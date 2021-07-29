@@ -58,7 +58,7 @@ fi
 #############################
 ### source custom
 #############################
-sources=("$HOME/.public_profile" "$HOME/.private_profile")
+sources=("$HOME/.public_profile" "$HOME/.private_profile" "$HOME/.fzf.${0//[^[:alpha:]]/}")
 
 for f in "${sources[@]}"; do
   [[ -r "$f" ]] && source "$f"
