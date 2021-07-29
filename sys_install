@@ -10,6 +10,8 @@ Warning: Leave in place!
 "
 
 # TODO: conda install pips sklearn -> scikit-learn
+# TODO: timeout 3s ipython, then move 00.py in place
+# TODO: execute /opt/homebrew/opt/fzf/install --all
 # Unify brew & brew casks
 ########################################################################################################
 ##### Args parsing
@@ -1072,7 +1074,7 @@ fi
 section "Settings"
 
 current_dockitems=$(defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g')
-if [[ $(echo "$current_dockitems"| wc -l) -ne 11 ]]; then
+if [[ $(echo "$current_dockitems"| wc -l) -ne 9 ]]; then
   echo "Getting dockitems"
   dockitems=$(pass dockitems)
   if [[ "$current_dockitems" != "$dockitems" ]]; then
