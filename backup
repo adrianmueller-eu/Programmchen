@@ -66,10 +66,10 @@ calc_size() {
       return_code=1
       continue
     }
-    if [[ -f "$f" && $size -lt 2049 ]]; then # calc small files (<1MB) more exactly
+    if [[ -f "$f" && $size -lt 2049 ]]; then # calc small files (<1MB == <2049*512-byte blocks) more exactly
       size=$(wc -c < "$f")
     else
-      ((size*=512))
+      ((size*=512)) # blocks -> bytes
     fi
     #printf "Size needed for $f: %s\n" >&2 "$(sizeFormat $size)"
     ((overall_size+=size))
@@ -185,7 +185,7 @@ echo "####################################################"
 # update .gitconfig and .private_profile into pass
 saveToPass ~/.gitconfig
 saveToPass ~/.private_profile
-echo "Save dockitems into pass"
+echo "Save dockitems to pass"
 defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g' | pass insert -m dockitems > /dev/null || die "Copying dockitems into pass failed"
 
 if [[ -z "$target" ]]; then
@@ -224,7 +224,7 @@ pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 ensureTargetDir files
 ensureTargetDir .m2
 
-rm -rf .gnupg/S.gpg-agent* # remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
+rm -rf .gnupg/S.* # remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
 ctt .bashrc .profile .zshrc # only transitionally
 ctt .m2/settings.xml .ssh .password-store .gnupg
 ctf .ipython/profile_default/startup/00.py
