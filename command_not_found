@@ -4,43 +4,37 @@ if [[ ! -t 0 ]]; then
   exit 1
 fi
 
+ask=true
+functions_needed=false
 cmd=
 # link regex does not work because (http:)// gets recognized as file path
 case $1 in
   fw)
     f w
     ;;
+  wpff)
+    cmd=wlan
+    arg=off
+    functions_needed=true
+    ;;
   o*)
     arg=${1:1}
-    cmd=o
+    [[ "$arg" == "." ]] && ask=false
+    cmd=open
     ;;
   greo)
     cmd=grep
     arg="--color=always" # grep alias is created by oh-my-zsh
     ;;
-  e*)
+  e*|n*|m*)
     arg=${1:1}
-    cmd=e
+    cmd=${1:0:1}
+    functions_needed=true
     ;;
-  se*)
+  se*|sn*|sm*)
     arg=${1:2}
-    cmd=se
-    ;;
-  n*)
-    arg=${1:1}
-    cmd=n
-    ;;
-  sn*)
-    arg=$(1:2)
-    cmd=sn
-    ;;
-  m*)
-    arg=${1:1}
-    cmd=m
-    ;;
-  sm*)
-    arg=$(1:2)
-    cmd=sm
+    cmd=${1:0:2}
+    functions_needed=true
     ;;
 #  t*) # make script zsh compatible first
 #    arg=${1:1}
@@ -60,23 +54,26 @@ esac
 if [[ -n "$cmd" ]]; then
   args=($@)
   [[ -n "$arg" ]] && args[0]=$arg
-  printf "Did you mean: $cmd ${args[*]} ? (y/n) [y]: "
-  [[ -n "$ZSH_VERSION" ]] && readoption="-k" || readoption="-n"
-  read $readoption 1 ans
-  case "$ans" in
-    n)
-      echo
-      exit 0
-      ;;
-    "")
-      ;;
-    *)
-      echo
-      ;;
-  esac
+  if [[ "$ask" == "true" ]]; then
+    printf "Did you mean: $cmd ${args[*]} ? (y/n) [y]: "
+    [[ -n "$ZSH_VERSION" ]] && readoption="-k" || readoption="-n"
+    read $readoption 1 ans
+    case "$ans" in
+      n)
+        echo
+        exit 0
+        ;;
+      "")
+        ;;
+      *)
+        echo
+        ;;
+    esac
+  fi
 
-  #source ~/.zshrc
-  source ~/.profile  # index aliases
+  if [[ "$functions_needed" == "true" ]]; then
+    #source ~/.zshrc
+    source ~/.profile  # index functions (no aliases!)
+  fi
   "$cmd" "${args[@]}"
 fi
-
