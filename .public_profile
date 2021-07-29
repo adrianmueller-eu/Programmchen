@@ -671,15 +671,13 @@ function ocr() {
     if ! echo "$res" | grep "\w" &>/dev/null; then
       echo "Oh dear, no results! :(" >&2
       echo "Maybe you should try: $0 --psm 11 $imagefile" >&2
-      echo "See tesseract --help-extra for more help." >&2
+      echo "See \e[1m$0 --help-extra\e[0m for more help." >&2
       return 2
     else
       echo "$res"
     fi
   else
-    echo "Usage: $(basename $0) [\e[4mtesseract options\e[0m \e[4m...\e[0m] imagefile" >&2
-    echo "Print result of optical character recognition with tesseract to stdout." >&2
-    echo "See tesseract --help-extra for more help." >&2
+    tesseract "$@"
   fi
 }
 
