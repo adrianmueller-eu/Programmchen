@@ -100,7 +100,19 @@ alias idiff="/Applications/IntelliJ\ IDEA.app/Contents/MacOS/idea diff"
 alias cp=fcp
 alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
 
-function printbytes() {
+function findDevicesInNetwork() {
+  start=${1:-1}
+  end=${2:-255}
+  ipaddr=$(ipconfig getifaddr en0)
+  echo "Your local ip: $ipaddr"
+  pre=${ipaddr%.*}.
+  echo "Expanding $pre{$start-$end}"
+  for i in $(seq $start $end); do
+    printf "$pre%d: %s\n" "$i" "$(host 192.168.1.$i)"
+  done | g -v NXDOMAIN # filter all unused hosts
+}
+
+function hex2bytes() {
   if [[ -t 0 ]]; then
     content=$1
   else
