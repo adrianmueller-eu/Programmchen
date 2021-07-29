@@ -1,20 +1,28 @@
 #!/bin/bash
 
+# hard-coded settings
 youtube="https://www.youtube.com"
-site=""
-query=""
 CURL=(curl -sSi -H "Accept-Language: en-US")
+STORAGE_DIR="$HOME/.yt"
+JSON_STORAGE="$STORAGE_DIR/json"
+RESULTS_STORAGE="$STORAGE_DIR/results"
+
+# arguments
 DEBUG=
 PRINTALL=
 OPEN=
-FILE=
-STORAGE_DIR="$HOME/.yt"
-STORAGE_FILE=
-JSON_FILE=
 USE_CACHED=
+site=""
+query=""
+
+# variables
+FILE=
+RESULTS_FILE=
+JSON_FILE=
 declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
+
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | [--cached | -n ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Fetch list of recent videos from YouTube.
 $usage
@@ -65,22 +73,22 @@ while [[ -n $1 ]]; do
     shift
     [[ -z "$1" ]] && die "Please give a user name with option -u. See -h for more help."
     site="${youtube}/user/${1}/videos"
-    STORAGE_FILE="$STORAGE_DIR/$1"
-    JSON_FILE="$STORAGE_DIR/json/${1}.json"
+    RESULTS_FILE="$RESULTS_STORAGE/$1"
+    JSON_FILE="$JSON_STORAGE/${1}.json"
     ;;
   -c)
     shift
     [[ -z "$1" ]] && die "Please give a channel's name  with option -c. See -h for more help."
     site="${youtube}/c/${1}/videos"
-    STORAGE_FILE="$STORAGE_DIR/$1"
-    JSON_FILE="$STORAGE_DIR/json/${1}.json"
+    RESULTS_FILE="$RESULTS_STORAGE/$1"
+    JSON_FILE="$JSON_STORAGE/${1}.json"
     ;;
   -i)
     shift
     [[ -z "$1" ]] && die "Please give a channel ID with option -i. See -h for more help."
     site="${youtube}/channel/${1}/videos"
-    STORAGE_FILE="$STORAGE_DIR/$1"
-    JSON_FILE="$STORAGE_DIR/json/${1}.json"
+    RESULTS_FILE="$RESULTS_STORAGE/$1"
+    JSON_FILE="$JSON_STORAGE/${1}.json"
     ;;
   -f) # json file or curl result
     shift
@@ -92,8 +100,8 @@ while [[ -n $1 ]]; do
     [[ -z "$1" ]] && die "Please give a playlist ID with option -p. See -h for more help."
     site="${youtube}/playlist?list=${1}"
     [[ -n $2 ]] && shift # use alternative name if given
-    STORAGE_FILE="$STORAGE_DIR/$1"
-    JSON_FILE="$STORAGE_DIR/json/${1}.json"
+    RESULTS_FILE="$RESULTS_STORAGE/$1"
+    JSON_FILE="$JSON_STORAGE/${1}.json"
     ;;
   -o)
     OPEN=true
@@ -130,7 +138,7 @@ function parseResults0() {
     if [[ -n $JSON_FILE ]]; then
       json_file=$JSON_FILE
     else
-      json_file="$STORAGE_DIR/json/$(date +%s).json"
+      json_file="$JSON_STORAGE/$(date +%s).json"
     fi
     printf "%s" "$1" > "$json_file"
 
@@ -264,7 +272,7 @@ function parseResults() {
   tmp_results=$(parseResults0 "$v1" "$2")
   exit_code=$?
   [[ $exit_code == 42 ]] && die
-  [[ $exit_code -gt 0 ]] && die "parseResults0: Couldn't parse descriptions for ${STORAGE_FILE##*/}"
+  [[ $exit_code -gt 0 ]] && die "parseResults0: Couldn't parse descriptions for ${RESULTS_FILE##*/}"
   tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
   IFS=$'\n' DESCRIPTIONS=(${tmp_descriptions})
   tmp_links=$(printf "%s" "$tmp_results" | sed -n '1d;p;n')
@@ -307,7 +315,7 @@ function fetchVideos() {
   fi
 
   if [[ -n $DEBUG && -n "$src" ]]; then
-    result_name="${STORAGE_FILE}_$(date +%s).curl"
+    result_name="${RESULTS_FILE}_$(date +%s).curl"
     echo "$src" > "${result_name}"
     echo "Curl result saved in ${result_name}" >&2
   fi
@@ -353,8 +361,8 @@ function setupOutputsVariable() {
 
 function filterLinks() {
   local content=
-  if [[ -e "$STORAGE_FILE" ]]; then
-    content=$(< "$STORAGE_FILE")
+  if [[ -e "$RESULTS_FILE" ]]; then
+    content=$(< "$RESULTS_FILE")
   fi
 
   if [[ -z $PRINTALL ]]; then
@@ -420,7 +428,7 @@ function askForChoose() {
 }
 
 function updateLocalStorage() {
-  printf "%s" "$OUTPUTS" > "$STORAGE_FILE"
+  printf "%s" "$OUTPUTS" > "$RESULTS_FILE"
 }
 
 if [[ "$site" = ${youtube}* ]]; then
@@ -434,11 +442,11 @@ if [[ "$site" = ${youtube}* ]]; then
     exit 0
   fi
 
-  if [[ ! -d "$STORAGE_DIR" ]]; then
-    mkdir -p "$STORAGE_DIR" || die "Couldn't create $STOREAGE_DIR"
+  if [[ ! -d "$JSON_STORAGE" ]]; then
+    mkdir -p "$JSON_STORAGE" || die "Couldn't create $JSON_STORAGE"
   fi
-  if [[ ! -d "$STORAGE_DIR/json" ]]; then
-    mkdir -p "$STORAGE_DIR/json" || die "Couldn't create $STOREAGE_DIR/json"
+  if [[ ! -d "$RESULTS_STORAGE" ]]; then
+    mkdir -p "$RESULTS_STORAGE" || die "Couldn't create $RESULTS_STORAGE"
   fi
 
   # echo "$site"
@@ -449,7 +457,7 @@ if [[ "$site" = ${youtube}* ]]; then
     if [[ -z $PRINTALL ]]; then
       filterLinks
     fi
-    if [[ -n $STORAGE_FILE ]]; then
+    if [[ -n $RESULTS_FILE ]]; then
       updateLocalStorage
     fi
     if [[ -z $PRINTALL ]]; then
