@@ -58,10 +58,13 @@ fi
 #############################
 ### source custom
 #############################
-sources=("$HOME/.public_profile" "$HOME/.private_profile" "$HOME/.fzf.${0//[^[:alpha:]]/}")
+if [[ $0 == "bash" ]]; then
+  export SHELL=/bin/bash
+fi
+sources=("$HOME/.public_profile" "$HOME/.private_profile" "$HOME/.fzf.$(basename $SHELL)")
 
 for f in "${sources[@]}"; do
-  [[ -r "$f" ]] && source "$f"
+  source "$f"
 done
 
 return;
