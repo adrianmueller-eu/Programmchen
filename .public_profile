@@ -102,9 +102,9 @@ alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
 
 function ping() {
   if [[ -z $1 ]]; then
-    /sbin/ping "$PING"
+    command ping "$PING"
   else
-    /sbin/ping "$@"
+    command ping "$@"
   fi
 }
 
