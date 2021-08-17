@@ -836,7 +836,12 @@ function po() {
 #############################
 function b() {
   local precision=42
+  local debug=
 
+  if [[ $1 == "-d" ]]; then
+    debug=true
+    shift
+  fi
   local args=($@)
   local input=$args[-1]
   if [[ ! -t 0 ]]; then
@@ -846,17 +851,24 @@ function b() {
   fi
 
   # first utilize bc
+  [[ -n $debug ]] && printf "bc: "
   local res=$(bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\
 \n')
   if [[ "$res" != *error* ]]; then # assume success
     echo " = $res"; return
+  else
+    [[ -n $debug ]] && echo "Error!"
   fi
 
+  [[ -n $debug ]] && printf "wcalc: "
   res=$(wcalc --radians -P$precision "${args[@]}" "$input" 2>&1)
   if [[ "$res" != *error* && "$res" != *Inf* && "$res" != *Undefined* ]]; then
-     echo "$res"; return
+    echo "$res"; return
+  else
+    [[ -n $debug ]] && echo "Error!"
   fi
 
+  [[ -n $debug ]] && printf "python: "
   res=$(python -c "
 from math import *  # https://docs.python.org/3/library/math.html
 
@@ -864,11 +876,14 @@ nCr=comb
 nPr=lambda a,b: comb(a,b)*factorial(b)
 print($input)" 2>/dev/null)
   if [[ $? == 0 ]]; then
-     echo "$res"; return
+    echo "$res"; return
+  else
+    [[ -n $debug ]] && echo "Error!"
   fi
 
   # and if it still seems unsolvable, ask sage
   # see https://paulmasson.github.io/sagemath-docs/functions
+  [[ -n $debug ]] && printf "sage: "
   sage -c "nCr=binomial; nPr=lambda a,b: factorial(a)/factorial(a-b); print($input)"
 }
 
