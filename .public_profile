@@ -1033,3 +1033,11 @@ function hexflow() {
 function battery() {
   system_profiler SPPowerDataType | grep "Charge [^I]" | awk '{print $NF" %"}' #| awk '{print $NF}' | tr '\n' ' ' | awk '{ print $1 / $2 * 100 "%"}'
 }
+
+function evilinsult() {
+  hash recode &>/dev/null || {
+    echo "Install recode, bitch."
+    return 42
+  }
+  curl -sS https://evilinsult.com/generate_insult.php\?lang\=en\&type\=json | sed 's/.*"insult":"\([^"]*\)".*/\1\n/' | recode html..utf8
+}
