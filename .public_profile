@@ -608,7 +608,9 @@ function pdfpages() {
 
   local -a input=("$@")
   if [[ -z "$*" ]]; then
-    IFS=$'\n' input=($(fd --no-ignore-vcs -t f -d 1 '\.pdf')); unset IFS
+    tmpIFS=$IFS
+    IFS=$'\n' input=($(fd --no-ignore-vcs -t f -d 1 '\.pdf'))
+    IFS=$tmpIFS
     [[ -z "$input" ]] && echo "No .pdf file found." && return 0
   fi
   local -a files=()
