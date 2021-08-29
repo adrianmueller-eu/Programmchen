@@ -3,9 +3,22 @@
 #############################
 ### ls
 #############################
-alias l=ll
+unalias l
+function l() {
+  local ls_command=(lsd -laF) #='ls -liAFh'
+  if [[ ! -t 0 ]]; then
+    tmpIFS=$IFS
+    IFS=$'\n'
+    for f in $(cat); do
+      [[ -f "$f" ]] && "${ls_command[@]}" "$@" "$f"
+    done
+    IFS=$tmpIFS
+  else
+    "${ls_command[@]}" "$@"
+  fi
+}
+alias ll=l
 alias la="lsd -a" #="ls -A"
-alias ll="lsd -laF" #='ls -liAFh'
 alias tl="tree -faFhpN --du"
 alias td="tree -faFhpNd --du"
 alias fd="fd -H"
