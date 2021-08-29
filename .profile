@@ -61,7 +61,12 @@ fi
 if [[ $0 == "bash" ]]; then
   export SHELL=/bin/bash
 fi
-sources=("$HOME/.public_profile" "$HOME/.private_profile" "$HOME/.fzf.$(basename $SHELL)")
+sources=(
+  "$HOME/.public_profile"
+  "$HOME/.private_profile"
+  "$HOME/.fzf.$(basename $SHELL)"
+  "$HOME/.config/broot/launcher/bash/br"
+)
 
 for f in "${sources[@]}"; do
   source "$f"
@@ -82,7 +87,7 @@ startup=(
 /Library/LaunchDaemons
 /Library/PrivilegedHelperTools
 /Library/Apple/System/Library/LaunchDaemons
-~/LaunchAgents
+~/Library/LaunchAgents
 )
 for d in "${startup[@]}"; do
   echo "$d:"
