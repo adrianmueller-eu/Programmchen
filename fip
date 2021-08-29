@@ -28,8 +28,9 @@ case $1 in
     key=$1
     ;;
 esac
+shift # remove key from arguments
 
-if [[ -t 0 && -z $1 ]]; then
+if [[ -t 0 && -z "$key" ]]; then
   printf "Do you really want to see \e[4mall\e[0m available executables in \$PATH? (y/n) [n]: "
   read ans
   case $ans in
@@ -39,6 +40,9 @@ if [[ -t 0 && -z $1 ]]; then
       exit 0
       ;;
   esac
+elif [[ -n "$1" ]]; then
+  echo "Following arguments will be ignored: $*"
+  echo
 fi
 
 if [[ $key == ^*$ ]]; then
