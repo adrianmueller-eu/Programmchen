@@ -84,6 +84,7 @@ function rsyncit() {
           --delete --delete-delay `# but delete non-existing files` \
           --filter=':- .gitignore' \
           "$1" "$2"
+  sync # finish reading / writing
 }
 
 function _cp() {
