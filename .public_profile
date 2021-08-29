@@ -329,7 +329,7 @@ function panoptoDownload() { # TODO: seems not to work anymore
 #############################
 ### applications
 #############################
-alias bs="brew search"
+alias bs="brew search --desc"
 alias bi="brew info"
 alias bh="brew home"
 alias play="spotify play"
