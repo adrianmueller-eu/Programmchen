@@ -772,7 +772,12 @@ function loudnorm() {
 }
 
 function vltomp4() {
-  resdir="${TMPDIR}results_mp4/"
+  if [[ ! -f $1 ]]; then
+    echo "Please give a video file as argument!"
+    return 1
+  fi
+
+  local resdir="${TMPDIR}results_mp4/"
   if [[ ! -e "$resdir" ]]; then
     mkdir "$resdir"
   elif [[ ! -d "$resdir" ]]; then
@@ -780,28 +785,37 @@ function vltomp4() {
     return 1
   fi
 
+  local return_value=0
   for f in "$@"; do
-    resf=$(basename "$f")
+    [[ -d "$f" ]] && continue
+    local resf=$(basename "$f")
     resf=${resf%.*}
     [[ -e "$f" ]] && resf="${resf} converted"
+    resf=${resf}.mp4
     if [[ -e "$resf" ]]; then
       echo "Already done: $f (goal exists: $resf)"
       continue
     fi
-    resf="$resdir${resf}.mp4"
 
     echo "Convert $f to $resf"
-    ffmpeg -hide_banner -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$resf" || continue
+    local res_path="$resdir$resf"
+    ffmpeg -hide_banner -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$res_path"
+    exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+      return_value=$exit_code
+      continue
+    fi
     if [[ -e "$f" ]] && hash trash &>/dev/null; then
       trash "$f" && echo "Original file moved to trash"
-      mv "$resf" "${resf% converted.*}.mp4"
-      mv "${resf% converted.*}.mp4" .
+      mv "$res_path" "${res_path% converted.*}.mp4"
+      mv "${res_path% converted.*}.mp4" .
     else
-      mv "$resf" .
-      printf "Saved as $PWD/%s" "$(basename $resf)"
+      mv "$res_path" .
+      printf "Saved as $PWD/%s" "$resf"
     fi
   done
   rm -r "$resdir"
+  return $return_value
 }
 
 
