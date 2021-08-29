@@ -282,6 +282,21 @@ function fetchPrecipitation() { # wetter.com / usage: $0 $lat $lng
   echo "$res"
 }
 
+function fetchPrecipitation2() { # Usage: $0 <path on wetter.com>
+  local res parsed
+  res=$(curl -sS "https://www.wetter.com$1") || return $?
+  #echo "$res" | pup '.icon-wind_arrow attr{title}' | sed -n '9,$p' | nl -v $(date +%H) | awk '{print $1 % 24 ":00\t" $2}'
+  parsed=$(echo "$res" | pup '.hwg-col-rain-text json{}')
+  node -e 'const ans=JSON.parse(process.argv[1]); for (wind of ans) { console.log(wind.text)}' "$parsed" | nl -v $(date +%H) | awk '{
+    res=$1 % 24;
+    if (res < 10)
+      $1="0"res":00  ";
+    else
+      $1=res":00  ";
+    print $0
+  }' | sed 's/ %/ %/;s/\([0-9] %\)/\1   /;s/\([0-9][0-9] %\)/\1 /'
+}
+
 function fetchWind() { # Usage: $0 <path on wetter.com>
   local res parsed
   res=$(curl -sS "https://www.wetter.com$1") || return $?
