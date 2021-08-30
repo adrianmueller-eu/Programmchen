@@ -1018,6 +1018,21 @@ alias showUnixTime="$BREW_PREFIX/bin/bash -c 'while true; do printf \"\\r\\e[K\$
 alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
 alias lsusers="dscl . list /Users | grep -v ^_"
 
+function caesar() {
+  [[ -z "$2" ]] && echo "Usage: $0 displacement phrase" || python -c "
+alphabet = 'abcdefghijklmnopqrstuvwxyz'
+displacement = $1
+word = '$2'
+for character in word:
+  position = alphabet.find(character)
+  #print(character, position)
+  if position > -1:
+    position = (position + displacement) % len(alphabet)
+    character = alphabet[position]
+  print(character, end='')"
+  [ -t 1 ] && echo
+}
+
 function zombiesAndStuff() {
   ps aux | awk ' $8 !~ /S/ {print $0}' | grep -v "ps aux"
 }
