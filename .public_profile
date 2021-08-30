@@ -119,6 +119,7 @@ function cp() {
   fi
 }
 alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
+alias psh="ps aux | head"
 
 function ping() {
   if [[ -z $1 ]]; then
