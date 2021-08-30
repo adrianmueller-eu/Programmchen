@@ -11,7 +11,7 @@ Warning: Leave in place!
 
 # TODO: conda install pips sklearn -> scikit-learn
 # TODO: timeout 3s ipython, then move 00.py in place
-# TODO: execute /opt/homebrew/opt/fzf/install --all
+# TODO: execute /opt/homebrew/opt/fzf/install --all, remove lines from .zshrc, .bashrc?
 # Unify brew & brew casks
 ########################################################################################################
 ##### Args parsing
@@ -51,7 +51,7 @@ newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 
 py_ver=python@3.9
 
-# brew formulas
+# brew formulas  # brew leaves
 brews=(
 airshare
 agedu		# Unix utility for tracking down wasted disk space
@@ -60,14 +60,15 @@ bash
 bash-completion
 bash-snippets
 bfg
-brightness
 #bro		# Network security monitor
-#broot		# New way to see and navigate directory trees
+broot		# New way to see and navigate directory trees
 #chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
 #cheat		# Better version contained in bash snippets
 #choose		# reads from stdin, lets user choose one line, prints that line to stdout, exits
 #chordii
+ciphey		# Automatic decryption and decoding tool
 cloc
+cmake
 coreutils	# GNU File, Shell, and Text utilities
 curlie		# Easy-to-use curl
 darkstat
@@ -76,6 +77,7 @@ diff-pdf        # needs xquartz
 exiftool
 #expect		# automate interactive applications
 #fasttext	# fast text representation and classification
+fcp		# fast copy
 fd
 ffmpeg
 fortune
@@ -93,18 +95,18 @@ googler
 heksa
 hexedit
 howdoi
-imagemagick   # installs convert
+imagemagick	# installs convert
 jq		# JSON parser
 #launch4j   	# Cross-platform Java executable wrapper
-#lf		# Terminal visual file manager
+#lf		# Terminal visual file manager (I like broot more)
 lorem
 lsd
-lynx
+#lynx		# Text-based web browser
 #mas #already installed
 #maven
 #maven-completion
 monolith	# Saving complete web pages as a single HTML
-mplayer
+#mplyer # mainly for converting to mp3 (also done by ffmpeg or sox)
 #mujs
 mysql
 nano
@@ -112,8 +114,8 @@ nativefier
 #navi 		# Interactive cheatsheet tool
 #nbdime		# Jupyter Notebook Diff and Merge tools
 nmap		# Port scanning utility for large networks
-node
-openjdk
+node		# also required by bfg
+openjdk		# also required by nativefier
 #pass #already installed
 pandoc		# markup format conversion
 pastel		# Generate, analyze, convert and manipulate colors
@@ -122,14 +124,16 @@ pdfgrep
 pueue		# queuing shell commands
 pup		# HTML parser
 $py_ver
+#r		# Software environment for statistical computing
 recode		# Convert character sets
 rename
 ripgrep
 rsync
 shpotify
 #sic		# Minimal multiplexing IRC client
+sox		# SOund eXchange: audio manipulation (e.g. sound recording tool)
 telnet
-tesseract
+tesseract	# also required by ffmeg and tesseract-lang
 tesseract-lang
 testdisk      # Powerful free data recovery utility
 tldr		# Simplified and community-driven man pages
@@ -151,22 +155,22 @@ zsh-completions
 
 # casks needing the password
 brewcasks=(
-  background-music
+  #background-music	 # replacement for soundflower
   google-earth-pro
   mactex
   miniconda
   nextcloud
-  #soundflower # replaced by background-music
-  wine-stable
+  #soundflower		# replaced by background-music
+  #wine-stable		# currently not working with ARM
   xquartz
   zoom
-  #adoptopenjdk/openjdk/adoptopenjdk8
+  #adoptopenjdk/openjdk/adoptopenjdk8 # needed?
 )
 
-# brew casks
+# brew casks  # brew list --cask
 brewcasks+=(
 #anaconda
-android-file-transfer
+#android-file-transfer
 #android-sdk
 #android-studio
 anki
@@ -183,7 +187,7 @@ disablemonitor
 discord
 #docker			# also as formula
 drawio
-#element
+#element		# matrix messenger
 #eul 			# clear and simple status monitoring
 firefox
 flux
@@ -194,12 +198,16 @@ geogebra
 #graphsketcher		# draw graphs
 intellij-idea
 iterm2
+j			# J language
+#jamkazam		# Low-latency rehearsing, jamming and performing
+joplin			# Note taking app with nextcloud sync
 #jwzlyrics
 #kodi
 #mathpix-snipping-tool  #nice, but only 50 pics/month
 #mp3tag
 mpv
 musescore
+#netron			# Visualizer for neural network, deep learning, and machine learning models
 #notational-velocity
 #nvalt
 #openoffice
@@ -207,6 +215,7 @@ musescore
 qlstephen
 sage
 signal
+shottr			# Screenshot measurement and annotation tool
 #sketch
 skim			# PDF reader and note-taking application
 #skype
@@ -222,6 +231,7 @@ the-unarchiver
 thunderbird
 #tor-browser
 ukelele
+#yippy			# clipboard manager (in beta)
 )
 
 masinstalls=(
@@ -1036,7 +1046,6 @@ if [[ ! -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
 fi
 
 section "Logins"
-echo "Please login to following applications:"
 
 # TODO: only propose login if applications are present
 if [[ ! -e "$HOME/Library/Application Support/Spotify/prefs" ]]; then
