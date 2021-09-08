@@ -3,7 +3,7 @@
 #############################
 ### ls
 #############################
-unalias l
+unalias l >&/dev/null
 function l() {
   local ls_command=(lsd -laF) #='ls -liAFh'
   if [[ ! -t 0 ]]; then
