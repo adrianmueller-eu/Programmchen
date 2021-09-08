@@ -49,6 +49,7 @@ alias gup=git_update
 alias grh^="git reset HEAD^"
 alias grh^^="git reset HEAD^^"
 alias grh^2="git reset HEAD^2"
+alias gurl="git config --get remote.origin.url | sed 's/\.git//;s~:~/~;s~git@~https://~'"
 
 function c() {
   git status > /dev/null || return
