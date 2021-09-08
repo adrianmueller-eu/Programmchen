@@ -1,9 +1,12 @@
+#!/bin/bash
+
 if [[ ! -t 0 ]]; then
   # not interactive, but piped
   echo "Sorry, couldn't find: $*"
   exit 1
 fi
 
+notfoundfile=~/.zsh_notfound_history
 ask=true
 functions_needed=false
 cmd=
@@ -46,7 +49,9 @@ case $1 in
       exit 0
     fi
     echo "Sorry, couldn't find: $*"
+    # TODO: count notfounds and recommend adding over a certain threshold
     echo "Maybe you can add it to handle if it was a frequent misspelling."
+    printf "%s:%s\n" "$(date +%s)" "$*" >> "$notfoundfile"
     exit 1
     ;;
 esac
@@ -73,6 +78,7 @@ if [[ -n "$cmd" ]]; then
 
   if [[ "$functions_needed" == "true" ]]; then
     #source ~/.zshrc
+    SHELL=bash
     source ~/.profile  # index functions (no aliases!)
   fi
   "$cmd" "${args[@]}"
