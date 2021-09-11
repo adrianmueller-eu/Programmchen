@@ -87,6 +87,10 @@ class SAT:
                     sub1 = getFormula(f["sub1"])
                     sub2 = getFormula(f["sub2"])
                     return IMPL(sub1, sub2)
+                elif o == "←":
+                    sub1 = getFormula(f["sub1"])
+                    sub2 = getFormula(f["sub2"])
+                    return IMPL(sub2, sub1)
                 elif o == "↔":
                     sub1 = getFormula(f["sub1"])
                     sub2 = getFormula(f["sub2"])

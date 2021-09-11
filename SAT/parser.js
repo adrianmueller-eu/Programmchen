@@ -11,7 +11,8 @@ function renderSymbols(str) {
   str = str.replace(/\+| xor /ig, '^');
   str = str.replace(/ nand /ig, '⊼');
   str = str.replace(/<->| iff /ig, '↔');
-  str = str.replace(/->/g, '→');
+  str = str.replace(/->| \\?implies | \\?therefore /ig, '→');
+  str = str.replace(/<-| \\?because /ig, '←');
   str = str.replace(/(\\neg|\\lnot)[\{ ]?\}?/g, '¬');
   str = str.replace(/(\\vee|\\lor)[\{ ]?\}?/g, '∨');
   str = str.replace(/(\\wedge|\\land)[\{ ]?\}?/g, '∧');

@@ -9,7 +9,7 @@ def main():
         print("\t%s" % "e.g. \"r and not q or not t\"")
         print("\t%s" % "e.g. \"(~a | b) & (a -> c) & (b -> ~c) & a\"")
         exit()
-    
+
     def arg(s):
         try:
             argv.remove(s)
