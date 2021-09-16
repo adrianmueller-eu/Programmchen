@@ -1,5 +1,5 @@
 from sys import argv, exit
-from . import solve, table, modelCnt
+from . import solve, table, modelCnt, cnf
 
 def main():
 
@@ -17,8 +17,9 @@ def main():
         except:
             return False
 
-    useDPLL = arg("-d")
+    useDPLL = arg("--dpll")
     showTable = arg("-t") or arg("--table")
+    showCnf = arg("--cnf")
     showTableTrueOnly = arg("-tt") or arg("--table-true-only")
     showModelCnt = arg("-c") or arg("--count")
 
@@ -40,6 +41,8 @@ def main():
             table(formula, trueOnly=showTableTrueOnly)
         elif showModelCnt:
             print(modelCnt(formula))
+        elif showCnf:
+            cnf(formula, verbose=True)
         else:
             result, model = solve(formula, useDPLL)
 

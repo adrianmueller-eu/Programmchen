@@ -13,15 +13,16 @@ else: # "SAT.SAT"
 class SAT:
 
     def __init__(self, useDPLL=False):
+        self.debug = False
+
         if useDPLL or not z3available():
             self.delegate = dpll
         else:
             self.delegate = z3wrapper
 
     def solve(self, formula):
-        formula = self._parse(formula)
-        #print(formula.flatten())
-        return self.delegate(formula.clauses())
+        clauses = self.cnf(formula)
+        return self.delegate(clauses)
 
     def table(self, formula, verbose=True, trueOnly=False):
         original = formula
@@ -108,9 +109,32 @@ class SAT:
         returncode, f = call(parser)
         if returncode != 0:
             raise ValueError("Have you written the formula correctly?")
-        # print("node output:", f)
         f = json.loads(f)[1]
-        return getFormula(f)
+        if self.debug:
+            print("node output:", f)
+        f = getFormula(f)
+        if self.debug:
+            print("formatted:", f)
+        return f
+
+    def cnf(self, formula, verbose=False):
+        formula = self._parse(formula)
+        clauses = formula.clauses()
+        if verbose or self.debug:
+            res = []
+            for clause in clauses:
+                res_c = []
+                for x,val in clause:
+                    if val:
+                        res_c.append(x)
+                    else:
+                        res_c.append("¬"+x)
+                if len(res_c) > 1:
+                    res.append("("+" ∧ ".join(res_c)+")")
+                else:
+                    res.append(res_c[0])
+            print(" ∨ ".join(res))
+        return clauses
 
 ##############################
 ### convenience functions
@@ -140,6 +164,10 @@ def logEq(f1, f2, useDPLL=True):
 def modelCnt(formula): # no solver needed
     sat = SAT(True) # "True" just because faster init
     return sat.modelCnt(formula)
+
+def cnf(formula, verbose=False):
+    sat = SAT(True) # "True" just because faster init
+    return sat.cnf(formula, verbose)
 
 ##############################
 ### helper functions
