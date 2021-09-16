@@ -107,7 +107,7 @@ class SAT:
         parser = ["node", path + "/parser.js", formula]
         returncode, f = call(parser)
         if returncode != 0:
-            raise ValueError("Did you write the formula correctly?")
+            raise ValueError("Have you written the formula correctly?")
         # print("node output:", f)
         f = json.loads(f)[1]
         return getFormula(f)

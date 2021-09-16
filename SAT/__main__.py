@@ -35,18 +35,22 @@ def main():
 
     formula = argv[1]
 
-    if showTable or showTableTrueOnly:
-        table(formula, trueOnly=showTableTrueOnly)
-    elif showModelCnt:
-        print(modelCnt(formula))
-    else:
-        result, model = solve(formula, useDPLL)
-
-        if result:
-            print("Satisfiable with model")
-            print(model)
+    try:
+        if showTable or showTableTrueOnly:
+            table(formula, trueOnly=showTableTrueOnly)
+        elif showModelCnt:
+            print(modelCnt(formula))
         else:
-            print("Unsatisfiable")
+            result, model = solve(formula, useDPLL)
+
+            if result:
+                print("Satisfiable with model")
+                print(model)
+            else:
+                print("Unsatisfiable")
+    except ValueError as e:
+        print(e)
+        exit(1)
 
 if __name__ == '__main__':
     main()

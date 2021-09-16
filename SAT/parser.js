@@ -2,7 +2,12 @@ p = require('./parser_lib')
 Parser = p.Parser
 input = process.argv[2]
 input = renderSymbols(input)
-console.log(JSON.stringify(new Parser().parseInput(input)))
+try {
+  console.log(JSON.stringify(new Parser().parseInput(input)))
+} catch (e) {
+  console.error(e)
+  process.exit(1)
+}
 
 function renderSymbols(str) {
   str = str.replace(/&|\*| and /ig, '∧');
