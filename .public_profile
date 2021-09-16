@@ -932,24 +932,27 @@ function b() {
     unset 'args[-1]'
   fi
 
-  # first utilize bc
-  [[ -n $debug ]] && printf "bc: "
-  local res=$(bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\
-\n')
-  if [[ "$res" != *error* ]]; then # assume success
-    echo " = $res"; return
-  else
-    [[ -n $debug ]] && echo "Error!"
+  # first utilize bc, if the input doesn't contain letters (to prevent "variables" to be resolved to 0)
+  if [[ ! "$input" =~ [[:alpha:]] ]]; then
+    [[ -n $debug ]] && printf "bc: "
+    local res=$(command bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\\n')
+    if [[ "$res" != *error* ]]; then # assume success
+      echo " = $res"; return
+    else
+      [[ -n $debug ]] && echo "Error!"
+    fi
   fi
 
+  # then go for wcalc
   [[ -n $debug ]] && printf "wcalc: "
-  res=$(wcalc --radians -P$precision "${args[@]}" "$input" 2>&1)
+  res=$(wcalc --radians -P$precision "${args[@]}" "$input" 2>&1 | sed 's/\.0*$//') # sed 's/\(\.\d*\)0*$/\1/;s/\.0*$//'
   if [[ "$res" != *error* && "$res" != *Inf* && "$res" != *Undefined* ]]; then
     echo "$res"; return
   else
     [[ -n $debug ]] && echo "Error!"
   fi
 
+  # also try python
   [[ -n $debug ]] && printf "python: "
   res=$(python -c "
 from math import *  # https://docs.python.org/3/library/math.html
