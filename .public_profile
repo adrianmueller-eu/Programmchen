@@ -398,16 +398,15 @@ function _pick() {
 
   [[ "true" == "$file_only" ]] && fd_args=(-t f)
 
-  local -a depth_indicator
   if [[ -n "$q_dirname" ]]; then # if valid dirname given, cd there
     pushd "$q_dirname" > /dev/null
   fi
   local pwd_name
   if [[ $PWD == $HOME ]]; then
-    depth_indicator=(-d 1)
+    fd_args+=(-d 1)
     pwd_name="~"
   elif [[ / == "$PWD" ]]; then
-    depth_indicator=(-d 1)
+    fd_args+=(-d 1)
     pwd_name=""
   elif [[ / == $(dirname "$PWD") ]]; then
     pwd_name="$PWD"
@@ -416,7 +415,7 @@ function _pick() {
   fi
 
   local picked
-  picked=$($BREW_PREFIX/bin/fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
+  picked=$(command fd -H "${fd_args[@]}" | grep -v '\.git/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
   local exit_code=$?
   if [[ $(printf "%s" "$picked" | wc -l) -gt 0 ]]; then # result found
     query=$(printf "%s" "$picked" | head -1)
