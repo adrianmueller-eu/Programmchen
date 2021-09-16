@@ -745,9 +745,15 @@ if [[ -e "$(brew --prefix)/opt/openjdk/libexec/openjdk.jdk" ]] && [[ ! -e /Libra
   sudo ln -sfn $(brew --prefix)/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
 fi
 
+########################################################################################################
+##### Full automatic part (place as much as possible here)
+########################################################################################################
+# In this part, there is *no* need for user intervention at all
+# no use of pressEnterTo function, die only in severe error cases
+supersection "Full automatic part"
+
 echo
 section "brew cask installs"
-echo "Some casks might require your password"
 #failedcasks= # reuse same variable
 echo "Looking up installed brew casks ..."
 #brewcaskls=$(brew ls --cask) # already set above
@@ -768,13 +774,6 @@ if [[ -z "$failedcasks" ]]; then
 else
   echo "Following casks could not be installed: $failedcasks"
 fi
-
-########################################################################################################
-##### Full automatic part (place as much as possible here)
-########################################################################################################
-# In this part, there is *no* need for user intervention at all
-# no use of pressEnterTo function, die only in severe error cases
-supersection "Full automatic part"
 
 #app store
 if hash mas &>/dev/null; then
