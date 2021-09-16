@@ -5,7 +5,7 @@
 #############################
 unalias l >&/dev/null
 function l() {
-  local ls_command=(lsd -laF) #='ls -liAFh'
+  local ls_command=(lsd -lAF) #='ls -liAFh'
   if [[ ! -t 0 ]]; then
     tmpIFS=$IFS
     IFS=$'\n'
@@ -18,7 +18,7 @@ function l() {
   fi
 }
 alias ll=l
-alias la="lsd -a" #="ls -A"
+alias la="lsd -A" #="ls -A"
 alias tl="tree -faFhpN --du"
 alias td="tree -faFhpNd --du"
 alias fd="fd -H"
