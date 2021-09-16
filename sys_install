@@ -9,15 +9,13 @@ Fast internet connection recommended.
 Warning: Leave in place!
 "
 
-# TODO: conda install pips sklearn -> scikit-learn
-# TODO: timeout 3s ipython, then move 00.py in place
-# TODO: execute /opt/homebrew/opt/fzf/install --all, remove lines from .zshrc, .bashrc?
-# Unify brew & brew casks
+# TODO: conda install pips (beware: sklearn -> scikit-learn)
+# TODO: execute /opt/homebrew/opt/fzf/install --all, then ln_update
+# TODO: Unify brew & brew casks
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
 
-# TODO: Divide full and slim install
 case $1 in
   -h)
     printf "$help"
@@ -106,7 +104,7 @@ lsd
 #maven
 #maven-completion
 monolith	# Saving complete web pages as a single HTML
-#mplyer # mainly for converting to mp3 (also done by ffmpeg or sox)
+#mplayer # mainly for converting to mp3 (also done by ffmpeg or sox)
 #mujs
 mysql
 nano
@@ -399,10 +397,7 @@ if [[ -z "$P" ]]; then
   chmod 600 .ssh/*
   chmod 600 .gnupg/*
 
-  #install terminal layouts
-  #open "$thisdir/*.terminal" # $IT/Settings/Terminal/*.terminalχ
-
-  #keyboard layout
+  # keyboard layout
   pushd "$HOME/Library" &> /dev/null || die "cd to $HOME/Library failed"
   c "Keyboard Layouts/" # - keyboard layout
 
@@ -1047,6 +1042,8 @@ fi
 
 section "Logins"
 
+# DONE: Spotify, OneNote, Duolingo
+# TODO: Anki, Discord, Slack, Zoom, Notion?
 # TODO: only propose login if applications are present
 if [[ ! -e "$HOME/Library/Application Support/Spotify/prefs" ]]; then
   letRead "  - Spotify"
