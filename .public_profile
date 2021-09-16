@@ -596,6 +596,34 @@ function backup() {
   unmount
 }
 
+function ln_update() {
+  function hardLink() {
+    filename=$(basename "$1")
+    filedest=$(dirname "$1")
+    echo "Linking $filename to $filedest"
+    ln -f "$P/$filename" "$filedest"
+  }
+
+  if [[ -z ${P+x} ]]; then
+    echo "Variable \$P not set"
+    echo "Please link \$P/.profile to \$HOME manually"
+    exit 1
+  fi
+
+  hardLink ~/.profile
+  hardLink ~/.zshrc
+  hardLink ~/.bashrc
+  hardLink ~/.public_profile
+
+  hardLink ~/.nanorc
+  hardLink ~/.Rprofile
+  hardLink ~/.ipython/profile_default/startup/00.py
+
+  hardLink ~/.finicky.js
+  hardLink ~/.config/mpv/input.conf
+  hardLink ~/.config/mpv/mpv.conf
+}
+
 #############################
 ### media
 #############################
