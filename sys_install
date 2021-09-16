@@ -382,10 +382,7 @@ if [[ -z "$P" ]]; then
 
   # install basic shell sources
   c .bashrc .profile .zshrc
-  printf "#dummy" > "$HOME/.public_profile" # dummy for preventing sourcing error and to be replaced later
-  printf "#dummy" > "$HOME/.private_profile"
-  P=$(cat .profile | grep P= | sed "s/export P=//")
-  mkdir "$(eval echo $P)" # dummy
+  P=$(cat .profile | grep P= | sed "s/export P=//") # avoid errors by not sourcing .profile
 
   # install the other shit
   if [[ ! -d .m2 ]]; then
@@ -576,15 +573,8 @@ if [[ -z "$P" ]]; then
 
   defaults write com.apple.systemsound "com.apple.sound.uiaudio.enabled" -int 0
 
-  #let user choose layout and restart terminal & install script
-  echo "The computer will reboot now to apply the settings. After that, please start this script again."
-  printf "\e[4mHint\e[0m: Just set your favourite terminal layout to default.\n"
-  printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
-  printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. (Maybe only after restart?)\n"
-  pressEnterTo restart
-  letRead "sudo shutdown -r now ..."
-  sudo shutdown -r now
-  exit 0
+  echo "You can switch the keyboard layout now. (Maybe only after restart?)\n"
+  pressEnterTo
 else
   echo "Skipped preferences installation"
 fi
@@ -653,7 +643,7 @@ else
 fi
 
 # copy .private_profile from pass
-if [[ ! -e ~/.private_profile || $(cat ~/.private_profile) == "#dummy" ]]; then
+if [[ ! -e ~/.private_profile ]]; then
   section "Copy files from pass"
   echo "Copying .private_profile from pass"
   pass .private_profile > ~/.private_profile
