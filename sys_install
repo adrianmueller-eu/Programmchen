@@ -845,29 +845,6 @@ else
   echo "Skipped copying of Thunderbird to $HOME/Library/"
 fi
 
-### place at ~/Library/Preferences
-if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
-  c Preferences/
-else
-  echo "Skipped copying of content of Preferences to $HOME/Library/Preferences/"
-fi
-popd &> /dev/null || die "cd failed" # HOME again
-
-mpv_conf1="$HOME/.config/mpv/input.conf"
-mpv_conf2="$HOME/.config/mpv/mpv.conf"
-if [[ ! -f "$mpv_conf1" ]]; then
-  echo "Create mpv config file $mpv_conf1"
-  echo "RIGHT seek  5 exact\nLEFT  seek -5 exact" > "$mpv_conf1"
-fi
-if [[ ! -f "$mpv_conf2" ]]; then
-  echo "Create mpv config gile $mpv_conf2"
-  echo 'autofit-larger=2880x1620
-cursor-autohide=300
-msg-color=yes
-volume-max=150
-#macos-title-bar-material=dark' > "$mpv_conf2"
-fi
-
 if [[ ! -e "$P"/.zshrc ]]; then
   git clone git@github.com:noxafy/Programmchen.git || die "Cloning Programmchen failed"
 fi
@@ -879,35 +856,22 @@ if [[ ! -e "$P"/imgcat ]]; then
   popd &>/dev/null
 fi
 
-# try with CONDA_AUTO_ACTIVATE_BASE=false first
-#if hash conda &>/dev/null; then
-#  conda config --set auto_activate_base false
-#fi
+### function in .public_profile: hardlink all startup and config files
+source "$P"/.public_profile && ln_update || die "Linking startup and config files failed"
 
-if [[ ! -e ~/.public_profile \
-   || ! -e ~/.profile \
-   || ! -e ~/.zshrc \
-   || ! -e ~/.bashrc \
-   || ! -e ~/.nanorc ]]; then
-  section "Linking dotfiles to $HOME"
-
-  function hardLink() {
-    filename=$(basename "$1")
-    filedir=$(dirname "$1")
-    echo "Linking $filename from $filedir"
-    ln -f "$1" ~
-  }
-
-  hardLink "$P"/.profile
-  hardLink "$P"/.zshrc
-  hardLink "$P"/.bashrc
-  hardLink "$P"/.public_profile
-  hardLink "$P"/.nanorc
-
-  echo "Please restart this session now."
-  exit 0
+### place at ~/Library/Preferences
+if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
+  c Preferences/
 else
-  echo "Skipped linking dotfiles"
+  echo "Skipped copying of content of Preferences to $HOME/Library/Preferences/"
+fi
+popd &> /dev/null || die "cd failed" # HOME again
+
+p2t_conf="$HOME/.p2t"
+if [[ ! -f "$p2t_conf" ]]; then
+  echo "Create p2t config file"
+  printf "token=%s\n" $(git --global config p2t.token) > "$p2t_conf"
+  printf "chatId=%s\n" $(git --global config p2t.chatId) >> "$p2t_conf"
 fi
 
 ### place at /Applications
