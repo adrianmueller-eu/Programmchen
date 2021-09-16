@@ -228,7 +228,6 @@ ensureTargetDir .m2
 rm -rf .gnupg/S.* # remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
 ctt .bashrc .profile .zshrc # only transitionally
 ctt .m2/settings.xml .ssh .password-store .gnupg
-ctf .ipython/profile_default/startup/00.py
 
 cd "Programmchen" &> /dev/null || die "cd to $HOME/Programmchen failed"
 ctt sys_install
