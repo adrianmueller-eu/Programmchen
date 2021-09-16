@@ -1037,14 +1037,6 @@ else
   echo "Skipped OneNote login"
 fi
 
-if [[ ! -e "$HOME/Library/Containers/com.atlassian.trello" ]]; then
-  letRead "  - Trello (use the opportunity to set global shortcut to cmd+alt+t !)"
-  open /Applications/Trello.app/ || die "Please install Trello and restart the script to continue"
-  pressEnterTo
-else
-  echo "Skipped Trello login"
-fi
-
 if [[ ! -e "$HOME/Library/Preferences/com.electron.duolingo.plist" ]]; then
   letRead "  - Duolingo"
   open /Applications/Duolingo.app/ || die "Please install Duolingo with nativfier and restart the script to continue"
@@ -1056,7 +1048,7 @@ fi
 section "Settings"
 
 current_dockitems=$(defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g')
-if [[ $(echo "$current_dockitems"| wc -l) -ne 9 ]]; then
+if [[ $(echo "$current_dockitems"| wc -l) -ne 7 ]]; then
   echo "Getting dockitems"
   dockitems=$(pass dockitems)
   if [[ "$current_dockitems" != "$dockitems" ]]; then
