@@ -988,7 +988,11 @@ __test_b() {
 }
 
 function randint() {
-  echo $((RANDOM % $1))
+  if [[ $1 -lt 16384 ]]; then
+    echo $((RANDOM % $1+1))
+  else
+    python -c "from random import randint; print(randint(0,$1))"
+  fi
 }
 
 # http://latexcalc.sourceforge.net/
