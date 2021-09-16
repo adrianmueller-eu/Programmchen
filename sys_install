@@ -1064,7 +1064,36 @@ else
 fi
 
 if [[ ! -e "$HOME/Library/Application Support/TextMate/Managed/Bundles/LaTeX.tmbundle" ]]; then
-  letRead "Go to Textmate Preferences and install bundles as you like."
+  # TODO: automate this somehow
+  letRead 'Go to Textmate Preferences and install bundles:
+    - AppleScript
+    - C
+    - CSS
+    - Diff
+    - Git
+    - HTML
+    - Hyperlink Helper
+    - JSON
+    - Java
+    - JavaDoc
+    - JavaScript
+    - LaTeX Font Settings
+    - LaTeX
+    - Mail
+    - Make
+    - Markdown
+    - Math
+    - PHP
+    - Property List
+    - Python
+    - R
+    - Ruby
+    - SQL
+    - Shell Script
+    - Source
+    - Text
+    - XML'
+  #ls "$HOME/Library/Application Support/TextMate/Managed/Bundles/" | sed 's/.tmbundle//' | sed 's/^/    - /' | pbcopy
   open /Applications/TextMate.app/ || die "Please install TextMate and restart the script to continue"
   pressEnterTo
 else
@@ -1169,11 +1198,14 @@ fi
 
 echo 'Last settings:
 ### Settings
+  - Iterm (e.g. secure keyboard entry)
   - System settings
   - Flux setup
   - Firefox settings
   - Safari settings
-  - Application shortcuts
+  - Obsidian theme: "Deep Work"
+  - calibre setup
+  - cisco vpn setup
 
 And last but not least, you might think of installing
   - Adobe Pro (contains key)
