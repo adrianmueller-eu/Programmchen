@@ -152,12 +152,12 @@ zsh-completions
 )
 
 # casks needing the password
-brewcasks=(
+brewcasks_pwd=(
   #background-music	 # replacement for soundflower
   google-earth-pro
   mactex
   miniconda
-  nextcloud
+  #nextcloud # already installed
   #soundflower		# replaced by background-music
   #wine-stable		# currently not working with ARM
   xquartz
@@ -166,7 +166,7 @@ brewcasks=(
 )
 
 # brew casks  # brew list --cask
-brewcasks+=(
+brewcasks=(
 #anaconda
 #android-file-transfer
 #android-sdk
@@ -686,7 +686,7 @@ if [[ ! -e /Applications/nextcloud.app/ ]]; then
   #log in nextcloud
   letRead "Please log in to nextcloud"
   open /Applications/nextcloud.app/
-  pass -c nextcloud # public_profile not yet loaded
+  pass -c nextcloud
   pressEnterTo
 else
   echo "Skipped nextcloud installation"
@@ -707,7 +707,27 @@ if hash mas &> /dev/null && ! mas account &> /dev/null; then
   printf "mas account: %s\n" $(mas account)
 fi
 
-# TODO: move casks with password here
+section "brew cask installs (password required)"
+failedcasks=
+echo "Looking up installed brew casks ..."
+brewcaskls=$(brew ls --cask)
+for cask in ${brewcasks_pwd[@]}; do
+  if [[ -z $(echo "$brewcaskls" | grep -e "$cask") ]]; then
+    echo "Installing cask $cask ..."
+    brew install --cask --force $cask
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $cask"
+      failedcasks+="$cask "
+    fi
+  else
+    echo "Skipped already installed cask: $cask"
+  fi
+done
+if [[ -z "$failedcasks" ]]; then
+  echo "All casks that require password were installed with no obvious problems."
+else
+  echo "Following casks could not be installed: $failedcasks"
+fi
 
 # install chordpro
 #if ! hash chordpro &>/dev/null; then
@@ -727,11 +747,10 @@ fi
 
 echo
 section "brew cask installs"
-#brew cask install
 echo "Some casks might require your password"
-failedcasks=
+#failedcasks= # reuse same variable
 echo "Looking up installed brew casks ..."
-brewcaskls=$(brew ls --cask)
+#brewcaskls=$(brew ls --cask) # already set above
 for cask in ${brewcasks[@]}; do
   if [[ -z $(echo "$brewcaskls" | grep -e "$cask") ]]; then
     echo "Installing cask $cask ..."
