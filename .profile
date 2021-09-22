@@ -23,15 +23,6 @@ if cat ~/.nanorc &>/dev/null | grep -e '$BREW_PREFIX' &>/dev/null; then
   cat "$P"/.nanorc | sed -e "s/\$BREW_PREFIX/${BREW_PREFIX//\//\\/}/" > ~/.nanorc
 fi
 
-function copy_custom_py_packages() {
-  py_usersite=$(python -m site --user-site)
-  [[ -d "$py_usersite" ]] || mkdir -p "$py_usersite"
-
-  [[ -d "$P/BN" ]] &&  cp -a "$P/BN" "$py_usersite/"
-  [[ -d "$P/MDP" ]] && cp -a "$P/MDP" "$py_usersite/"
-  [[ -d "$P/SAT" ]] && cp -a "$P/SAT" "$py_usersite/"
-}
-
 #############################
 ### prefs
 #############################
