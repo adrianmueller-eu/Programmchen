@@ -517,6 +517,14 @@ function se() {
   _pick_and_execute -f "sudo less" "$@"
 }
 
+function v() {
+  _pick_and_execute -f -w vim "$@"
+}
+
+function sv() {
+  _pick_and_execute -f -w "sudo vim" "$@"
+}
+
 function n() {
   _pick_and_execute -f -w nano "$@"
 }
