@@ -8,6 +8,10 @@ module.exports = {
       match: /^https?:\/\/.*aalto.*/,
       browser: "Safari"
     },
+    {
+      match: /^https?:\/\/.*peergrade.io.*/,
+      browser: "Safari"
+    },
   ],
   options: {
     // Hide the finicky icon from the top bar. Default: false
