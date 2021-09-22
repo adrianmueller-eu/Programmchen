@@ -443,12 +443,12 @@ function _pick_and_execute() {
   if [[ ! -t 0 ]]; then
     files=$(cat)
   fi
-  local file_only=false
+  local file_only=false # set -f if the command can only digest files
   if [[ "-f" == $1 ]]; then
     file_only=true
     shift
   fi
-  local writer=false
+  local writer=false # set -w if the command can create new files
   if [[ "-w" == $1 ]]; then
     writer=true
     shift

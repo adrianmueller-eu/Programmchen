@@ -53,7 +53,7 @@ if [[ $0 == "bash" ]]; then
   export SHELL=/bin/bash
 fi
 sources=(
-  "$HOME/.public_profile"
+  "$HOME/.public_profile" # should be first
   "$HOME/.private_profile"
   "$HOME/.fzf.$(basename $SHELL)"
   "$HOME/.config/broot/launcher/bash/br"
