@@ -11,6 +11,7 @@ export JAVA_HOME=$(/usr/libexec/java_home) # -v 1.8
 #export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_152.jdk/Contents/Home
 export ANDROID_SDK_ROOT="$BREW_PREFIX/share/android-sdk"
 export ANDROID_HOME=$ANDROID_SDK_ROOT
+export PYTHONSTARTUP=$HOME/.ipython/profile_default/startup/00.py
 
 export PATH="$BREW_PREFIX/sbin:$PATH"
 export PATH="$BREW_PREFIX/opt/python/libexec/bin:$PATH" # current python version
