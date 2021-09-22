@@ -122,7 +122,7 @@ function cp() {
 }
 alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
 alias psh="ps aux | head"
-alias al='echo "\$\$\n\\\\begin{align}\n\n\\\\end{align}\n\$\$" | pbcopy'
+alias al='echo "\$\$\n\\\\begin{aligned}\n\n\\\\end{aligned}\n\$\$" | pbcopy'
 
 function ping() {
   if [[ -z $1 ]]; then
