@@ -620,9 +620,19 @@ function copy_custom_py_packages() {
 function ln_update() {
   function hardLink() {
     filename=$(basename "$1")
+    fileorig="$P/$filename"
     filedest=$(dirname "$1")
-    echo "Linking $filename to $filedest"
-    ln -f "$P/$filename" "$filedest"
+    if [[ ! -d "$filedest" ]]; then
+      echo "Destination doesn't exists! $filedest"
+      return 1
+    fi
+    if [[ -d "$fileorig" ]]; then
+      echo "Copying $filename to $filedest"
+      cp -a "$fileorig" "$filedest/"
+    else
+      echo "Linking $filename to $filedest"
+      ln -f "$fileorig" "$filedest"
+    fi
   }
 
   if [[ -z ${P+x} ]]; then
@@ -636,13 +646,18 @@ function ln_update() {
   hardLink ~/.bashrc
   hardLink ~/.public_profile
 
-  hardLink ~/.nanorc
-  hardLink ~/.Rprofile
-  hardLink ~/.ipython/profile_default/startup/00.py
+  if [[ -n "$1" ]]; then
+    hardLink ~/.nanorc
+    hardLink ~/.Rprofile
+    hardLink ~/.ipython/profile_default/startup/00.py
 
-  hardLink ~/.finicky.js
-  hardLink ~/.config/mpv/input.conf
-  hardLink ~/.config/mpv/mpv.conf
+    hardLink ~/.finicky.js
+    hardLink ~/.config/mpv/input.conf
+    hardLink ~/.config/mpv/mpv.conf
+
+    hardLink ~"/Library/Services/idiff.workflow"
+    hardLink ~"/Library/Services/same?.workflow"
+  fi
 }
 
 #############################
