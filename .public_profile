@@ -1143,3 +1143,48 @@ function evilinsult() {
   }
   curl -sS https://evilinsult.com/generate_insult.php\?lang\=en\&type\=json | sed 's/.*"insult":"\([^"]*\)".*/\1\n/' | recode html..utf8
 }
+
+function freq() {
+python -c 'A4 = 440
+
+# argv parsing
+from sys import argv
+pitch = argv[1]  # e.g. C2
+tone = pitch[:-1]
+octave = pitch[-1]
+
+tone_name_to_distance = {
+  "C": -9,
+  "C#": -8,
+  "Db": -8,
+  "D": -7,
+  "D#": -6,
+  "Eb": -6,
+  "E": -5,
+  "F": -4,
+  "F#": -3,
+  "Gb": -3,
+  "G": -2,
+  "G#": -1,
+  "Ab": -1,
+  "A": 0,
+  "A#": 1,
+  "Bb": 1,
+  "B": 2,
+  "H": 2
+}
+
+n = int(octave) - 4 + tone_name_to_distance[tone]/12 # distance in octaves
+freq = A4 * 2**n
+print(f"%.4f" % freq)' $1
+}
+
+function guitar() {
+  strings=(E2 A2 D3 G3 H3 E4)
+  for string in $strings; do
+    freqency=$(freq $string)
+    printf "$string"
+    play -n synth sin $freqency >&/dev/null
+    printf "\r\e[K"
+  done
+}
