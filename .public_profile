@@ -1169,8 +1169,12 @@ python -c 'A4 = 440
 # argv parsing
 from sys import argv
 pitch = argv[1]  # e.g. C2
-tone = pitch[:-1]
-octave = pitch[-1]
+try:
+  octave = int(pitch[-2:])
+  tone = pitch[:-2]
+except:
+  octave = int(pitch[-1])
+  tone = pitch[:-1]
 
 tone_name_to_distance = {
   "C": -9,
