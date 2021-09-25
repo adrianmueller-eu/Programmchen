@@ -26,18 +26,18 @@ OUTPUTS=
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | [--cached | -n ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Fetch list of recent videos from YouTube.
 $usage
-        \e[1m-h\e[0m          Displays this message and exits.
-        \e[1m-a\e[0m          Print all results from the first page.
-        \e[1m-o\e[0m          Just opens the generated link (uses \"\e[1mf\e[0m\").
-        \e[1m-d\e[0m          Print some debug logs.
-        \e[4msite\e[0m        Youtube user or channel site to grep videos from.
-        \e[1m--cached\e[0m    Read from cache (only if cache already exists).
-        \e[1m-n\e[0m          Undo option \e[1m--cached\e[0m, i.e. don't read from cache (default).
-        \e[1m-u\e[0m \e[4muser\e[0m     Give a \e[4muser\e[0m name to grep videos from.
-        \e[1m-c\e[0m \e[4mname\e[0m     Give a channel's \e[4mname\e[0m to grep videos from.
-        \e[1m-i\e[0m \e[4mID\e[0m       Give a channel's \e[4mID\e[0m ID to grep videos from.
-        \e[1m-p\e[0m \e[4mID\e[0m       Give a playlist ID. Takes an optional second argument \e[4mname\e[0m for the cache file name.
-        \e[1m-f\e[0m \e[4mfile\e[0m     Give a curl fetch result \e[4mfile\e[0m to grep videos from (for debug, no save).
+        \e[1m-h\e[0m         Displays this message and exits.
+        \e[1m-a\e[0m         Print all results from the first page.
+        \e[1m-o\e[0m         Just opens the generated link (uses \"\e[1mf\e[0m\").
+        \e[1m-d\e[0m         Print some debug logs.
+        \e[4msite\e[0m       Youtube user or channel site to grep videos from.
+        \e[1m--cached\e[0m   Read from cache (only if cache already exists).
+        \e[1m-n\e[0m         Undo option \e[1m--cached\e[0m, i.e. don't read from cache (default).
+        \e[1m-u\e[0m \e[4muser\e[0m    Give a \e[4muser\e[0m name to grep videos from.
+        \e[1m-c\e[0m \e[4mname\e[0m    Give a channel's \e[4mname\e[0m to grep videos from.
+        \e[1m-i\e[0m \e[4mID\e[0m      Give a channel's \e[4mID\e[0m ID to grep videos from.
+        \e[1m-p\e[0m \e[4mID\e[0m      Give a playlist ID. Takes an optional second argument \e[4mname\e[0m for the cache file name.
+        \e[1m-f\e[0m \e[4mfile\e[0m    Give a curl fetch result \e[4mfile\e[0m to grep videos from (for debug, no save).
         \e[4mquery\e[0m       Filters for a query \e[4mquery\e[0m (case insensitive).
 If only \e[4mquery\e[0m given, uses \e[1mf\e[0m to search on YouTube.
 
@@ -78,7 +78,7 @@ while [[ -n $1 ]]; do
     ;;
   -c)
     shift
-    [[ -z "$1" ]] && die "Please give a channel's name  with option -c. See -h for more help."
+    [[ -z "$1" ]] && die "Please give a channel's name with option -c. See -h for more help."
     site="${youtube}/c/${1}/videos"
     RESULTS_FILE="$RESULTS_STORAGE/$1"
     JSON_FILE="$JSON_STORAGE/${1}.json"
@@ -373,7 +373,7 @@ function filterLinks() {
         unset 'DESCRIPTIONS[$idx]'
       fi
     done
-    # rebuild indicies
+    # rebuild indices
     local -a NEW_LINKS
     local -a NEW_DESCRIPTIONS
     for idx in "${!LINKS[@]}"; do
@@ -409,7 +409,7 @@ function askForChoose() {
     [[ -z "$ans" ]] && ans=1
     if [[ $ans =~ ^[0-9]+$ ]]; then
       if [[ $ans -gt 0 && $ans -le ${#DESCRIPTIONS[@]} ]]; then
-        ((ans--)) # decrement to convert from one-based to zero based
+        ((ans--)) # decrement to convert from one-based to zero-based
         local link=${LINKS[${ans}]}
         if [[ -z $DEBUG ]]; then
           f "$link"
@@ -418,7 +418,7 @@ function askForChoose() {
         fi
         [[ $ans -eq 0 ]] && exit 0
       else
-        die "Wrong answer. Integer is zero or too high: $ans."
+        die "Error: Answer must not be zero or larger than ${#DESCRIPTIONS[@]}, but was: $ans."
       fi
     else
       printf "Nothing opened.\n"
@@ -499,7 +499,7 @@ elif [[ -n "$FILE" ]]; then
   filterLinks
   printf "%s" "$OUTPUTS"
 else
-  # since $site is just the first given non-option argument, handle it here as query as well
+  # since $site is just the first given non-option argument, handle it here as part of the query
   query="$site $query"
   if [[ -z $DEBUG ]]; then
     f yt "$query"
