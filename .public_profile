@@ -672,6 +672,25 @@ function ln_update() {
   fi
 }
 
+function find_encoding() {
+  if [[ -z $2 ]]; then
+    echo "Usage: $0 \e[4mtarget_encoding\e[0m \e[4mfile\e[0m"
+    echo "See iconv -l for encodings."
+    return 1
+  fi
+  declare -a encodings=($(iconv -l))
+  local to=$1
+  local file=$2
+  testres=$(iconv -f utf8 -t "$to" "$file" 2>&1)
+  if [[ $? != 0 || -z "$testres" ]]; then
+     echo "$testres"
+     return 1
+  fi
+  for enc in "${encodings[@]}"; do
+    printf "$enc: " && iconv -f "$enc" -t "$to" "$file" 2>&1 && echo
+  done
+}
+
 #############################
 ### media
 #############################
