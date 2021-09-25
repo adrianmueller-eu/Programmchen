@@ -111,7 +111,17 @@ alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
 alias q="qlmanage -p &>/dev/null"
 alias shutup="osascript -e 'Set volume output volume 0'"
 alias apropos="2>/dev/null apropos"
-alias diff="git diff --no-index"
+function diff() {
+  if [[ -z "$2" || -n "$3" ]]; then
+    echo "Please give exactly two arguments!"
+    return 1
+  fi
+  if file -b --mime-type "$1" "$2" | grep "^text" >/dev/null; then
+    gd --no-index "$1" "$2"
+  else
+    command diff "$1" "$2"
+  fi
+}
 alias idiff="/Applications/IntelliJ\ IDEA.app/Contents/MacOS/idea diff"
 function cp() {
   if [[ "$1" == -* ]]; then
