@@ -81,7 +81,7 @@ goal_dir=$(dirname "$goal")
 [[ -n "$2" ]] && multiple=true || multiple=
 
 if [[ -z $SHORT ]]; then
-  if ! cat "$goal" | grep -e '\\cite' -e '\\citep' -e '\\parencite' -e '\\\citet' -e '\\textcite' &>/dev/null; then # -e '\\ref'
+  if ! cat "$goal" | sed 's/^%.*//;s/[^\]%.*//g' | grep -e '\\cite' -e '\\citep' -e '\\parencite' -e '\\\citet' -e '\\textcite' -e '\\ref' &>/dev/null; then
     SHORT=true
   else
     SHORT=false
