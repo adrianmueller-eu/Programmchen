@@ -101,6 +101,7 @@ alias py_full="cat ~/.ipython/profile_default/startup/00.py | sed 's/from tqdm i
 alias ec='echo $?'
 alias rg="rg --hidden --glob '!.git/*'"
 alias g=grep
+alias he=head
 alias hist=history
 alias h="waitnet -s && howdoi"
 alias mvninit="mvn archetype:generate"
@@ -133,6 +134,7 @@ function cp() {
 alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
 alias psh="ps aux | head"
 alias al='echo "\$\$\n\\\\begin{aligned}\n\n\\\\end{aligned}\n\$\$" | pbcopy'
+alias mime='file -I'
 
 function ping() {
   if [[ -z $1 ]]; then
@@ -349,10 +351,10 @@ bs() {
 }
 alias bi="brew info"
 alias bh="brew home"
-alias play="spotify play"
-alias pause="spotify pause"
-alias next="spotify next"
-alias prev="spotify prev"
+#alias play="spotify play"
+#alias pause="spotify pause"
+#alias next="spotify next"
+#alias prev="spotify prev"
 alias show="defaults write com.apple.finder AppleShowAllFiles YES && killall Finder"
 alias hide="defaults write com.apple.finder AppleShowAllFiles NO && killall Finder"
 alias lftp="sudo -s launchctl load -w /System/Library/LaunchDaemons/ftp.plist"
@@ -1042,7 +1044,7 @@ function randint() {
 }
 
 # http://latexcalc.sourceforge.net/
-function lc() {
+function lcalc() {
   local equation
   if [[ ! -t 0 ]]; then
     equation=$(cat)
@@ -1059,6 +1061,7 @@ function lc() {
 	$\end{document}
 	EOF
 }
+alias lc=lcalc
 
 function isprime() {
   if [[ ${#1} -le 17 ]] && (($1 < 18014398509481984)); then # 2^54
@@ -1124,7 +1127,7 @@ function hexflow() {
   t=${1:-100}
   t=$((1.0/t))
   while true; do
-    openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g' | grep --color=always -e "3e\|$"
+    openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g' | command grep --color=always -e "42\|$"
     sleep $t
   done
 }
