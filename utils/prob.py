@@ -1,11 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from math import factorial
+from .utils import *
 
 # converts 1-d data into a pdf, smoothing in [0,1]
-def density(data, plot=True, label=None, smoothing=0.1):
-    bins_c = int(np.ceil(np.sqrt(len(data))))
-    n, bin_edges = np.histogram(data, bins_c, density=True)
-    bin_centers = np.convolve(bin_edges, np.ones(2), 'valid')
+def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=None):
+    if log:
+        bins = logbins(data, scale=2, num=num_bins+1 if num_bins else bins_sqrt(data)+1)
+        n, bin_edges = np.histogram(data, bins=bins, density=True)
+        bin_centers = 10**(moving_avg(np.log10(bin_edges), 2))
+    else:
+        bins = num_bins or bins_sqrt(data)
+        bins += 1
+        n, bin_edges = np.histogram(data, bins=bins, density=True)
+        bin_centers = moving_avg(bin_edges, 2)
+
     if smoothing:
         # https://scipy.github.io/old-wiki/pages/Cookbook/SavitzkyGolay
         def savitzky_golay(y, window_size, order, deriv=0, rate=1):
@@ -23,18 +32,26 @@ def density(data, plot=True, label=None, smoothing=0.1):
             y = np.concatenate((firstvals, y, lastvals))
             return np.convolve(m[::-1], y, mode='valid')
 
-        window = max(2,int(smoothing*bins_c))
+        window = max(2,int(smoothing*len(bin_centers)))
         x, y = bin_centers, savitzky_golay(n, window, min(window-2,3))
         # normalization
-        dx = x[1] - x[0]
+        dx = np.diff(bin_edges)
         y /= np.sum(y*dx)
     else:
         x,y = bin_centers, n
 
     if plot:
+        plt.figure(figsize=(10,5))
         plt.plot(x, y, label=label)
         top = max(plt.gca().get_ylim()[1], 1.05*np.max(y))
         plt.ylim(bottom=0, top=top)
+        ax = plt.gca()
+        ax.set_ylabel("Pdf")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
+        if log:
+            plt.xscale('log')
         if label:
             plt.legend()
 

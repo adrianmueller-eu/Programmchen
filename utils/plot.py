@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import collections
+from .utils import *
 
 def imshow(a, cmap_for_real="hot"):
     from colorsys import hls_to_rgb
@@ -34,17 +36,25 @@ def imshow(a, cmap_for_real="hot"):
         plt.colorbar()
     plt.show()
 
-def hist(data, title="", xlabel="", colored=None, cmap="viridis", save_file=None, bins=None):
+def hist(data, title="", xlabel="", colored=None, cmap="viridis", save_file=None, bins=None, log=False, density=False):
+    # create figure
     if colored:
        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10,5), sharex=True, gridspec_kw={"height_ratios": [10, 1]})
        ax0 = ax[0]
     else:
        fig, ax0 = plt.subplots(figsize=(10,5))
 
+    # bins
+    if log:
+       if not isinstance(bins, collections.Sequence):
+            bins = logbins(data, num=bins)
+       ax0.set_xscale("log")
+    else:
+       bins = bins_sqrt(data)
+    n, bins, _ = ax0.hist(data, bins=bins, density=density)
+
+    # visuals
     ax0.set_title(title)
-    if bins is None:
-        bins = int(np.ceil(np.sqrt(len(data))))
-    ax0.hist(data, bins=bins)
     ax0.set_ylabel("Frequency")
     ax0.spines["top"].set_visible(False)
     ax0.spines["right"].set_visible(False)
@@ -67,6 +77,8 @@ def hist(data, title="", xlabel="", colored=None, cmap="viridis", save_file=None
 
     if save_file:
         plt.savefig(save_file)
+
+    return n, bins
 
 def scatter1d(data, xticks=None, **pltargs):
     fig = plt.figure(figsize=(10,1))
