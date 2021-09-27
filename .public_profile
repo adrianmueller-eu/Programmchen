@@ -44,7 +44,9 @@ alias ga="git add"
 alias a="git add"
 alias glt='git ls-tree -r --name-only "$(git rev-parse --short HEAD)"'
 alias glu='git ls-files --others --exclude-standard'
-alias glf='git log --graph --abbrev-commit --decorate --format=format:'\''%C(red)%h%C(reset) - %C(cyan)%ar (%aD)%C(reset)%C(white)%d%C(reset)%n'\'\''          %s%C(blue)%C(bold) %aN %C(dim)<%aE>%C(reset)'\'' --all'
+alias glf="git log --graph --abbrev-commit --decorate --format=format:'%C(red)%h%C(reset) - %C(cyan)%ar (%aD)%C(reset)%C(white)%d%C(reset)%n          %s%C(blue)%C(bold) %aN %C(dim)<%aE>%C(reset)' --all"
+alias glfs="glf --stat"
+alias glfp="glfs -p"
 alias gup=git_update
 alias grh^="git reset HEAD^"
 alias grh^^="git reset HEAD^^"
