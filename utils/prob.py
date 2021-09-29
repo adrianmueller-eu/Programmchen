@@ -65,3 +65,87 @@ def resample(x, y, sample_size=int(1e6)):
     f = interp1d(y_cs, x)
     u = np.random.uniform(min(y_cs), max(y_cs), sample_size)
     return f(u)
+
+# todo: make instance of scipy.stats.rv_continuous
+class P:
+    def __init__(self, x, y=None):
+        import scipy
+
+        if isinstance(x, scipy.stats._distn_infrastructure.rv_frozen):
+            if x.dist.__module__ == 'scipy.stats._continuous_distns':
+                x = x.rvs(int(1e6))
+                y = None # ignore argument
+            else:
+                raise ValueError("Only continuous functions supported!")
+        if y is None:
+            x, y = density(x)
+        else:
+            x, y = P._normalize(x,y)
+
+        x, y = np.array(x), np.array(y)
+        # pdf
+        self.pdf = scipy.interpolate.interp1d(x, y, fill_value="extrapolate")
+        # cdf
+        dx = np.diff(x)
+        y_centers = moving_avg(y,2)
+        y_cs = np.cumsum(y_centers*dx)
+        x_cs = moving_avg(x,2)
+        self.cdf = scipy.interpolate.interp1d(x_cs, y_cs, fill_value="extrapolate")
+
+    @property
+    def x(self):
+        return self.pdf.x
+
+    @property
+    def y(self):
+        return self.pdf.y
+
+    def __op__(self, other, op):
+        x = np.concatenate([self.x,other.x])
+        x.sort()
+        y = op(x, self.pdf, other.pdf)
+        return P(x,y) # normalizes in constructor
+
+    def __add__(self, other):
+        return self.__op__(other, lambda x, f, g: f(x)+g(x))
+
+    def __sub__(self, other):
+        return self.__op__(other, lambda x, f, g: f(x)-g(x))
+
+    def __mul__(self, other):
+        return self.__op__(other, lambda x, f, g: f(x)*g(x))
+
+    def __truediv__(self, other):
+        return self.__op__(other, lambda x, f, g: f(x)/g(x))
+
+    def __call__(self, x):
+        return self.pdf(x)
+
+    def plot(self, *pltargs, **pltkwargs):
+        plt.plot(self.x, self.y, *pltargs, **pltkwargs)
+
+    def sample(self, size=1):
+        u = np.random.uniform(0, 1, sample_size)
+        return self.cdf(u)
+
+    @property
+    def nbytes(self):
+        n_pdf = self.pdf.x.nbytes
+        n_cdf = self.cdf.x.nbytes
+        return n_pdf*2 + n_cdf*2
+
+    @staticmethod # e.g. b = P.use(lambda p: binom.pmf(44, 274, p))
+    def use(f, start=0, stop=1, size=int(1e4)):
+        x = np.linspace(start, stop, size)
+        y = [f(i) for i in x]
+        return P(x,y) # normalizes in constructor
+
+    @staticmethod
+    def _normalize(x, y):
+        dx = np.diff(x)
+        y_centers = moving_avg(y,2)
+        integral = np.sum(dx*y_centers)
+        if integral == 0 or integral > 1e20 or np.isnan(integral):
+            raise ValueError("Not normalizable!")
+        y /= integral
+        return x, y
