@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CURL=(curl -sS -A 'Firefox/64.0' -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
+CURL=(curl -sS -A 'Firefox/92.0' -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 sites="songtexte.com songlyrics.com musixmatch.com azlyrics.com genius.com plyrics.com"
 #Search with ecosia for (compatibility with special characters and) easier grep
 GOOG_URL='https://www.ecosia.org/search'

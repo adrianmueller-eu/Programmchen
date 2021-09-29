@@ -286,7 +286,7 @@ function fetchPrecipitation() { # wetter.com / usage: $0 $lat $lng
   }
 
   local ans res
-  ans=$(curl -Ss -A 'Firefox/66.0' -H "Accept-Language: en-US" -H "X-Requested-With: XMLHttpRequest" https://www.wetter.com/wetter_aktuell/nowcast_update/ --data-urlencode "lat=$lat" --data-urlencode "lng=$lng") || return $?
+  ans=$(curl -Ss -A 'Firefox/92.0' -H "Accept-Language: en-US" -H "X-Requested-With: XMLHttpRequest" https://www.wetter.com/wetter_aktuell/nowcast_update/ --data-urlencode "lat=$lat" --data-urlencode "lng=$lng") || return $?
   res=$(node -e 'const ans=JSON.parse(process.argv[1]);
     console.log(ans.text)
     function hexToRgb(hex) {
