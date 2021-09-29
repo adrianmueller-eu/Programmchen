@@ -567,6 +567,10 @@ function o() {
   _pick_and_execute open "$@"
 }
 
+function catf() {
+  _pick_and_execute -f cat "$@"
+}
+
 function cdf() {
   local picked__dir=$(fd -t d | grep -v '\.git/' | fzf --query="$1") || return $?
   cd "$picked__dir"
