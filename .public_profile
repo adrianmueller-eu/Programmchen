@@ -201,6 +201,8 @@ function wlan() {
 }
 alias won="wlan on"
 alias woff="wlan off"
+alias blon="blueutil -p 1"
+alias bloff="blueutil -p 0"
 
 alias serve="py -m http.server"
 
