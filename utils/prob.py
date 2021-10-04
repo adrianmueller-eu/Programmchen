@@ -3,6 +3,30 @@ import numpy as np
 from math import factorial
 from .utils import *
 
+def smooth(x, y, smoothing=0.1):
+    # https://scipy.github.io/old-wiki/pages/Cookbook/SavitzkyGolay
+    def savitzky_golay(y, window_size, order, deriv=0, rate=1):
+        if window_size < order + 2:
+            raise TypeError("window_size is too small for the polynomials order")
+        order_range = range(order+1)
+        half_window = (window_size -1) // 2
+        # precompute coefficients
+        b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
+        m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
+        # pad the signal at the extremes with
+        # values taken from the signal itself
+        firstvals = y[0] - np.abs(y[1:half_window+1][::-1] - y[0])
+        lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
+        y = np.concatenate((firstvals, y, lastvals))
+        return np.convolve(m[::-1], y, mode='valid')
+
+    # wilde guesses
+    window = max(2,int(smoothing*len(x)))
+    order = min(window-2,3)
+
+    y = savitzky_golay(y, window, order)
+    return x,y
+
 # converts 1-d data into a pdf, smoothing in [0,1]
 def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=None):
     if log:
@@ -16,24 +40,7 @@ def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=Non
         bin_centers = moving_avg(bin_edges, 2)
 
     if smoothing:
-        # https://scipy.github.io/old-wiki/pages/Cookbook/SavitzkyGolay
-        def savitzky_golay(y, window_size, order, deriv=0, rate=1):
-            if window_size < order + 2:
-                raise TypeError("window_size is too small for the polynomials order")
-            order_range = range(order+1)
-            half_window = (window_size -1) // 2
-            # precompute coefficients
-            b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
-            m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
-            # pad the signal at the extremes with
-            # values taken from the signal itself
-            firstvals = y[0] - np.abs(y[1:half_window+1][::-1] - y[0])
-            lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
-            y = np.concatenate((firstvals, y, lastvals))
-            return np.convolve(m[::-1], y, mode='valid')
-
-        window = max(2,int(smoothing*len(bin_centers)))
-        x, y = bin_centers, savitzky_golay(n, window, min(window-2,3))
+        x, y = smooth(bin_centers, n, smoothing)
         # normalization
         dx = np.diff(bin_edges)
         y /= np.sum(y*dx)
@@ -62,12 +69,20 @@ def resample(x, y, sample_size=int(1e6)):
     dx = x[1] - x[0]
     y_cs = np.cumsum(y*dx)
     from scipy.interpolate import interp1d
-    f = interp1d(y_cs, x)
-    u = np.random.uniform(min(y_cs), max(y_cs), sample_size)
+    f = interp1d(y_cs, x, bounds_error=False, fill_value=0)
+    u = np.random.uniform(0, 1, sample_size)
     return f(u)
 
 # todo: make instance of scipy.stats.rv_continuous
+# todo: save y in log-space
+# todo: enable saving in log-x
+# todo: implement for discrete x (pmf)
+# todo: point_estimate(), quantile(probs)
+# todo: P.find_approximation(), which outputs a belief distribution p(model|data)
+# todo: P.approx_normal(), P.approx_beta(), P.approx_lognormal(), ... (find best hyperparameters automatically)
 class P:
+    smoothing = 0.1
+
     def __init__(self, x, y=None):
         import scipy
 
@@ -78,19 +93,20 @@ class P:
             else:
                 raise ValueError("Only continuous functions supported!")
         if y is None:
-            x, y = density(x)
+            x, y = density(x, smoothing=P.smoothing)
         else:
+            x, y = smooth(x, y, smoothing=P.smoothing)
             x, y = P._normalize(x,y)
 
         x, y = np.array(x), np.array(y)
         # pdf
-        self.pdf = scipy.interpolate.interp1d(x, y, fill_value="extrapolate")
+        self.pdf = scipy.interpolate.interp1d(x, y, bounds_error=False, fill_value=0)
         # cdf
         dx = np.diff(x)
         y_centers = moving_avg(y,2)
         y_cs = np.cumsum(y_centers*dx)
         x_cs = moving_avg(x,2)
-        self.cdf = scipy.interpolate.interp1d(x_cs, y_cs, fill_value="extrapolate")
+        self.cdf = scipy.interpolate.interp1d(x_cs, y_cs, bounds_error=False, fill_value=0)
 
     @property
     def x(self):
