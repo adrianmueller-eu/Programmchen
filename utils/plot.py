@@ -92,3 +92,30 @@ def scatter1d(data, xticks=None, **pltargs):
         ax.set_xticks(xticks)
     fig.tight_layout()
     plt.show()
+
+# coloring for pd.corr() matrix
+def corrColor(corr, threshold=0.6):
+    def highlight(value):
+        if np.isnan(value):
+            bg_color = 'white'
+            color = 'white'
+        elif value < -threshold:
+            bg_color = 'red'
+            color = 'white'
+        elif value > threshold:
+            bg_color = 'green'
+            color = 'white'
+        else:
+            bg_color = 'white'
+            color = 'black'
+        return f"background-color: %s; color: %s" % (bg_color, color)
+
+    corr = corr.where(np.tril(np.ones(corr.shape), -1).astype(bool))
+    return corr.style.applymap(highlight)
+
+# make a list out of a pd.corr() matrix
+def corrList(corr):
+    corr = corr.where(np.triu(np.ones(corr.shape), 1).astype(bool))
+    corr = pd.DataFrame(corr.stack(), columns=["correlation"])
+    corr.index.names = ["feature 1", "feature 2"]
+    return corr
