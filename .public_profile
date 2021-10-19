@@ -24,7 +24,7 @@ alias td="tree -faFhpNd --du"
 alias fd="fd -H"
 alias fdd="fd -t d"
 alias fdf="fd -t f"
-alias fzf="fzf --no-mouse --bind='ctrl-t:toggle-preview' --exit-0 --color=hl:9,hl+:1 --preview=\"if [[ -r {} ]]; then \
+alias fzf="fzf -1 --no-mouse --bind='ctrl-t:toggle-preview' --exit-0 --color=hl:9,hl+:1 --preview=\"if [[ -r {} ]]; then \
   printf '\e[37m'; file {} | tr -d '\n'; printf ' ('; stat -f '%z' {} | tr -d '\n'; printf ' Bytes)'; printf '\e[0m\n'; cat {}; \
 elif [[ -r {-1} ]]; then \
   printf '\e[37m'; file {-1} | tr -d '\n'; printf ' ('; stat -f '%z' {-1} | tr -d '\n'; printf ' Bytes)'; printf '\e[0m\n'; cat {-1}; \
@@ -86,7 +86,7 @@ alias py=python
 alias ipython="python -m IPython"
 alias pip="python -m pip"
 alias ipy=ipython
-alias j="python -m notebook" #guarantee same python version #jupyter-notebook
+alias j="python -m notebook" # guarantee same python version #jupyter-notebook
 alias s="sage -n jupyter"
 alias spip="sage -python -m pip"
 alias ca=conda
