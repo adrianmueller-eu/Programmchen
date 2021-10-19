@@ -12,6 +12,9 @@ Warning: Leave in place!
 # TODO: conda install pips (beware: sklearn -> scikit-learn)
 # TODO: execute /opt/homebrew/opt/fzf/install --all, then ln_update
 # TODO: Unify brew & brew casks
+# TODO: sage -python -m pip install tqdm
+# TODO: copy_custom_py_packages with sage -python and /opt/homebrew/Caskroom/miniconda/base/bin/python
+# TODO: At least manually, go to TextMate settings > Terminal and click "Install"
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
