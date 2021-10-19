@@ -1,7 +1,13 @@
+
 import matplotlib.pyplot as plt
 import numpy as np
 from math import factorial
 from .utils import *
+
+def H(x): # e.g. H(1*[1/2] + 4*[1/8])
+    if abs(np.sum(x) - 1) > 1e-10:
+        raise ValueError("The overall probability must be 1!")
+    return -np.sum([p*np.log2(p) for p in x if p > 0])
 
 def smooth(x, y, smoothing=0.1):
     # https://scipy.github.io/old-wiki/pages/Cookbook/SavitzkyGolay
