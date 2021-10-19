@@ -674,6 +674,7 @@ function ln_update() {
 
   if [[ -n "$1" ]]; then
     hardLink ~/.nanorc
+    hardLink ~/.vimrc
     hardLink ~/.Rprofile
     hardLink ~/.ipython/profile_default/startup/00.py
 
