@@ -65,48 +65,56 @@ def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=Non
     return x, y
 
 # x,y should be an output of "density" above
-def resample(x, y, sample_size=int(1e6)):
-    dx = x[1] - x[0]
-    y_cs = np.cumsum(y*dx)
+def resample(x, y, size=int(1e6)):
     from scipy.interpolate import interp1d
-    f = interp1d(y_cs, x, bounds_error=False, fill_value=0)
-    u = np.random.uniform(0, 1, sample_size)
-    return f(u)
+    dx = np.diff(x)
+    y_centers = moving_avg(y,2)
+    y_cs = np.cumsum(y_centers*dx)
+    invcdf = interp1d(y_cs, x, assume_sorted=True, bounds_error=False, fill_value=(0,1))
+    u = np.random.uniform(0, 1, size)
+    return invcdf(u)
 
 # todo: make instance of scipy.stats.rv_continuous
 # todo: save y in log-space
 # todo: enable saving in log-x
 # todo: implement for discrete x (pmf)
-# todo: point_estimate(), quantile(probs)
 # todo: P.find_approximation(), which outputs a belief distribution p(model|data)
 # todo: P.approx_normal(), P.approx_beta(), P.approx_lognormal(), ... (find best hyperparameters automatically)
+# todo: write tests
 class P:
     smoothing = 0.1
+    resolution = int(1e4)
+    rim = 1e-4
+    resample_size = int(1e6)
 
     def __init__(self, x, y=None):
         import scipy
 
         if isinstance(x, scipy.stats._distn_infrastructure.rv_frozen):
-            if x.dist.__module__ == 'scipy.stats._continuous_distns':
-                x = x.rvs(int(1e6))
-                y = None # ignore argument
+            rv = x
+            if rv.dist.__module__ == 'scipy.stats._continuous_distns':
+                rim_h, rim_l = rv.isf([P.rim, 1-P.rim])
+                x = np.linspace(rim_l, rim_h, P.resolution)
+                y = rv.pdf(x) # normalized and smooth
             else:
                 raise ValueError("Only continuous functions supported!")
-        if y is None:
-            x, y = density(x, smoothing=P.smoothing)
+        elif y is None:
+            x, y = density(x, smoothing=P.smoothing) # smoothing and normalization included
         else:
             x, y = smooth(x, y, smoothing=P.smoothing)
             x, y = P._normalize(x,y)
 
         x, y = np.array(x), np.array(y)
         # pdf
-        self.pdf = scipy.interpolate.interp1d(x, y, bounds_error=False, fill_value=0)
-        # cdf
+        self.pdf = scipy.interpolate.interp1d(x, y, assume_sorted=True, bounds_error=False, fill_value=0)
+        # cdf & inverse cdf
         dx = np.diff(x)
         y_centers = moving_avg(y,2)
         y_cs = np.cumsum(y_centers*dx)
         x_cs = moving_avg(x,2)
-        self.cdf = scipy.interpolate.interp1d(x_cs, y_cs, bounds_error=False, fill_value=0)
+        self.cdf = scipy.interpolate.interp1d(x_cs, y_cs, assume_sorted=True, bounds_error=False, fill_value=(0,1))
+        self.invcdf = scipy.interpolate.interp1d(y_cs, x_cs, assume_sorted=True, fill_value="extrapolate") # todo: bad approximation in the asymptotes
+        self.quantile = self.invcdf # alias
 
     @property
     def x(self):
@@ -137,21 +145,38 @@ class P:
     def __call__(self, x):
         return self.pdf(x)
 
+    def mean(self):
+        return np.average(self.x, weights=self.y)
+
+    def median(self):
+        return self.invcdf(0.5)
+
+    def mode(self):
+        return self.x[np.argmax(self.y)]
+
     def plot(self, *pltargs, **pltkwargs):
         plt.plot(self.x, self.y, *pltargs, **pltkwargs)
 
     def sample(self, size=1):
-        u = np.random.uniform(0, 1, sample_size)
-        return self.cdf(u)
+        u = np.random.uniform(0, 1, size)
+        return self.invcdf(u)
+
+    def resample(self, size=None):
+        if not size:
+            size = P.resample_size
+        return self.sample(size)
 
     @property
     def nbytes(self):
         n_pdf = self.pdf.x.nbytes
         n_cdf = self.cdf.x.nbytes
-        return n_pdf*2 + n_cdf*2
+        n_invcdf = self.invcdf.x.nbytes
+        return n_pdf*2 + n_cdf*2 + n_invcdf*2 # each x and y
 
     @staticmethod # e.g. b = P.use(lambda p: binom.pmf(44, 274, p))
-    def use(f, start=0, stop=1, size=int(1e4)):
+    def use(f, start=0, stop=1, size=None):
+        if not size:
+            size = P.resolution
         x = np.linspace(start, stop, size)
         y = [f(i) for i in x]
         return P(x,y) # normalizes in constructor
@@ -161,7 +186,7 @@ class P:
         dx = np.diff(x)
         y_centers = moving_avg(y,2)
         integral = np.sum(dx*y_centers)
-        if integral == 0 or integral > 1e20 or np.isnan(integral):
-            raise ValueError("Not normalizable!")
-        y /= integral
+        if integral < 1e-20 or integral > 1e20 or np.isnan(integral):
+            raise ValueError(f"Not normalizable! Integral was %s" % integral)
+        y = y/integral # copy
         return x, y
