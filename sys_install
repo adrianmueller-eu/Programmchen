@@ -14,7 +14,6 @@ Warning: Leave in place!
 # TODO: Unify brew & brew casks
 # TODO: sage -python -m pip install tqdm
 # TODO: copy_custom_py_packages with sage -python and /opt/homebrew/Caskroom/miniconda/base/bin/python
-# TODO: At least manually, go to TextMate settings > Terminal and click "Install"
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
