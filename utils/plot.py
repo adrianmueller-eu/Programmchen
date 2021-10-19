@@ -49,7 +49,7 @@ def hist(data, title="", xlabel="", colored=None, cmap="viridis", save_file=None
        if not isinstance(bins, collections.Sequence):
             bins = logbins(data, num=bins)
        ax0.set_xscale("log")
-    else:
+    elif not bins:
        bins = bins_sqrt(data)
     n, bins, _ = ax0.hist(data, bins=bins, density=density)
 
