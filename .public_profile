@@ -142,6 +142,9 @@ alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
 alias psh="ps aux | head"
 alias al='echo "\$\$\n\\\\begin{aligned}\n\n\\\\end{aligned}\n\$\$" | pbcopy'
 alias mime='file -I'
+function bdate() {
+  gdate --date="$1"
+}
 
 function ping() {
   if [[ -z $1 ]]; then
