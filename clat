@@ -89,7 +89,7 @@ if [[ -z $SHORT ]]; then
 fi
 
 if [[ -z $DELETE ]]; then
-  if [[ -e "${goal:0:$((${#goal}-3))}toc" ]]; then
+  if [[ -e "${goal:0:$((${#goal}-3))}aux" ]]; then
     DELETE=false
   else
     DELETE=true
