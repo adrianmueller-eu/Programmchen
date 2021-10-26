@@ -4,14 +4,13 @@ usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s|-l] [-n|-d] [\e[4mfile\e[0m]"
 default_name="main.tex"
 goal=
 SHORT=
-DELETE=
+DELETE=true
 help="Compiles a tex file. Complies multiple times if citation is used, so that literature section is right. Uses pdflatexmkrc if available.
 $usage
 	\e[1m-h\e[0m	Display this message and exit.
 	\e[1m-s\e[0m	Force compile only one time with pdflatex.
 	\e[1m-l\e[0m	Force compile multiple times.
-	\e[1m-n\e[0m	Don't delete auto-generated files.
-	\e[1m-d\e[0m	Force delete auto-generated files.
+	\e[1m-d\e[0m	Debug: Don't delete auto-generated files.
 	\e[4mfile\e[0m	.tex-file to compile (default: $default_name).
 "
 
@@ -33,7 +32,7 @@ function cltex() {
   local -a tokill=(.aux -blx.bib .bbl .bcf .blg .dvi .fdb_latexmk .fls .idx .ilg .ind .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp)
   [[ $SHORT == "false" ]] && tokill+=(.nav .toc)
   for postfix in ${tokill[@]}; do
-    local file="${goal:0:$((${#goal}-4))}$postfix"
+    local file="${goal%.*}$postfix"
     [[ -e "$file" ]] && rm -v "$file" && ((removed++))
   done
   echo "$removed files removed"
@@ -41,7 +40,7 @@ function cltex() {
 
 function open_it() {
   if hash open &>/dev/null; then
-    open "${1:0:$((${#1}-4))}.pdf" || die "Could not open file: $goal"
+    open "${1%.*}.pdf" || die "Could not open file: ${1%.*}"
   fi
   if [[ $DELETE == "true" ]]; then
     cltex "$1"
@@ -60,11 +59,8 @@ while [[ $1 == -* ]]; do
     -l)
       SHORT=false
       ;;
-    -n)
-      DELETE=false
-      ;;
     -d)
-      DELETE=true
+      DELETE=false
       ;;
     --)
       break;
@@ -88,14 +84,6 @@ if [[ -z $SHORT ]]; then
   fi
 fi
 
-if [[ -z $DELETE ]]; then
-  if [[ -e "${goal:0:$((${#goal}-3))}aux" ]]; then
-    DELETE=false
-  else
-    DELETE=true
-  fi
-fi
-
 if [[ -r "$PWD/pdflatexmkrc" ]]; then
   latexmk -pdf -r pdflatexmkrc "$goal" || die
   open_it "$goal"
@@ -107,9 +95,9 @@ elif [[ -n "$goal" ]]; then
   pdflatex -output-directory "$goal_dir" "$goal" || die 'First latex compilation run failed'
   if [[ $SHORT == "false" ]]; then
     if cat "$goal" | grep '^\\printbibliography' >/dev/null; then
-      biber "${goal:0:$((${#goal}-4))}"
+      biber "${goal%.*}"
     else
-      bibtex "${goal:0:$((${#goal}-3))}aux"
+      bibtex "${goal%.*}.aux"
     fi
     pdflatex -output-directory "$goal_dir" "$goal" || die 'Second latex compilation run failed'
     pdflatex -output-directory "$goal_dir" "$goal" || die 'Third latex compilation run failed'
