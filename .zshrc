@@ -5,12 +5,7 @@ export PATH="/opt/homebrew/bin:$PATH"
 export FPATH="$(brew --prefix)/share/zsh/site-functions:$FPATH"
 export FPATH="$(brew --prefix)/share/zsh-completions:$FPATH"
 
-# disable marking untracked files under VCS as dirty
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# see 'man strftime' for details.
+# Command execution time stamp shown in the history command output (see 'man strftime')
 HIST_STAMPS="dd.mm.yyyy"
 
 COMPLETION_WAITING_DOTS="true"
@@ -24,13 +19,9 @@ plugins=(
 
 source "$ZSH/oh-my-zsh.sh"
 
-# User configuration
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# ssh
+# export ARCHFLAGS="-arch x86_64" # compilation flag
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
+# setopt sh_word_split
 
 ENABLE_CORRECTION="true"
 autoload -U +X bashcompinit && bashcompinit
@@ -57,6 +48,8 @@ compdef '_files -g "*.tex"' cltex
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[red]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[yellow]%}*"
+# disable marking untracked files under VCS as dirty
+# DISABLE_UNTRACKED_FILES_DIRTY="true"
 ZSH_THEME_GIT_PROMPT_CLEAN=""
 PROMPT='%(?..%F{red})%*%f %c$(git_prompt_info)%(!.%F{red}.)$%f '
 # see http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
