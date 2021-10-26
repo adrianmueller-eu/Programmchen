@@ -60,6 +60,7 @@ bash
 bash-completion
 bash-snippets
 bfg
+blueutil
 #bro		# Network security monitor
 broot		# New way to see and navigate directory trees
 #chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
@@ -67,11 +68,13 @@ broot		# New way to see and navigate directory trees
 #choose		# reads from stdin, lets user choose one line, prints that line to stdout, exits
 #chordii
 ciphey		# Automatic decryption and decoding tool
+clamav
 cloc
 cmake
 coreutils	# GNU File, Shell, and Text utilities
 curlie		# Easy-to-use curl
 darkstat
+dateutils
 diff-pdf        # needs xquartz
 #docker		# also as cask
 exiftool
@@ -101,7 +104,7 @@ jq		# JSON parser
 #lf		# Terminal visual file manager (I like broot more)
 lorem
 lsd
-#lynx		# Text-based web browser
+lynx		# Text-based web browser
 #mas #already installed
 #maven
 #maven-completion
@@ -120,6 +123,7 @@ openjdk		# also required by nativefier
 pandoc		# markup format conversion
 pastel		# Generate, analyze, convert and manipulate colors
 pdfgrep
+pick
 #plan9port
 pueue		# queuing shell commands
 pup		# HTML parser
@@ -155,7 +159,7 @@ zsh-completions
 
 # casks needing the password
 brewcasks_pwd=(
-  #background-music	 # replacement for soundflower
+  background-music	 # replacement for soundflower
   google-earth-pro
   mactex
   miniconda
@@ -188,7 +192,8 @@ discord
 #docker			# also as formula
 drawio
 #element		# matrix messenger
-#eul 			# clear and simple status monitoring
+eqmac			# system-wide equalizer
+#eul 			# clear and simple system status monitoring (cpu, ram, ...)
 firefox
 flux
 font-hack-nerd-font
@@ -200,7 +205,7 @@ intellij-idea
 iterm2
 j			# J language
 #jamkazam		# Low-latency rehearsing, jamming and performing
-joplin			# Note taking app with nextcloud sync
+#joplin			# Note taking app with nextcloud sync
 #jwzlyrics
 #kodi
 #mathpix-snipping-tool  #nice, but only 50 pics/month
@@ -210,9 +215,11 @@ musescore
 #netron			# Visualizer for neural network, deep learning, and machine learning models
 #notational-velocity
 #nvalt
+obsidian		# replacement for notational-velocity
 #openoffice
 #osxfuse 		#maybe needed for plugging the external drive?
 qlstephen
+#rstudio
 sage
 signal
 shottr			# Screenshot measurement and annotation tool
@@ -260,14 +267,17 @@ masinstalls=(
 pips=(
 numpy
 pandas
-#scipy
-#sklearn
+#scipy # not available for arm
+#sklearn # not available for arm
 notebook # jupyter
-#tensorflow
+#tensorflow # not available for arm
 matplotlib
+#nest-asyncio # stan
 ipywidgets
 ipython
 ipykernel
+tqdm
+#z3-solver
 )
 
 #variables
