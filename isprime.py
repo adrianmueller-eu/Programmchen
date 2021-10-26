@@ -6,7 +6,7 @@ n = int(args[-1])
 from random import randint
 from math import gcd, log
 
-def MillerRabinTest(n, alpha=1e-10):
+def MillerRabinTest(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 55 iterations; < 1e-20 is 67 iterations)
     def getKM(n):
         k = 0
         while n % 2 == 0:
