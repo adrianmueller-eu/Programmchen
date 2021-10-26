@@ -21,4 +21,11 @@ def plot_dendrograms(X, methods=["single", "complete", "average", "centroid", "w
         ax.set_title(method)
         plot_dendrogram(X, method, truncate_after, metric, ax)
 
+def circular_mean(X, mod=2*np.pi):
+    rads = X*2*np.pi/mod
+    av_sin = np.mean(np.sin(rads))
+    av_cos = np.mean(np.cos(rads))
+    av_rads = np.arctan2(av_sin,av_cos) % (2*np.pi) # move the negative half to the other side -> [0;2pi]
+    return av_rads * mod/(2*np.pi)
+
 # todo: data whitening, remove nan, intelligent data cleaning, automatic outlier detection
