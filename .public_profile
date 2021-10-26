@@ -1047,8 +1047,7 @@ function b() {
   [[ -n $debug ]] && printf "python: "
   res=$(python -c "
 from math import *  # https://docs.python.org/3/library/math.html
-
-nCr=comb
+nCr=binom=comb
 nPr=lambda a,b: comb(a,b)*factorial(b)
 print($input)" 2>/dev/null)
   if [[ $? == 0 ]]; then
@@ -1060,7 +1059,15 @@ print($input)" 2>/dev/null)
   # and if it still seems unsolvable, ask sage
   # see https://paulmasson.github.io/sagemath-docs/functions
   [[ -n $debug ]] && printf "sage: "
-  sage -c "nCr=binomial; nPr=lambda a,b: factorial(a)/factorial(a-b); print($input)"
+  sage -c "
+nCr=binom=binomial
+nPr=lambda a,b: factorial(a)/factorial(a-b)
+def Fourier(f, inverse=False):
+  var('xi')
+  inv = 1 if inverse else -1
+  return integral(f*e^(inv*i*2*pi*x*xi),x, -oo, oo)
+
+print($input)"
 }
 
 __test_b() {
@@ -1070,10 +1077,11 @@ __test_b() {
   b '1/sqrt(2)' || return 1 # math functions defined
   b 'log(100) * pi' || return 1 # log is base 10
   b 'ln(e^pi)' || return 1 # variables e and pi defined
-  b 'nCr(24,4)' || return 1 # nCr defined
+  b 'binom(24,4)' || return 1 # nCr, nPr defined
   b 'is_prime(512*2^512 - 1)' || return 1 # sage is working
   b 'is_prime(1000000000000066600000000000001)' || return 1 # because primes are cool
   b 'diff(sin(x) * x^2 + cos(x) * e^(x^2))' || return 1 # sage is working 2
+  b 'Fourier(e^(-x^2))' || return 1 # Fourier defined
   echo "---------------"
   echo "All tests succeeded!"
 }
