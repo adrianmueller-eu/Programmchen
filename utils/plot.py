@@ -3,6 +3,189 @@ import numpy as np
 import collections
 from .utils import *
 
+def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pltargs):
+    # make it a bit intelligent
+    if type(x) == tuple and len(x) == 2:
+        title  = ylabel
+        ylabel = xlabel
+        if type(figsize) == str:
+            xlabel = figsize
+            if type(fmt) == tuple:
+                figsize= fmt
+                if type(y) == str:
+                    fmt = y
+        y = x[1]
+        x = x[0]
+    elif type(y) == str: # skip y
+        title  = ylabel
+        ylabel = xlabel
+        if type(figsize) == str:
+            xlabel = figsize
+            if type(fmt) == tuple:
+                figsize= fmt
+        fmt=y
+        y=None
+    elif type(y) == tuple and len(y) == 2 and type(y[0]) == int and type(y[1]) == int: # skip y and fmt
+        title  = xlabel
+        if type(figsize) == str:
+            ylabel = figsize
+            xlabel = fmt
+        figsize= y
+        fmt=None
+        y=None
+    if type(fmt) == tuple: # skip fmt
+        title  = ylabel
+        ylabel = xlabel
+        if type(figsize) == str:
+            xlabel = figsize
+        figsize= fmt
+        fmt=None
+    elif type(figsize) == str: # skip figsize
+        title  = ylabel
+        ylabel = xlabel
+        xlabel = figsize
+        figsize= (10,8)
+
+    if fmt is None:
+        fmt = "-"
+    # plot
+    plt.figure(figsize=figsize)
+    if fmt == ".":
+        if y is None:
+            y = x
+            x = np.linspace(1,len(x),len(x))
+        plt.scatter(x, y, **pltargs)
+    elif y is not None:
+        plt.plot(x, y, fmt, **pltargs)
+    else:
+        plt.plot(x, fmt, **pltargs)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.gca().spines["top"].set_visible(False)
+    plt.gca().spines["right"].set_visible(False)
+
+# # basics, no log
+# def hist(data, xlabel="", title="", bins=None, density=False):
+#     def bins_sqrt(data):
+#         return int(np.ceil(np.sqrt(len(data))))
+#
+#     plt.figure(figsize=(10,5))
+#
+#     # bins
+#     if not bins:
+#         bins = bins_sqrt(data)
+#     n, bins, _ = plt.hist(data, bins=bins, density=density)
+#
+#     # visuals
+#     plt.title(title)
+#     plt.ylabel("Density" if density else "Frequency")
+#     plt.xlabel(xlabel)
+#     plt.gca().spines["top"].set_visible(False)
+#     plt.gca().spines["right"].set_visible(False)
+#     plt.gca().spines["bottom"].set_visible(False)
+#     return n, bins
+
+# # basics
+# def hist(data, xlabel="", title="", bins=None, log=False, density=False):
+#     import collections
+#
+#     def bins_sqrt(data):
+#         return int(np.ceil(np.sqrt(len(data))))
+#
+#     def logbins(data, start=None, stop=None, num=None, scale=2):
+#         if start is None:
+#             start = min(data)/scale
+#         if stop is None:
+#             stop = max(data)*scale
+#         if num is None:
+#             num = bins_sqrt(data)
+#         return 10**(np.linspace(np.log10(start),np.log10(stop),num))
+#
+#     plt.figure(figsize=(10,5))
+#
+#     # bins
+#     if log:
+#         if not isinstance(bins, collections.Sequence):
+#             bins = logbins(data, num=bins)
+#         plt.xscale("log")
+#     elif not bins:
+#         bins = bins_sqrt(data)
+#     n, bins, _ = plt.hist(data, bins=bins, density=density)
+#
+#     # visuals
+#     plt.title(title)
+#     plt.ylabel("Density" if density else "Frequency")
+#     plt.xlabel(xlabel)
+#     plt.gca().spines["top"].set_visible(False)
+#     plt.gca().spines["right"].set_visible(False)
+#     plt.gca().spines["bottom"].set_visible(False)
+#     return n, bins
+
+def histogram(data, bins=None, log=False, density=False):
+    if log:
+        if not isinstance(bins, collections.Sequence):
+            bins = logbins(data, num=bins)
+    elif not bins:
+        bins = bins_sqrt(data)
+    return np.histogram(data, bins=bins, density=density)
+
+def hist(data, title="", xlabel="", colored=None, cmap="viridis", save_file=None, bins=None, log=False, density=False):
+    # create figure
+    if colored:
+        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10,5), sharex=True, gridspec_kw={"height_ratios": [10, 1]})
+        ax0 = ax[0]
+    else:
+        fig, ax0 = plt.subplots(figsize=(10,5))
+
+    n, bins = histogram(data, bins=bins, log=log, density=density)
+    ax0.hist(bins[:-1], bins, weights=n) # TODO: moving_avg(bins,2) instead of bins[:-1]?
+    if log:
+        ax0.set_xscale("log")
+
+    # visuals
+    ax0.set_title(title)
+    ax0.set_ylabel("Density" if density else "Frequency")
+    ax0.spines["top"].set_visible(False)
+    ax0.spines["right"].set_visible(False)
+    ax0.spines["bottom"].set_visible(False)
+
+    if colored:
+        ax[1].scatter(data, np.zeros(*data.shape), alpha=.5, c=colored, cmap=cmap, marker="|", s=500)
+        # ax[1].axis("off")
+        ax[1].set_xlabel(xlabel)
+        ax[1].set_yticks([])
+        ax[1].spines["top"].set_visible(False)
+        ax[1].spines["right"].set_visible(False)
+        ax[1].spines["left"].set_visible(False)
+
+        norm = plt.Normalize(vmin=min(colored), vmax=max(colored))
+        sm = plt.cm.ScalarMappable(norm=norm, cmap=plt.get_cmap(cmap))
+        cb = plt.colorbar(sm, ax=ax, fraction=0.05, pad=0.01, aspect=50)
+    else:
+        ax0.set_xlabel(xlabel)
+
+    plt.show()
+
+    if save_file:
+        plt.savefig(save_file)
+
+    return n, bins
+
+def scatter1d(data, xticks=None, **pltargs):
+    fig = plt.figure(figsize=(10,1))
+    ax = fig.gca()
+    size = np.array(data).flatten().shape
+    plt.scatter(data, np.zeros(*size), alpha=.5, marker="|", s=500, *pltargs)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.set_yticks([])
+    if xticks:
+        ax.set_xticks(xticks)
+    fig.tight_layout()
+    plt.show()
+
 def imshow(a, cmap_for_real="hot"):
     from colorsys import hls_to_rgb
 
@@ -36,86 +219,74 @@ def imshow(a, cmap_for_real="hot"):
         plt.colorbar()
     plt.show()
 
-def hist(data, title="", xlabel="", colored=None, cmap="viridis", save_file=None, bins=None, log=False, density=False):
-    # create figure
-    if colored:
-       fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10,5), sharex=True, gridspec_kw={"height_ratios": [10, 1]})
-       ax0 = ax[0]
-    else:
-       fig, ax0 = plt.subplots(figsize=(10,5))
-
-    # bins
+def bar(heights, log=False):
+    N = len(heights)
+    plt.figure(figsize=(int(np.ceil(N/2)),6))
+    plt.bar(range(N), height=heights)
+    plt.xticks(range(N))
     if log:
-       if not isinstance(bins, collections.Sequence):
-            bins = logbins(data, num=bins)
-       ax0.set_xscale("log")
-    elif not bins:
-       bins = bins_sqrt(data)
-    n, bins, _ = ax0.hist(data, bins=bins, density=density)
-
-    # visuals
-    ax0.set_title(title)
-    ax0.set_ylabel("Frequency")
-    ax0.spines["top"].set_visible(False)
-    ax0.spines["right"].set_visible(False)
-    ax0.spines["bottom"].set_visible(False)
-
-    if colored:
-        ax[1].scatter(data, np.zeros(*data.shape), alpha=.5, c=colored, cmap=cmap, marker="|", s=500)
-        # ax[1].axis("off")
-        ax[1].set_xlabel(xlabel)
-        ax[1].set_yticks([])
-        ax[1].spines["top"].set_visible(False)
-        ax[1].spines["right"].set_visible(False)
-        ax[1].spines["left"].set_visible(False)
-
-        norm = plt.Normalize(vmin=min(colored), vmax=max(colored))
-        sm = plt.cm.ScalarMappable(norm=norm, cmap=plt.get_cmap(cmap))
-        cb = plt.colorbar(sm, ax=ax, fraction=0.05, pad=0.01, aspect=50)
-
+        plt.yscale("log")
+    plt.tight_layout()
     plt.show()
 
-    if save_file:
-        plt.savefig(save_file)
 
-    return n, bins
-
-def scatter1d(data, xticks=None, **pltargs):
-    fig = plt.figure(figsize=(10,1))
-    ax = fig.gca()
-    plt.scatter(data, np.zeros(*data.shape), alpha=.5, marker="|", s=500, *pltargs)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_visible(False)
-    ax.set_yticks([])
-    if xticks:
-        ax.set_xticks(xticks)
-    fig.tight_layout()
-    plt.show()
+def rgb(r,g=1.0,b=1.0,a=1.0):
+    if type(r) == str:
+        s = r.split("#")[-1]
+        r = int(s[0:2],16)/255
+        g = int(s[2:4],16)/255
+        b = int(s[4:6],16)/255
+        if len(s) > 6:
+            a = int(s[6:8],16)/255
+        else:
+            a = 1
+        return (r,g,b,a)
+    return "#" + "".join('{0:02X}'.format(int(255*v)) for v in [r,g,b,a])
 
 # coloring for pd.corr() matrix
-def corrColor(corr, threshold=0.6):
-    def highlight(value):
-        if np.isnan(value):
-            bg_color = 'white'
-            color = 'white'
-        elif value < -threshold:
-            bg_color = 'red'
-            color = 'white'
-        elif value > threshold:
-            bg_color = 'green'
-            color = 'white'
-        else:
-            bg_color = 'white'
-            color = 'black'
-        return f"background-color: %s; color: %s" % (bg_color, color)
+def pdcolor(corr, threshold=None, minv=-1, maxv=1):
+    if threshold:
+        def highlight(value):
+            if np.isnan(value):
+                bg_color = 'white'
+                color = 'white'
+            elif value < -threshold:
+                bg_color = 'red'
+                color = 'white'
+            elif value > threshold:
+                bg_color = '#000000'
+                color = 'white'
+            else:
+                bg_color = 'white'
+                color = 'black'
+            return f"background-color: %s; color: %s" % (bg_color, color)
+    else:
+        if not maxv:
+            maxv = d.max().max()
+        if not minv:
+            minv = d.min().min()
+        def getRGB(v):
+            scaled = (v - minv)/(maxv-minv) #[0;1]
+            minc = np.array(rgb('#ff0000'))
+            midc = np.array(rgb('#ffffff'))
+            maxc = np.array(rgb('#069900'))
+            if scaled > 0.5:
+                r,g,b,a = v*(maxc-midc) + midc
+            else:
+                r,g,b,a = v*(midc-minc) + minc
+            if 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5: # perceived brightness
+                color = "black"
+            else:
+                color = "white"
+            return rgb(r,g,b,a), color
+
+        def highlight(value):
+            if np.isnan(value):
+                bg_color = 'white'
+                color = 'white'
+            else:
+                bg_color, color = getRGB(value)
+            return f"background-color: %s; color: %s" % (bg_color, color)
 
     corr = corr.where(np.tril(np.ones(corr.shape), -1).astype(bool))
     return corr.style.applymap(highlight)
-
-# make a list out of a pd.corr() matrix
-def corrList(corr):
-    corr = corr.where(np.triu(np.ones(corr.shape), 1).astype(bool))
-    corr = pd.DataFrame(corr.stack(), columns=["correlation"])
-    corr.index.names = ["feature 1", "feature 2"]
-    return corr
