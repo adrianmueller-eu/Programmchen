@@ -102,10 +102,11 @@ done
 #function __git_files () { _wanted files expl 'local files' _files  }
 
 ### Some other interesting things
+# set -- ab bc bd	set positional parameters $1 $2 ...
 ## $
 # $?	last command exit code
-# $-	gives also something i don't now
-# $$	current process number
+# $-	???
+# $$	process ID of the shell
 ## cd
 # cd	go to home dir (~)
 # cd -	go to last dir ($OLDPWD)
@@ -118,6 +119,10 @@ done
 # &>	shorthand for 2>&1>
 # ;&	in case statement: fallthrough
 # ;;&	in case statement: evaluate "through"
+## zsh
+# n	go to n-th last dir, where n \in {1,2,...,9}
+# -	1 (see above)
+# $zsh_eval_context	see https://zsh.sourceforge.io/Doc/Release/Parameters.html#Parameters-Set-By-The-Shell
 ## sed
 # :  # label
 # =  # line_number
@@ -143,6 +148,18 @@ done
 # w  # append_pattern_to_file_now
 # x  # swap_pattern_and_hold
 # y  # transform_chars
+
+# bash is weird: IFS
+IFS="i "
+a1="ii"
+for b in $a1; do echo "b: [$b]"; done
+# []
+# []
+a2="  " # expect: two empty strings
+for b in $a2; do echo "b: [$b]"; done
+a3="i "
+for b in $a3; do echo "b: [$b]"; done
+# []
 
 #############################
 ### git history
