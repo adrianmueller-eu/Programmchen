@@ -9,7 +9,7 @@ def H(x): # e.g. H(1*[1/2] + 4*[1/8])
         raise ValueError("The overall probability must be 1!")
     return -np.sum([p*np.log2(p) for p in x if p > 0])
 
-def smooth(x, y, smoothing=0.1):
+def smooth(y, smoothing=0.1):
     # https://scipy.github.io/old-wiki/pages/Cookbook/SavitzkyGolay
     def savitzky_golay(y, window_size, order, deriv=0, rate=1):
         if window_size < order + 2:
@@ -27,11 +27,9 @@ def smooth(x, y, smoothing=0.1):
         return np.convolve(m[::-1], y, mode='valid')
 
     # wilde guesses
-    window = max(2,int(smoothing*len(x)))
+    window = max(2,int(smoothing*len(y)))
     order = min(window-2,3)
-
-    y = savitzky_golay(y, window, order)
-    return x,y
+    return savitzky_golay(y, window, order)
 
 # converts 1-d data into a pdf, smoothing in [0,1]
 def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=None):
@@ -46,7 +44,7 @@ def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=Non
         bin_centers = moving_avg(bin_edges, 2)
 
     if smoothing:
-        x, y = smooth(bin_centers, n, smoothing)
+        x, y = bin_centers, smooth(n, smoothing)
         # normalization
         dx = np.diff(bin_edges)
         y /= np.sum(y*dx)
@@ -107,7 +105,7 @@ class P:
         elif y is None:
             x, y = density(x, smoothing=P.smoothing) # smoothing and normalization included
         else:
-            x, y = smooth(x, y, smoothing=P.smoothing)
+            y = smooth(y, smoothing=P.smoothing)
             x, y = P._normalize(x,y)
 
         x, y = np.array(x), np.array(y)
