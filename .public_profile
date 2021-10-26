@@ -1022,6 +1022,9 @@ function b() {
   else
     unset 'args[-1]'
   fi
+  if [[ -z "$input" ]]; then
+    input=$(pbpaste)
+  fi
 
   # first utilize bc, if the input doesn't contain letters (to prevent "variables" to be resolved to 0)
   if [[ ! "$input" =~ [[:alpha:]] ]]; then
@@ -1036,7 +1039,7 @@ function b() {
 
   # then go for wcalc
   [[ -n $debug ]] && printf "wcalc: "
-  res=$(wcalc --radians -P$precision "${args[@]}" "$input" 2>&1 | sed 's/\.0*$//') # sed 's/\(\.\d*\)0*$/\1/;s/\.0*$//'
+  res=$(wcalc --radians -P$precision "${args[@]}" -- "$input" 2>&1 | sed 's/\.0*$//') # sed 's/\(\.\d*\)0*$/\1/;s/\.0*$//'
   if [[ "$res" != *error* && "$res" != *Inf* && "$res" != *Undefined* ]]; then
     echo "$res"; return
   else
