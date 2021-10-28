@@ -294,7 +294,7 @@ die() {
   exit 1
 }
 
-c() {
+copy() {
   while [[ -n $1 ]]; do
     origin="$thisdir/$1"
     target="$PWD/$1"
@@ -393,14 +393,14 @@ if [[ -z "$P" ]]; then
   section "Preferences installation"
 
   # install basic shell sources
-  c .bashrc .profile .zshrc
+  copy .bashrc .profile .zshrc
   P=$(cat .profile | grep P= | sed "s/export P=//") # avoid errors by not sourcing .profile
 
   # install the other shit
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed"
   fi
-  c .m2/settings.xml .ssh .password-store .gnupg
+  copy .m2/settings.xml .ssh .password-store .gnupg
   chmod 700 .gnupg .password-store .password-store/* .ssh
   chmod 600 .password-store/**/*.gpg
   chmod 600 .ssh/*
@@ -408,10 +408,10 @@ if [[ -z "$P" ]]; then
 
   # keyboard layout
   pushd "$HOME/Library" &> /dev/null || die "cd to $HOME/Library failed"
-  c "Keyboard Layouts/" # - keyboard layout
+  copy "Keyboard Layouts/" # - keyboard layout
 
   # copy dictionaries
-  c "Dictionaries/"
+  copy "Dictionaries/"
   popd &> /dev/null
 
   # TODO
@@ -860,11 +860,11 @@ fi
 section "Copying of data folders"
 # move remaining files from backup
 pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed"
-c Desktop/ Downloads/ Documents/ Music/ Pictures/
+copy Desktop/ Downloads/ Documents/ Music/ Pictures/
 
 pushd "Library" &> /dev/null || die "cd to $HOME/Library/ failed"
 if [[ ! -d Thunderbird ]]; then
-  c Thunderbird
+  copy Thunderbird
 else
   echo "Skipped copying of Thunderbird to $HOME/Library/"
 fi
@@ -885,7 +885,7 @@ source "$P"/.public_profile && ln_update || die "Linking startup and config file
 
 ### place at ~/Library/Preferences
 if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
-  c Preferences/
+  copy Preferences/
 else
   echo "Skipped copying of content of Preferences to $HOME/Library/Preferences/"
 fi
@@ -901,7 +901,7 @@ fi
 ### place at /Applications
 cd "/Applications" || die "cd to /Applications failed"
 if [[ ! -d Minecraft ]]; then
-  c Minecraft
+  copy Minecraft
 else
   echo "Skipped copying Minecraft to /Applications/"
 fi
