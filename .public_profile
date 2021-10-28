@@ -1159,17 +1159,35 @@ alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo W
 alias lsusers="dscl . list /Users | grep -v ^_"
 
 function caesar() {
-  [[ -z "$2" ]] && echo "Usage: $0 displacement phrase" || python -c "
-alphabet = 'abcdefghijklmnopqrstuvwxyz'
-displacement = $1
-word = '$2'
-for character in word:
-  position = alphabet.find(character)
+  displacement=$1
+  shift
+  input="$*"
+  if [[ -z "$input" ]]; then
+    input=$(cat)
+  elif [[ -f "$input" ]]; then
+    input=$(cat "$input")
+  fi
+  if [[ -z "$displacement" || -z "$input" ]]; then
+    echo "Usage: $0 displacement input"
+    return 1
+  fi
+  python -c "from sys import argv
+alphabetLower = 'abcdefghijklmnopqrstuvwxyz'
+alphabetUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+displacement = $displacement
+text = argv[1]
+for character in text:
+  position = alphabetLower.find(character)
   #print(character, position)
   if position > -1:
-    position = (position + displacement) % len(alphabet)
-    character = alphabet[position]
-  print(character, end='')"
+    position = (position + displacement) % len(alphabetLower)
+    character = alphabetLower[position]
+  else:
+    position = alphabetUpper.find(character)
+    if position > -1:
+      position = (position + displacement) % len(alphabetUpper)
+      character = alphabetUpper[position]
+  print(character, end='')" "$input"
   [ -t 1 ] && echo
 }
 
