@@ -216,7 +216,7 @@ alias yt1080="youtube-dl -f 'bestvideo[height<=1080]+bestaudio/best[height<=1080
 alias y=yt1080
 alias ytul="alias | grep \"='yt \" | grep -v -- --cached | sed 's/alias //g; s/=.*//g'"
 alias be="bielefeld_events"
-funciton curl() {
+function curl() {
   if hash curlie &>/dev/null; then
     curlie --socks5-hostname "$PROXY" "$@"
   else
