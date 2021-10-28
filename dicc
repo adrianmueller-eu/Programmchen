@@ -14,7 +14,7 @@ $usage
 	\e[1m-o\e[0m	Opens the site directly in your default browser.
 	\e[1m-a\e[0m	Show all translations from the first page. Will be shown automatically
 		if there are no exact results available.
-	\e[1m-r\e[0m	Show all entries of all pages. This may take a while.
+	\e[1m-r\e[0m	Print all pages. If there are more than $pagesconfirmfrom, ask how many pages to show.
 	\e[1m-x\e[0m	Show exact matching results only. This is the default.
 	\e[1m-v\e[0m	Verbose a little bit.
 	\e[4mkey\e[0m	The keyword to search translations for.
@@ -25,23 +25,23 @@ Dependency to \"node\".
 #resolve wholepage (-a) and multipage search (-r), open link (-o), verbose (-v) and help (-h)
 while [[ -n "$*" ]]; do
  case $1 in
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;
-  -a)
+  -a|--all)
     all=1
     ;;
-  -o|-l)
+  -o|-l|--open)
     openDirect=1
     ;;
   -r)
     all=2
     ;;
-  -x)
+  -x|--exact)
     all=0
     ;;
-  -v)
+  -v|--verbose)
     verbose=1
     ;;
   -*)
@@ -125,36 +125,29 @@ if [[ $all == 2 ]]; then
   if [[ $pagemax == 1 ]]; then
     all=1
   elif [[ $pagemax -ge $pagesconfirmfrom ]]; then
-    read -p "Do you really want to show all $pagemax pages? (y/n) [n]: " inp
-    case $inp in
-      y*|Y*)
+    printf "How many pages do you want to read out? (2-$pagemax) [$pagesconfirmfrom]: "
+    read ans
+    case $ans in
+      0)
+        exit 0
+        ;;
+      1)
+        all=1
+        ;;
+      [0-9]|[1-9][0-9]|[1-9][0-9][0-9])
+        if [[ $ans -gt $pagemax ]]; then
+          printf "There are only $pagemax pages..."
+          exit 1
+        else
+          pagemax=$ans
+        fi
+        ;;
+      "")
+        all=1
         ;;
       *)
-        printf "How many pages do you want to read out? (0-$pagemax) [1]: "
-        read inp2
-        case $inp2 in
-          0)
-            exit 0
-            ;;
-          1)
-            all=1
-            ;;
-          [0-9]|[1-9][0-9]|[1-9][0-9][0-9])
-            if [[ $inp2 -gt $pagemax ]]; then
-              printf "There are only $pagemax pages..."
-              exit 1
-            else
-              pagemax=$inp2
-            fi
-            ;;
-          "")
-            all=1
-            ;;
-          *)
-            echo "Invalid pagenumber: $inp2"
-            exit 1;
-        esac
-        ;;
+        echo "Invalid pagenumber: $ans"
+        exit 1
     esac
   fi
 fi
