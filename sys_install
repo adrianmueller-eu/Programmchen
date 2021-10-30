@@ -42,6 +42,7 @@ fi
 templates="$C/Org/Vorlagen"
 # resources
 duolingo_icon="$IT/duolingo.jpg" # icon for Duolingo.app
+duolingo_inject="$IT/duolingo.css"
 graphing_icon="$IT/graphing calculator.jpg" # icon for Graphing Calculator.app
 trading_icon="$PROJ/212/js-listener/trading212.png" # icon for Trading212.app
 trading_script="$PROJ/212/js-listener/212listener.js" # listener for Trading212.app
@@ -947,7 +948,7 @@ fi
 if [[ ! -e "/Applications/Duolingo.app" ]]; then
   echo "### Duolingo.app installation"
   echo "Installing Duolingo.app with nativefier from https://www.duolingo.com/learn"
-  nativefier -f -n "Duolingo" -i "$duolingo_icon" https://www.duolingo.com/learn || die "Creating Duolingo.app failed"
+  nativefier -f --inject "$duolingo_inject" -n "Duolingo" -i "$duolingo_icon" https://www.duolingo.com/learn || die "Creating Duolingo.app failed"
   mv "Duolingo-${platform}-${arch}/Duolingo.app" /Applications/ || die "Moving to /Applications/ failed"
   rm -rf "Duolingo-${platform}-${arch}"
   echo
