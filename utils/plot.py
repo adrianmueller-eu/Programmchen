@@ -230,55 +230,64 @@ def bar(heights, log=False):
     plt.show()
 
 
-def rgb(r,g=1.0,b=1.0,a=1.0):
+def rgb(r,g=1.0,b=1.0,a=1.0, as255=False):
+    conv = 1 if as255 else 1/255
     if type(r) == str:
         s = r.split("#")[-1]
-        r = int(s[0:2],16)/255
-        g = int(s[2:4],16)/255
-        b = int(s[4:6],16)/255
+        r = int(s[0:2],16)*conv
+        g = int(s[2:4],16)*conv
+        b = int(s[4:6],16)*conv
         if len(s) > 6:
-            a = int(s[6:8],16)/255
+            a = int(s[6:8],16)*conv
         else:
             a = 1
         return (r,g,b,a)
-    return "#" + "".join('{0:02X}'.format(int(255*v)) for v in [r,g,b,a])
+    return "#" + "".join('{0:02X}'.format(int(v/conv)) for v in [r,g,b,a])
+
+def perceived_brightness(r,g,b,a=None): # a is ignored
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 # coloring for pd.corr() matrix
-def pdcolor(corr, threshold=None, minv=-1, maxv=1):
+# todo: use package "webcolors" (e.g. name to rgb)
+def pdcolor(corr, threshold=None, tril_if_symmetric=True, minv=-1, maxv=1, colors=['#ff0000', '#ffffff', '#069900']):
+    def blackorwhite(r,g=None,b=None):
+        if g is None:
+            r,g,b,a = rgb(r)
+        return 'white' if perceived_brightness(r,b,g) < 0.5 else 'black'
+
     if threshold:
         def highlight(value):
             if np.isnan(value):
                 bg_color = 'white'
                 color = 'white'
             elif value < -threshold:
-                bg_color = 'red'
-                color = 'white'
+                bg_color = colors[0]
+                color = blackorwhite(bg_color)
             elif value > threshold:
-                bg_color = '#000000'
-                color = 'white'
+                bg_color = colors[-1]
+                color = blackorwhite(bg_color)
             else:
                 bg_color = 'white'
                 color = 'black'
             return f"background-color: %s; color: %s" % (bg_color, color)
     else:
+        if len(colors) < 2:
+            raise ValueError("Please give at least two colors!")
         if not maxv:
             maxv = d.max().max()
         if not minv:
             minv = d.min().min()
         def getRGB(v):
-            scaled = (v - minv)/(maxv-minv) #[0;1]
-            minc = np.array(rgb('#ff0000'))
-            midc = np.array(rgb('#ffffff'))
-            maxc = np.array(rgb('#069900'))
-            if scaled > 0.5:
-                r,g,b,a = v*(maxc-midc) + midc
-            else:
-                r,g,b,a = v*(midc-minc) + minc
-            if 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5: # perceived brightness
-                color = "black"
-            else:
-                color = "white"
-            return rgb(r,g,b,a), color
+            scaled = (v - minv)/(maxv - minv) #[0;1]
+            subarea = np.floor(scaled * (len(colors)-1))
+            if subarea >= len(colors):
+                subarea = len(colors)-2
+            if subarea < 0:
+                subarea = 0
+            low_c, high_c = colors[subarea], colors[subarea+1] # get frame
+            low_c, high_c = np.array(rgb(low_c)), np.array(rgb(high_c)) # convert to (r,b,g,a)
+            r,g,b,a = scaled*(high_c-low_c) + low_c
+            return rgb(r,g,b,a), blackorwhite(r,g,b)
 
         def highlight(value):
             if np.isnan(value):
@@ -288,5 +297,6 @@ def pdcolor(corr, threshold=None, minv=-1, maxv=1):
                 bg_color, color = getRGB(value)
             return f"background-color: %s; color: %s" % (bg_color, color)
 
-    corr = corr.where(np.tril(np.ones(corr.shape), -1).astype(bool))
+    if tril_if_symmetric and is_symmetric(corr):
+        corr = corr.where(np.tril(np.ones(corr.shape), -1).astype(bool))
     return corr.style.applymap(highlight)
