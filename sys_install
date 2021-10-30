@@ -884,13 +884,21 @@ fi
 source "$P"/.public_profile && ln_update || die "Linking startup and config files failed"
 
 ### place at ~/Library/Preferences
-if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
+if [[ ! -f Preferences/com.googlecode.iterm2.plist ]]; then
   copy Preferences/
 else
   echo "Skipped copying of content of Preferences to $HOME/Library/Preferences/"
 fi
 popd &> /dev/null || die "cd failed" # HOME again
 
+### place at ~/Library/Application Support
+if [[ ! -n $(ls "Application Support/JetBrains/IntelliJIdea"* 2>/dev/null) ]]; then
+  copy "Application Support/"
+else
+  echo "Skipped copying of content of \"Application Support\" to $HOME/Library/Application Support/"
+fi
+
+### place at HOME
 p2t_conf="$HOME/.p2t"
 if [[ ! -f "$p2t_conf" ]]; then
   echo "Create p2t config file"
@@ -1218,6 +1226,7 @@ echo 'Last settings:
   - Obsidian theme: "Deep Work"
   - calibre setup
   - cisco vpn setup
+  - Exclude Backup stick from Spotlight
 
 And last but not least, you might think of installing
   - Adobe Pro (contains key)

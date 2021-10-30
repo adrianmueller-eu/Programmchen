@@ -129,7 +129,7 @@ function ensureTargetDir() {
       echo "Already exists, but is not a directory: $target/$1"
       rm -i "$target/$1" || die "rm $target/$1 failed"
     fi
-    mkdir "$target/$1" || die "mkdir $target/$1 failed"
+    mkdir -p "$target/$1" || die "mkdir $target/$1 failed"
   fi
 }
 
@@ -151,7 +151,9 @@ case $1 in
   -c)
     pushd "$HOME" &> /dev/null
     overall_size=$(calc_size Cloud Desktop Documents Music Pictures \
-                             Library/Thunderbird/Profiles Library/Dictionaries Library/Preferences/IntelliJIdea*)
+                             Library/Thunderbird/Profiles \
+                             Library/Dictionaries \
+                             Library/Application\ Support/JetBrains/IntelliJIdea* )
     echo "You will need about $overall_size."
     popd &> /dev/null
     exit 0
@@ -242,12 +244,14 @@ ctt "Keyboard Layouts" # - keyboard layout
 ctt "Dictionaries" # Databases for Dictionary.app
 
 ensureTargetDir Preferences
-ctt Preferences/IntelliJIdea* # IntelliJ config folder
 ctt Preferences/com.googlecode.iterm2.plist
 ctt Preferences/com.zipzapmac.Go2Shell.plist
 
 ensureTargetDir Safari
 ctt Safari/Bookmarks.plist
+
+ensureTargetDir "Application Support/JetBrains"
+ctt Application\ Support/JetBrains/IntelliJIdea* # IntelliJ config folder
 
 # TODO: copy whole Firefox Profile folder
 firefox_bookmark="firefox_bookmark.jsonlz4"
