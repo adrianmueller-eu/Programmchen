@@ -9,6 +9,7 @@ def corrList(corr, index_names=["feature 1", "feature 2"]):
     return corr
 
 def plot_dendrogram(X, method="ward", truncate_after=25, metric='euclidean', ax=None):
+    from scipy.cluster.hierarchy import dendrogram, linkage
     Z = linkage(X, metric=metric, method=method)
     dendrogram(Z, truncate_mode='lastp', p=truncate_after, leaf_rotation=90, ax=ax)
 
@@ -16,12 +17,12 @@ def plot_dendrograms(X, methods=["single", "complete", "average", "centroid", "w
     from scipy.cluster.hierarchy import dendrogram, linkage
 
     fig, axes = plt.subplots(len(methods), figsize=(12,6*len(methods)))
-
     for ax, method in zip(axes, methods):
         ax.set_title(method)
         plot_dendrogram(X, method, truncate_after, metric, ax)
 
-def circular_mean(X, mod=2*np.pi):
+# from scipy.stats import circmean
+def circular_mean(X, mod=360):
     rads = X*2*np.pi/mod
     av_sin = np.mean(np.sin(rads))
     av_cos = np.mean(np.cos(rads))
