@@ -645,14 +645,28 @@ function copy_custom_py_packages() { # { -> make $py_usersite available for look
   [[ -d "$P/utils" ]] && cp -a "$P/utils" "$py_usersite/"
 }
 
-function ln_update() {
+function ln_update() (
   function hardLink() {
     filename=$(basename "$1")
     fileorig="$P/$filename"
     filedest=$(dirname "$1")
+    sha=$2 # if set, only copy if filedest is in original state given by sha (sha256sum)
     if [[ ! -d "$filedest" ]]; then
       echo "Destination doesn't exists! $filedest"
       return 1
+    fi
+    if [[ -n "$sha" ]]; then
+      if [[ -e "$1" ]]; then
+        sha_t=$(sha256sum "$1" | awk '{print $1}')
+        # if the destination is already the new file, that's fine
+        if [[ "$sha_t" == $(sha256sum "$fileorig" | awk '{print $1}') ]]; then
+          printf "" # pass
+        # else if target file has changed, preserve changes, but notify user
+        elif [[ "$sha" != "$sha_t" ]]; then
+          echo "Original $1 has changed! See: diff \"$1\" \"$fileorig\""
+          return 1
+        fi
+      fi
     fi
     if [[ -d "$fileorig" ]]; then
       echo "Copying $filename to $filedest"
