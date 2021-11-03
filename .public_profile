@@ -1228,9 +1228,10 @@ pitch = argv[1]  # e.g. C2
 try:
   octave = int(pitch[-2:])
   tone = pitch[:-2]
+  tone = tone[0].upper() + tone[1]
 except:
   octave = int(pitch[-1])
-  tone = pitch[:-1]
+  tone = pitch[:-1].upper()
 
 tone_name_to_distance = {
   "C": -9,
