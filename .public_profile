@@ -4,19 +4,17 @@
 ### ls
 #############################
 unalias l >&/dev/null
-function l() {
-  local ls_command=(lsd -lAF) #='ls -liAFh'
+function l() (
+  ls_command=(lsd -lAF) #='ls -liAFh'
   if [[ ! -t 0 ]]; then
-    tmpIFS=$IFS
     IFS=$'\n'
     for f in $(cat); do
       [[ -f "$f" ]] && "${ls_command[@]}" "$@" "$f"
     done
-    IFS=$tmpIFS
   else
     "${ls_command[@]}" "$@"
   fi
-}
+)
 alias ll=l
 alias la="lsd -A" #="ls -A"
 alias tl="tree -faFhpN --du"
@@ -59,25 +57,25 @@ alias grh^^="git reset HEAD^^"
 alias grh^2="git reset HEAD^2"
 alias gurl="git config --get remote.origin.url | sed 's/\.git//;s~:~/~;s~git@~https://~'"
 
-function c() { # commit
+function c() ( # commit
   git status > /dev/null || return
   if [[ $(git config --show-origin user.email) != file:.git/config* ]]; then
     echo "Please set up user.name and user.email first!"
-    local def_name=$(git config user.name)
+    def_name=$(git config user.name)
     printf "user.name [%s]: " "$def_name"
-    local name; read name
+    read name
     [[ -z $name ]] && name=$def_name
     git config user.name "$name"
 
-    local def_email=$(git config user.email)
+    def_email=$(git config user.email)
     printf "user.email [%s]: " "$def_email"
-    local email; read email
+    read email
     [[ -z $email ]] && email=$def_email
     git config user.email "$email"
   fi
 
   git commit -m "$*"
-}
+)
 
 #############################
 ### python
@@ -155,7 +153,7 @@ function ping() {
   fi
 }
 
-function findDevicesInNetwork() {
+function findDevicesInNetwork() (
   start=${1:-1}
   end=${2:-255}
   ipaddr=$(ipconfig getifaddr en0)
@@ -165,9 +163,9 @@ function findDevicesInNetwork() {
   for i in $(seq $start $end); do
     printf "$pre%d: %s\n" "$i" "$(host 192.168.1.$i)"
   done | g -v NXDOMAIN # filter all unused hosts
-}
+)
 
-function hex2bytes() {
+function hex2bytes() (
   if [[ -t 0 ]]; then
     content=$1
   else
@@ -193,7 +191,7 @@ function hex2bytes() {
   if [[ -n $last_H ]]; then
     printf "%b" "\x${last_H}0"
   fi
-}
+)
 
 #############################
 ### internet
@@ -224,18 +222,16 @@ function curl() {
   fi
 }
 
-function ytu() {
+function ytu() (
   waitnet -s || return
   setopt NO_MONITOR # LOCAL_OPTIONS NO_NOTIFY
-  yts=($(ytul))
   [[ -n "$PROXY" ]] && echo "Using proxy ($PROXY)"
   yts=($(ytul))
   for y in "${yts[@]}"; do
     echo "$y\n$(eval $y)" &
   done
   wait
-  setopt MONITOR
-}
+)
 
 function uriencode() {
   if hash node &>/dev/null; then
@@ -249,12 +245,11 @@ function uridecode() {
   node -e 'console.log(decodeURIComponent(process.argv[1]))' "$*"
 }
 
-function fetch_dwd() { # german weather agency / usage: $0 "state" "city"
+function fetch_dwd() ( # german weather agency / usage: $0 "state" "city"
 # see https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/viewer/gemeinden.js?v=2
-  local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
-  local dwd_url="${dwd_site}warntab_$1_node.html"
+  dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
+  dwd_url="${dwd_site}warntab_$1_node.html"
 
-  local res http_status
   res=$(curl -sSi "$dwd_url") || return $?
   http_status=$(echo "$res" | sed -n '1p')
   case "$http_status" in
@@ -271,30 +266,29 @@ function fetch_dwd() { # german weather agency / usage: $0 "state" "city"
       ;;
   esac
 
-  local enc_location=$(echo "$2" | recode latin1..utf8)
-  local wetterwarnung=$(echo "$res" | sed -n "/<h2 id=\"${enc_location}\"/,/<\/table>/p")
+  enc_location=$(echo "$2" | recode latin1..utf8)
+  wetterwarnung=$(echo "$res" | sed -n "/<h2 id=\"${enc_location}\"/,/<\/table>/p")
   if [[ -n $wetterwarnung ]]; then
     echo $wetterwarnung | tr '\n' ' ' | grep -oE "<h2 id=\"${enc_location}\".*</table>" | sed 's/<thead>.*<\/thead>//' | pup 'text{}' | xargs -L 1 echo
   else
     echo "Keine amtlichen Wetterwarnungen für ${2}."
   fi
-}
+)
 
-function fetch_dwd2() {
+function fetch_dwd2() (
   echo "ERROR: NIY"
   # 1. fetch warnings from https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/json/warnings_gemeinde.json
   # 2. remove "warnWetter.loadWarnings(" and ");"
   # 3. find right polygon for desired city (stuck here)
-}
+)
 
-function fetchPrecipitation() { # wetter.com / usage: $0 $lat $lng
-  local lat=$1 lng=$2
+function fetchPrecipitation() ( # wetter.com / usage: $0 $lat $lng
+  lat=$1 lng=$2
   [[ -z $lat || -z $lng || ! "$lat" =~ ^[0-9]+.[0-9]+$ || ! "$lng" =~ ^[0-9]+.[0-9]+$ ]] && {
     echo "Usage: $0 \e[4mlat\e[0m \e[4mlng\e[0m"
     return 1;
   }
 
-  local ans res
   ans=$(curl -Ss -A 'Firefox/92.0' -H "Accept-Language: en-US" -H "X-Requested-With: XMLHttpRequest" https://www.wetter.com/wetter_aktuell/nowcast_update/ --data-urlencode "lat=$lat" --data-urlencode "lng=$lng") || return $?
   res=$(node -e 'const ans=JSON.parse(process.argv[1]);
     console.log(ans.text)
@@ -315,9 +309,9 @@ function fetchPrecipitation() { # wetter.com / usage: $0 $lat $lng
       console.log("%s\t%s (%s)\\e[0m", e.time, e.precipitation, e.short)
     }' "$ans" | sed 's/<span class="\[ text--blue-dark \]">/\\e[34;1m/g;s/<\/span>/\\e[0m/g')
   echo "$res"
-}
+)
 
-function fetchPrecipitation2() { # Usage: $0 <path on wetter.com>
+function fetchPrecipitation2() ( # Usage: $0 <path on wetter.com>
   local res parsed
   res=$(curl -sS "https://www.wetter.com$1") || return $?
   #echo "$res" | pup '.icon-wind_arrow attr{title}' | sed -n '9,$p' | nl -v $(date +%H) | awk '{print $1 % 24 ":00\t" $2}'
@@ -330,9 +324,9 @@ function fetchPrecipitation2() { # Usage: $0 <path on wetter.com>
       $1=res":00  ";
     print $0
   }' | sed 's/ %/ %/;s/\([0-9] %\)/\1   /;s/\([0-9][0-9] %\)/\1 /' | recode html..latin1
-}
+)
 
-function fetchWind() { # Usage: $0 <path on wetter.com>
+function fetchWind() ( # Usage: $0 <path on wetter.com>
   local res parsed
   res=$(curl -sS "https://www.wetter.com$1") || return $?
   #echo "$res" | pup '.icon-wind_arrow attr{title}' | sed -n '9,$p' | nl -v $(date +%H) | awk '{print $1 % 24 ":00\t" $2}'
@@ -345,21 +339,21 @@ function fetchWind() { # Usage: $0 <path on wetter.com>
       $1=res":00  ";
     print $0
   }' | sed -E 's/([[:alpha:]]) /\1    /;s/([[:alpha:]][[:alpha:]])  /\1 /;s/ Böen/  Böen/g'
-}
+)
 
-function panoptoDownload() { # TODO: seems not to work anymore
+function panoptoDownload() ( # TODO: seems not to work anymore
   if [[ -n $1 && $1 == *Viewer* ]]; then
     youtube-dl "$1"
     return
   fi
   printf "Copy (whole) page html into clipboard"
   read trash
-  local links=$(pbpaste | grep -o 'href="https[^"]*"' | sed 's/"//g;s/href=//g' | grep Viewer | uniq)
+  links=$(pbpaste | grep -o 'href="https[^"]*"' | sed 's/"//g;s/href=//g' | grep Viewer | uniq)
   echo "$links"
   printf "%d links found. Seems right?" $(echo $links | wc -l)
   read trash
   echo "$links" | xargs -L 1 youtube-dl
-}
+)
 
 #############################
 ### applications
@@ -401,8 +395,7 @@ function _pick() {
   local file_only=$1
   shift
 
-  local q_dirname
-  local query
+  local q_dirname query
   local -a fd_args
   if [[ -n "$*" ]]; then
     if [[ -f "$*" && -r "$*" ]]; then
@@ -601,29 +594,29 @@ function filecnt() {
   done | awk '{print $NF"\t"$0}' | sed -E 's/:.*$//g' | sort -nr
 }
 
-function cltex() {
-  local goal=$1
+function cltex() (
+  goal=$1
   [[ -z "$goal" && -e "main.tex" ]] && goal="main.tex"
   if [[ ! -e "$goal" || "$goal" != *.tex ]]; then
     echo "Please give a valid tex file." && return 1
   fi
 
-  local -i removed=0
-  local -a tokill=(-blx.bib .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .idx .ilg .ind .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp) # toc nav are needed
+  declare -i removed=0
+  declare -a tokill=(-blx.bib .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .idx .ilg .ind .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp) # toc nav are needed
   for postfix in ${tokill[@]}; do
-    local file="${goal:0:$((${#goal}-4))}$postfix"
+    file="${goal:0:$((${#goal}-4))}$postfix"
     [[ -e "$file" ]] && rm -v "$file" && ((removed++))
   done
   echo "$removed files removed"
-}
+)
 
-function backup() {
-  local target=$(git config --global custom.backup)
+function backup() (
+  target=$(git config --global custom.backup)
   if [[ -z $target ]]; then
     echo "Please set target first."
     return 1;
   fi
-  local drive=$(echo "$target" | sed 's/^\/Volumes\///;s/\/.*$//')
+  drive=$(echo "$target" | sed 's/^\/Volumes\///;s/\/.*$//')
   echo "Plug in $drive now"
   while [[ -z $(ls /Volumes | grep "$drive") ]]; do
     sleep 1
@@ -640,9 +633,9 @@ function backup() {
   echo
   caffeinate -i "$P"/backup -t "$target"
   unmount
-}
+)
 
-function copy_custom_py_packages() {
+function copy_custom_py_packages() { # { -> make $py_usersite available for lookup
   py_usersite=$(python -m site --user-site)
   [[ -d "$py_usersite" ]] || mkdir -p "$py_usersite"
 
@@ -694,17 +687,17 @@ function ln_update() {
     hardLink ~"/Library/Services/idiff.workflow"
     hardLink ~"/Library/Services/same?.workflow"
   fi
-}
+)
 
-function find_encoding() {
+function find_encoding() (
   if [[ -z $2 ]]; then
     echo "Usage: $0 \e[4mtarget_encoding\e[0m \e[4mfile\e[0m"
     echo "See iconv -l for encodings."
     return 1
   fi
   declare -a encodings=($(iconv -l))
-  local to=$1
-  local file=$2
+  to=$1
+  file=$2
   testres=$(iconv -f utf8 -t "$to" "$file" 2>&1)
   if [[ $? != 0 || -z "$testres" ]]; then
      echo "$testres"
@@ -713,13 +706,13 @@ function find_encoding() {
   for enc in "${encodings[@]}"; do
     printf "$enc: " && iconv -f "$enc" -t "$to" "$file" 2>&1 && echo
   done
-}
+)
 
 #############################
 ### media
 #############################
-function pdfpages() {
-  local QUIET=
+function pdfpages() (
+  QUIET=
   if [[ $1 == -q || $1 == -s ]]; then
     QUIET=true
     shift
@@ -761,7 +754,7 @@ function pdfpages() {
     echo
   fi
   printf "%d pages found in %d files.\n" $(IFS="+"; bc <<< "${pages[*]}") ${#files[@]}
-}
+)
 
 function pdfgrepc() {
   [[ -z "$1" ]] && return 1
@@ -792,11 +785,10 @@ function rmmeta() {
   fi
 }
 
-function imgx() {
-  local divide=$1
+function imgx() (
+  divide=$1
   shift
   local width height size mime
-
   for img in $@; do
     if ! mime=$(file --mime-type -E "$img"); then
       echo "$mime"
@@ -820,12 +812,12 @@ function imgx() {
       printf "%d x %d (%s)\n" $width $height "$size"
     }
   done
-}
+)
 alias img2="imgx 2"
 alias img4="imgx 4"
 
-function ocr() {
-  local imagefile="${@: -1}"
+function ocr() (
+  imagefile="${@: -1}"
   if ! hash convert &>/dev/null; then
     echo "Please make sure that convert (see imagemagick) is in your path!"
     return 1
@@ -834,7 +826,7 @@ function ocr() {
     return 1
   elif [[ -f "$imagefile" ]]; then
     shift -p
-    local res=$(convert "$imagefile" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off - | tesseract "$@" - -)
+    res=$(convert "$imagefile" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off - | tesseract "$@" - -)
     if ! echo "$res" | grep "\w" &>/dev/null; then
       echo "Oh dear, no results! :(" >&2
       echo "Maybe you should try: $0 --psm 11 $imagefile" >&2
@@ -846,10 +838,9 @@ function ocr() {
   else
     tesseract "$@"
   fi
-}
+)
 
-function secinvideo() {
-  local files
+function secinvideo() (
   if [[ -f $1 ]]; then
     for f in $@; do
       files+="$f"$'\0'
@@ -859,9 +850,9 @@ function secinvideo() {
   fi
   secs=$(printf "%s" "$files" | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc)
   sec2time $secs
-}
+)
 
-function _loudnorm() {
+function _loudnorm() (
   local vol peak vol_change res
   vol=$(ffmpeg -hide_banner -i "$1" -af "volumedetect" -vn -sn -dn -f null /dev/null 2>&1 | \grep -o -e "max_volume.*" -e "mean_volume.*") || return $?
   echo "$vol"
@@ -882,7 +873,7 @@ function _loudnorm() {
   fi
   mv "$res" "$1"
   ffmpeg -hide_banner -i "$1" -af "volumedetect" -vn -sn -dn -f null /dev/null 2>&1 | \grep -o -e "max_volume.*" -e "mean_volume.*"
-}
+)
 
 function loudnorm() {
   for f in $@; do
@@ -893,13 +884,13 @@ function loudnorm() {
   done
 }
 
-function vltomp4() {
+function vltomp4() (
   if [[ ! -f $1 ]]; then
     echo "Please give a video file as argument!"
     return 1
   fi
 
-  local resdir="${TMPDIR}results_mp4/"
+  resdir="${TMPDIR}results_mp4/"
   if [[ ! -e "$resdir" ]]; then
     mkdir "$resdir"
   elif [[ ! -d "$resdir" ]]; then
@@ -907,10 +898,10 @@ function vltomp4() {
     return 1
   fi
 
-  local return_value=0
+  return_value=0
   for f in "$@"; do
     [[ -d "$f" ]] && continue
-    local resf=$(basename "$f")
+    resf=$(basename "$f")
     resf=${resf%.*}
     [[ -e "$f" ]] && resf="${resf} converted"
     resf=${resf}.mp4
@@ -920,7 +911,7 @@ function vltomp4() {
     fi
 
     echo "Convert $f to $resf"
-    local res_path="$resdir$resf"
+    res_path="$resdir$resf"
     ffmpeg -hide_banner -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$res_path"
     exit_code=$?
     if [[ $exit_code -ne 0 ]]; then
@@ -938,7 +929,7 @@ function vltomp4() {
   done
   rm -r "$resdir"
   return $return_value
-}
+)
 
 
 #############################
@@ -946,12 +937,11 @@ function vltomp4() {
 #############################
 alias pe="pass edit"
 
-function pm() {
+function pm() (
   [[ -z "$*" ]] && echo "Please give a pass-name for grabbing e-mail address." && return 1;
-  local p_res
   p_res=$(pass "$*") || return $?
 
-  local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^m: ")
+  res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^m: ")
   [[ -z $res ]] && echo "No mail address found for: $*" && return 1
   res=$(echo "$res" | cut -c 4-)
 
@@ -961,14 +951,13 @@ function pm() {
     printf "%s" "$res" | pbcopy
     echo "$res (copied to clipboard)"
   fi
-}
+)
 
-function pu() {
+function pu() (
   [[ -z "$*" ]] && echo "Please give a pass-name for grabbing username." && return 1;
-  local p_res
   p_res=$(pass "$*") || return $?
 
-  local res=$(echo "$p_res" | grep --binary-files=text -m 1 "^u: ")
+  res=$(echo "$p_res" | grep --binary-files=text -m 1 "^u: ")
   if [[ -z $res ]]; then
     res=$(echo "$p_res" | grep --binary-files=text -m 1 "^CID: ")
     if [[ -z $res ]]; then
@@ -986,14 +975,13 @@ function pu() {
     printf "%s" "$res" | pbcopy
     echo "$res (copied to clipboard)"
   fi
-}
+)
 
-function po() {
+function po() (
   [[ -z "$*" ]] && echo "Please give a pass-name for grabbing online login site." && return 1;
-  local p_res
   p_res=$(pass "$*") || return $?
 
-  local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^o: ")
+  res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^o: ")
   [[ -z $res ]] && echo "No online link found for: $*" && return 1
   res=$(echo "$res" | cut -c 4-)
 
@@ -1002,21 +990,21 @@ function po() {
   else
     open "$res"
   fi
-}
+)
 
 #############################
 ### math
 #############################
-function b() {
-  local precision=42
-  local debug=
+function b() (
+  precision=42
+  debug=
 
   if [[ $1 == "-d" ]]; then
     debug=true
     shift
   fi
-  local args=($@)
-  local input=$args[-1]
+  args=($@)
+  input=$args[-1]
   if [[ ! -t 0 ]]; then
     input=$(cat)
   else
@@ -1029,7 +1017,7 @@ function b() {
   # first utilize bc, if the input doesn't contain letters (to prevent "variables" to be resolved to 0)
   if [[ ! "$input" =~ [[:alpha:]] ]]; then
     [[ -n $debug ]] && printf "bc: "
-    local res=$(command bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\\n')
+    res=$(command bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\\n')
     if [[ "$res" != *error* ]]; then # assume success
       echo " = $res"; return
     else
@@ -1071,9 +1059,9 @@ def Fourier(f, inverse=False):
   return integral(f*e^(inv*i*2*pi*x*xi),x, -oo, oo)
 
 print($input)"
-}
+)
 
-__test_b() {
+__test_b() (
   b '1+1' || return 1 # 2
   b '2**1000' || return 1 # scientific output
   b '2^1000' || return 1 # long integer output
@@ -1087,7 +1075,7 @@ __test_b() {
   b 'Fourier(e^(-x^2))' || return 1 # Fourier defined
   echo "---------------"
   echo "All tests succeeded!"
-}
+)
 
 function randint() {
   if [[ $1 -lt 16384 ]]; then
@@ -1098,8 +1086,8 @@ function randint() {
 }
 
 # http://latexcalc.sourceforge.net/
-function lcalc() {
-  local equation
+function lcalc() (
+  equation
   if [[ ! -t 0 ]]; then
     equation=$(cat)
   else
@@ -1114,7 +1102,7 @@ function lcalc() {
 	\answer
 	$\end{document}
 	EOF
-}
+)
 alias lc=lcalc
 
 function isprime() {
@@ -1126,7 +1114,7 @@ function isprime() {
   fi
 }
 
-function sec2time() {
+function sec2time() (
     local sec=$1 min=0 hour=0 day=0
     sec=$(echo $1 | awk '{print int($1+0.5)}')
     if ((sec>59)); then
@@ -1148,7 +1136,7 @@ function sec2time() {
     else
       echo "$sec"s
     fi
-}
+)
 
 
 #############################
@@ -1158,7 +1146,7 @@ alias showUnixTime="$BREW_PREFIX/bin/bash -c 'while true; do printf \"\\r\\e[K\$
 alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
 alias lsusers="dscl . list /Users | grep -v ^_"
 
-function caesar() {
+function caesar() (
   displacement=$1
   shift
   input="$*"
@@ -1189,20 +1177,20 @@ for character in text:
       character = alphabetUpper[position]
   print(character, end='')" "$input"
   [ -t 1 ] && echo
-}
+)
 
 function zombiesAndStuff() {
   ps aux | awk ' $8 !~ /S/ {print $0}' | grep -v "ps aux"
 }
 
-function hexflow() {
+function hexflow() (
   t=${1:-100}
   t=$((1.0/t))
   while true; do
     openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g' | command grep --color=always -e "42\|$"
     sleep $t
   done
-}
+)
 
 function battery() {
   system_profiler SPPowerDataType | grep "Charge [^I]" | awk '{print $NF" %"}' #| awk '{print $NF}' | tr '\n' ' ' | awk '{ print $1 / $2 * 100 "%"}'
