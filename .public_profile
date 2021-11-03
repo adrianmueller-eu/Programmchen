@@ -690,6 +690,7 @@ function ln_update() (
 
   if [[ -n "$1" ]]; then
     hardLink ~/.nanorc
+    hardLink /opt/homebrew/share/nano/markdown.nanorc "1667faf25ca7dd649782e3e724ef01fb01b29dcc423f34be0d67ba0a60f05b1c"
     hardLink ~/.vimrc
     hardLink ~/.Rprofile
     hardLink ~/.ipython/profile_default/startup/00.py
