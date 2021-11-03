@@ -647,8 +647,14 @@ function copy_custom_py_packages() { # { -> make $py_usersite available for look
 
 function ln_update() (
   function hardLink() {
+    if [[ $1 == "-P" ]]; then
+      base=$P
+      shift
+    else
+      base="$P/config"
+    fi
     filename=$(basename "$1")
-    fileorig="$P/$filename"
+    fileorig="$base/$filename"
     filedest=$(dirname "$1")
     sha=$2 # if set, only copy if filedest is in original state given by sha (sha256sum)
     if [[ ! -d "$filedest" ]]; then
@@ -683,17 +689,17 @@ function ln_update() (
     exit 1
   fi
 
-  hardLink ~/.profile
-  hardLink ~/.zshrc
-  hardLink ~/.bashrc
-  hardLink ~/.public_profile
+  hardLink -P ~/.profile
+  hardLink -P ~/.zshrc
+  hardLink -P ~/.bashrc
+  hardLink -P ~/.public_profile
 
   if [[ -n "$1" ]]; then
     hardLink ~/.nanorc
     hardLink /opt/homebrew/share/nano/markdown.nanorc "1667faf25ca7dd649782e3e724ef01fb01b29dcc423f34be0d67ba0a60f05b1c"
     hardLink ~/.vimrc
     hardLink ~/.Rprofile
-    hardLink ~/.ipython/profile_default/startup/00.py
+    hardLink -P ~/.ipython/profile_default/startup/00.py
 
     hardLink ~/.finicky.js
     hardLink ~/.config/mpv/input.conf
