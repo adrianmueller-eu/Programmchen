@@ -1220,18 +1220,29 @@ function evilinsult() {
 }
 
 function freq() {
-python -c 'A4 = 440
-
+python -c '
 # argv parsing
 from sys import argv
-pitch = argv[1]  # e.g. C2
 try:
-  octave = int(pitch[-2:])
-  tone = pitch[:-2]
-  tone = tone[0].upper() + tone[1]
+  A4 = int(argv[1])
+  pitch = argv[2]
 except:
-  octave = int(pitch[-1])
-  tone = pitch[:-1].upper()
+  A4 = 440
+  pitch = argv[1]  # e.g. C2
+
+tone = pitch[0].upper()
+octave = pitch[1:]
+if len(pitch) > 1:
+  if pitch[1] == "#" or pitch[1] == "b":
+    tone += pitch[1]
+    octave = pitch[2:]
+
+if octave:
+  octave = int(octave)
+else:
+  octave = 4 # default octave
+
+print(tone, octave)
 
 tone_name_to_distance = {
   "C": -9,
@@ -1256,7 +1267,7 @@ tone_name_to_distance = {
 
 n = int(octave) - 4 + tone_name_to_distance[tone]/12 # distance in octaves
 freq = A4 * 2**n
-print(f"%.4f" % freq)' $1
+print(f"%.4f" % freq)' $1 $2
 }
 
 function guitar() {
