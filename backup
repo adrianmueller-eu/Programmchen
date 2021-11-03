@@ -78,16 +78,22 @@ calc_size() {
   return $return_code
 }
 
-function rsyncit() {
+rsyncit() {
   rsync $rsync_progress --size-only \
-          --archive --crtimes `# preserve everything, except -H,-A,-X` \
-          --delete --delete-delay `# but delete non-existing files` \
+          --archive --crtimes `# preserve everything, except hard links (-H), ACLs (-A), xattrs (-X)` \
+          --delete --delete-delay `# delete non-existing files, but only after the transfer` \
+          --whole-file `# disable delta comparisons` \
           --filter=':- .gitignore' \
           "$1" "$2"
+  if [[ $1 == 20 ]]; then
+    echo "Backup aborted." >&2
+    sync
+    exit 130 # don't start new tasks on keyboard interrupt
+  fi
   sync # finish reading / writing
 }
 
-function _cp() {
+_cp() {
   src=$1
   dst=$2
 
@@ -108,14 +114,14 @@ function _cp() {
   }
 }
 
-function ctt() { #copy to target
+ctt() { #copy to target
   while [[ -n "$1" ]]; do
     _cp "$PWD/$1" "$target/$1"
     shift
   done
 }
 
-function ctf() { #copy to files
+ctf() { #copy to files
   while [[ -n "$1" ]]; do
     file=$(basename "$1")
     _cp "$PWD/$1" "$target/files/$file"
@@ -123,7 +129,7 @@ function ctf() { #copy to files
   done
 }
 
-function ensureTargetDir() {
+ensureTargetDir() {
   if [[ ! -d "$target/$1" ]]; then
     if [[ -e "$target/$1" ]]; then
       echo "Already exists, but is not a directory: $target/$1"
@@ -133,7 +139,7 @@ function ensureTargetDir() {
   fi
 }
 
-function saveToPass() {
+saveToPass() {
   filename=$(basename "$1")
   echo "Save $filename to pass"
   cat "$1" | pass insert -m "$filename" > /dev/null || die "Copying $filename into pass failed"
