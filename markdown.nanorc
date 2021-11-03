@@ -10,14 +10,14 @@ comment "<!--|-->"
 color magenta "^[ 	]*>.*"
 
 # List-item markers:
-color brightmagenta "^(    |	)* ? ? ?(\*|\+|-|[1-9]+\.)( +|	)"
+color brightmagenta "^(    |	)* ? ? ?(\*|\+|-|[0-9]+\.)( +|	)"
 
 # Emphasis and strong:
 color green "\*[^* 	][^*]*\*|_[^_ 	][^_]*_"
 color brightgreen "\*\*[^*]+\*\*|__[^_]+__"
 
 # Strikethrough:
-color red "~~[^~]+~~"
+color grey "~~[^~]+(~~|$)"
 
 # Line breaks:
 color ,blue "  $"
