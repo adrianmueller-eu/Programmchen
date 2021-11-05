@@ -30,6 +30,14 @@ else \
   echo 'Invalid file name: ' {}; \
 fi\" --preview-window=right" #--preview-window=right:hidden
 
+fdt() (
+  \fd -t f -H --exclude ".git/*" --exec-batch stat -f '%c %N' "{}" \; | sort -nr | \
+  while read f; do
+    sec=$(echo "$f" | cut -d " " -f 1)
+    printf "%s\t%s\n" "$(date -r $sec)" "$(echo "$f" | cut -d " " -f 2-)"
+  done
+)
+
 #############################
 ### git
 #############################
