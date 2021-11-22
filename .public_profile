@@ -259,6 +259,10 @@ function uridecode() {
   node -e 'console.log(decodeURIComponent(process.argv[1]))' "$*"
 }
 
+urldata() {
+  uridecode "${1#*\?}" | tr '&' '\n'
+}
+
 function fetch_dwd() ( # german weather agency / usage: $0 "state" "city"
 # see https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/viewer/gemeinden.js?v=2
   dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
@@ -1056,7 +1060,6 @@ function randint() {
 
 # http://latexcalc.sourceforge.net/
 function lcalc() (
-  equation
   if [[ ! -t 0 ]]; then
     equation=$(cat)
   else
