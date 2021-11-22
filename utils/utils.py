@@ -19,4 +19,7 @@ def logbins(data, start=None, stop=None, num=None, scale=2):
     return 10**(np.linspace(np.log10(start),np.log10(stop),num))
 
 def is_symmetric(a, rtol=1e-05, atol=1e-08):
+    a = np.array(a)
+    if len(a.shape) != 2 or a.shape[0] != a.shape[1]:
+        return False
     return np.allclose(a, a.T, rtol=rtol, atol=atol)
