@@ -20,7 +20,7 @@ export PATH="./node_modules/.bin:$PATH" # nice hack for dev independent node dep
 #export PATH="$JAVA_HOME/bin:$PATH"
 
 if cat ~/.nanorc &>/dev/null | grep -e '$BREW_PREFIX' &>/dev/null; then
-  sed -i -e "s/\$BREW_PREFIX/${BREW_PREFIX//\//\\/}/" ~/.nanorc
+  sed -i "" "s/\$BREW_PREFIX/${BREW_PREFIX//\//\\/}/" ~/.nanorc
 fi
 
 #############################
