@@ -3,6 +3,7 @@ set nowrap
 set nohelp
 set autoindent
 #set indicator #scroll bar
+#set mouse # side effect: scrolling always skips two lines
 
 bind   ^]           cutwordleft         main
 
