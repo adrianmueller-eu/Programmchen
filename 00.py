@@ -7,7 +7,8 @@ except:
     from math import *
 try:
     import scipy
-    from scipy.stats import *
+    from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
+    from scipy.optimize import minimize
 except:
     from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
 import itertools # https://docs.python.org/3/library/itertools.html
