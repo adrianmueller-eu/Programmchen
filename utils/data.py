@@ -30,3 +30,10 @@ def circular_mean(X, mod=360):
     return av_rads * mod/(2*np.pi)
 
 # todo: data whitening, remove nan, intelligent data cleaning, automatic outlier detection
+
+# use with scipy.optimize.minimize and numpy arrays
+def sqloss(f,x,y):
+    def _sqloss(p):
+        res = f(x,*p) - y
+        return res.T @ res
+    return _sqloss
