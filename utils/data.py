@@ -37,3 +37,34 @@ def sqloss(f,x,y):
         res = f(x,*p) - y
         return res.T @ res
     return _sqloss
+
+# # association mining
+# from mlxtend.frequent_patterns import apriori, association_rules
+# res = pd.DataFrame(index=df.index)
+#
+# def s(name, series):
+#     res[name] = series.astype(int)
+#
+# # create binarization here
+# s("class_0", df["class"] == 0)
+#
+# res.head()
+#
+# # find frequent itemsets
+# min_support = 0.1
+# frequent = apriori(res, min_support=min_support, use_colnames=True)
+# # and take a look at them
+# print(len(frequent))
+# frequent.sort_values("support", ascending=False).reset_index(drop=True).head(10)
+#
+# # find rules
+# min_confidence = 0.5
+# rules = association_rules(frequent, metric='confidence', min_threshold=min_confidence)
+#
+# # and look at them
+# # %matplotlib
+# rules.plot("support", "confidence", kind="scatter", c="lift", cmap="viridis",
+#     xlim=(min_support-0.02,1.02), ylim=(min_confidence-0.02,1.02), figsize=(10,6))
+# plt.grid()
+#
+# rules.sort_values("lift", ascending=False).head(10)
