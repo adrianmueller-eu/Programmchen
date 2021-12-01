@@ -1,4 +1,3 @@
-
 import matplotlib.pyplot as plt
 import numpy as np
 from math import factorial
@@ -52,12 +51,13 @@ def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=Non
         x,y = bin_centers, n
 
     if plot:
-        plt.figure(figsize=(10,5))
+        if len(plt.gcf().get_axes()) == 0:
+            plt.figure(figsize=(10,5))
         plt.plot(x, y, label=label)
-        top = max(plt.gca().get_ylim()[1], 1.05*np.max(y))
+        top = max(plt.ylim()[1], 1.05*np.max(y))
         plt.ylim(bottom=0, top=top)
+        plt.ylabel("Pdf")
         ax = plt.gca()
-        ax.set_ylabel("Pdf")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
         ax.spines["bottom"].set_visible(False)

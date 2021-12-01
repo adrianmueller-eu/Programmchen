@@ -49,7 +49,8 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
     if fmt is None:
         fmt = "-"
     # plot
-    plt.figure(figsize=figsize)
+    if len(plt.gcf().get_axes()) == 0:
+        plt.figure(figsize=figsize)
     if fmt == ".":
         if y is None:
             y = x
@@ -59,9 +60,12 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
         plt.plot(x, y, fmt, **pltargs)
     else:
         plt.plot(x, fmt, **pltargs)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylabel:
+        plt.ylabel(ylabel)
+    if title:
+        plt.title(title)
     plt.gca().spines["top"].set_visible(False)
     plt.gca().spines["right"].set_visible(False)
 
