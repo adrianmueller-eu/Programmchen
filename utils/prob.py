@@ -194,3 +194,10 @@ class P:
             raise ValueError(f"Not normalizable! Integral was %s" % integral)
         y = y/integral # copy
         return x, y
+
+
+def calc_pi(N=3):
+     r = 0
+     for n in range(N):
+         r += factorial(4*n)*(1103+26390*n)/(factorial(n)*396**n)**4
+     return 9801/(np.sqrt(8)*r)
