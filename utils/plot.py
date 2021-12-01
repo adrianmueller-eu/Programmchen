@@ -253,12 +253,15 @@ def perceived_brightness(r,g,b,a=None): # a is ignored
 
 # coloring for pd.DateFrame
 # todo: use package "webcolors" (e.g. name to rgb)
-def pdcolor(df, threshold=None, tril_if_symmetric=True, minv=None, maxv=None, colors=['#ff0000', '#ffffff', '#069900']):
+def pdcolor(df, threshold=None, minv=None, maxv=None, colors=['#ff0000', '#ffffff', '#069900'], tril_if_symmetric=True, bi=False):
     def blackorwhite(r,g=None,b=None):
         if g is None:
             r,g,b,a = rgb(r)
         return 'white' if perceived_brightness(r,b,g) < 0.42 else 'black'
 
+    df = df.dropna(thresh=1).T.dropna(thresh=1).T # filter out rows and cols with no data
+    if bi:
+        colors = colors[1:]
     if threshold:
         def highlight(value):
             if np.isnan(value):
@@ -277,21 +280,20 @@ def pdcolor(df, threshold=None, tril_if_symmetric=True, minv=None, maxv=None, co
     else:
         if len(colors) < 2:
             raise ValueError("Please give at least two colors!")
+        if minv is None and maxv is None and len(df.columns) == len(df.index) and (df.columns == df.index).all(): # corr matrix!
+            maxv = 1
+            minv = -1
         if not maxv:
             maxv = df.max().max()
         if not minv:
             minv = df.min().min()
-        if len(df.columns) == len(df.index) and (df.columns == df.index).all() and maxv <= 1 and minv >= -1: # corr matrix!
-            maxv = 1
-            minv = -1
+        if maxv <= minv:
+            raise ValueError(f"Maxv must be higher than minv, but was: %f <= %f" % (maxv, minv))
 
         def getRGB(v):
-            scaled = (v - minv)/(maxv + 1e-10 - minv) * (len(colors)-1) #[0;len(colors)]
+            scaled = (v - minv)/(maxv - minv) * (len(colors)-1)
+            scaled = max(0,min(scaled, len(colors)-1-1e-10)) #[0;len(colors)-1[
             subarea = int(np.floor(scaled))
-            if subarea >= len(colors):
-                subarea = len(colors)-2
-            if subarea < 0:
-                subarea = 0
             low_c, high_c = colors[subarea], colors[subarea+1] # get frame
             low_c, high_c = np.array(rgb(low_c)), np.array(rgb(high_c)) # convert to (r,b,g,a)
             r,g,b,a = (scaled-subarea)*(high_c-low_c) + low_c
@@ -307,4 +309,5 @@ def pdcolor(df, threshold=None, tril_if_symmetric=True, minv=None, maxv=None, co
 
     if tril_if_symmetric and is_symmetric(df):
         df = df.where(np.tril(np.ones(df.shape), -1).astype(bool))
+        df = df.dropna(thresh=1).T.dropna(thresh=1).T
     return df.style.applymap(highlight)
