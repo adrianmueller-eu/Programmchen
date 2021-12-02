@@ -119,6 +119,7 @@ nativefier
 #nbdime		# Jupyter Notebook Diff and Merge tools
 nmap		# Port scanning utility for large networks
 node		# also required by bfg
+ocrmypdf
 openjdk		# also required by nativefier
 #pass #already installed
 pandoc		# markup format conversion
@@ -134,6 +135,7 @@ recode		# Convert character sets
 rename
 ripgrep
 rsync
+sha3sum
 shpotify
 #sic		# Minimal multiplexing IRC client
 sox		# SOund eXchange: audio manipulation (e.g. sound recording tool)
@@ -153,7 +155,7 @@ wiki
 #winetricks
 woff2		# create and convert Web Open Font File (WOFF) files
 #you-get
-youtube-dl
+yt-dlp
 #zeek 		# passive network traffic analyzer
 zsh-completions
 )
@@ -195,12 +197,13 @@ drawio
 #element		# matrix messenger
 eqmac			# system-wide equalizer
 #eul 			# clear and simple system status monitoring (cpu, ram, ...)
+finicky
 firefox
 flux
 font-hack-nerd-font
 #font-times-newer-roman	# slightly wider times font
 geogebra
-#gephi			# Utility to visualize and explore GraphViz graphs
+#gephi			# Utility to visualize and explore graphs
 #graphsketcher		# draw graphs
 intellij-idea
 iterm2
@@ -215,6 +218,7 @@ mpv
 musescore
 #netron			# Visualizer for neural network, deep learning, and machine learning models
 #notational-velocity
+notion
 #nvalt
 obsidian		# replacement for notational-velocity
 #openoffice
@@ -222,8 +226,8 @@ obsidian		# replacement for notational-velocity
 qlstephen
 #rstudio
 sage
-signal
 shottr			# Screenshot measurement and annotation tool
+signal
 #sketch
 skim			# PDF reader and note-taking application
 #skype
@@ -239,7 +243,7 @@ the-unarchiver
 thunderbird
 #tor-browser
 ukelele
-#yippy			# clipboard manager (in beta)
+#yippy			# clipboard manager (in beta) see also: maccy
 )
 
 masinstalls=(
