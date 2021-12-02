@@ -49,7 +49,7 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
     if fmt is None:
         fmt = "-"
     # plot
-    if len(plt.gcf().get_axes()) == 0:
+    if len(plt.get_fignums()) == 0:
         plt.figure(figsize=figsize)
     if fmt == ".":
         if y is None:

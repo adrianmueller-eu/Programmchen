@@ -51,7 +51,7 @@ def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=Non
         x,y = bin_centers, n
 
     if plot:
-        if len(plt.gcf().get_axes()) == 0:
+        if len(plt.get_fignums()) == 0:
             plt.figure(figsize=(10,5))
         plt.plot(x, y, label=label)
         top = max(plt.ylim()[1], 1.05*np.max(y))
