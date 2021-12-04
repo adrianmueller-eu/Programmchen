@@ -251,7 +251,6 @@ ctt "Dictionaries" # Databases for Dictionary.app
 
 ensureTargetDir Preferences
 ctt Preferences/com.googlecode.iterm2.plist
-ctt Preferences/com.zipzapmac.Go2Shell.plist
 
 ensureTargetDir Safari
 ctt Safari/Bookmarks.plist
