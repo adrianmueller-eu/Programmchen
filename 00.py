@@ -19,18 +19,20 @@ import matplotlib.pyplot as plt # https://matplotlib.org/stable/api/_as_gen/matp
 from tqdm import tqdm
 ### options
 # pd.set_option('display.max_rows', 500)
+# pd.set_option('display.max_colwidth', None) # show complete text in df cells
 # pd.set_option("display.precision", 3)
 # np.set_printoptions(precision=3, suppress=True) # suppress == no scientific notation
 # plt.style.use('ggplot') # nicer plots?
-
 
 def bins(data):
     return int(np.ceil(np.sqrt(len(data))))
 
 ### more
+# %lsmagic
+
 # from ipywidgets import interact, FloatSlider, IntText
 # FloatSlider(min=0, max=1, step=0.1, value=1, continuous_update=False)
-# https://ipywidgets.readthedocs.io/en/latest/examples/Widget List.html
+# https://ipywidgets.readthedocs.io/en/latest/examples/Widget%20List.html
 
 # import networkx as nx
 # import tensorflow as tf
