@@ -25,7 +25,7 @@ fi
 # first utilize bc
 # if the input doesn't contain letters (to prevent "variables" to be resolved to 0)
 # and no modulus (doesn't work with scale != 0)
-if [[ ! "$input" =~ [[:alpha:]] && ! "$input" =~ % ]]; then
+if [[ "$input" =~ "base" || ( ! "$input" =~ [[:alpha:]] && ! "$input" =~ % ) ]]; then
   [[ -n $debug ]] && printf "bc: "
   res=$(command bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\\n')
   if [[ "$res" != *error* ]]; then # assume success
