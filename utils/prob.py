@@ -158,8 +158,10 @@ class P:
     def mode(self):
         return self.x[np.argmax(self.y)]
 
-    def plot(self, *pltargs, **pltkwargs):
+    def plot(self, show=False, *pltargs, **pltkwargs):
         plt.plot(self.x, self.y, *pltargs, **pltkwargs)
+        if show:
+            plt.show()
 
     def sample(self, size=1):
         u = np.random.uniform(0, 1, size)
