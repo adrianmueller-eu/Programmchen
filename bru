@@ -1,15 +1,11 @@
 #!/bin/bash
 
 dest="$HOME/brewupdate.log"
-extendedUpgrade=
-usage="\e[1mbru\e[0m [-h|-a]"
+usage="\e[1mbru\e[0m [-h]"
 help="An updater script for homebrew.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
-	\e[1m-a\e[0m	Extended processing.
-Executes the commands: brew update, brew upgrade
-With argument -a additional commands will be executed:
-	brew cask upgrade, brew cleanup, brew doctor, mas upgrade
+Executes the commands: brew update, brew upgrade, brew cleanup, brew doctor
 Logs the results to $dest.
 "
 
@@ -19,9 +15,6 @@ case $1 in
   -h)
     printf "$help"
     exit 0
-    ;;
-  -a)
-    extendedUpgrade=true
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -51,16 +44,13 @@ runCmd() {
 waitnet -s || exit 1
 
 start
-if [[ -n $extendedUpgrade ]]; then
-  echo "*** EXTENDED UPGRADE ***" >> $dest
-fi
+
 runCmd brew update
 runCmd brew upgrade
+runCmd brew cleanup
+runCmd brew doctor
 
-if [[ -n $extendedUpgrade ]]; then
-  runCmd brew cleanup
-  runCmd brew doctor
-#  hash mas &>/dev/null && runCmd mas upgrade
-  softwareupdate --all --install
-fi
+# hash mas &>/dev/null && runCmd mas upgrade
+# softwareupdate --all --install
+
 end
