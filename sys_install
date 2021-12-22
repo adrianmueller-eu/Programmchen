@@ -284,6 +284,16 @@ tqdm
 #z3-solver
 )
 
+conda_base=(
+jupyter
+matplotlib
+notebook # ipython, ipykernel
+pandas
+python=3.9
+scikit-learn #scipy, numpy
+tqdm
+)
+
 #variables
 def_ssid=
 def_password=
@@ -765,7 +775,28 @@ fi
 # no use of pressEnterTo function, die only in severe error cases
 supersection "Full automatic part"
 
-echo
+section "conda installs"
+failedcasks=
+echo "Looking up installed conda installs ..."
+conda_ls=$(conda list | sed -n '4,$p')
+for package in ${conda_base[@]}; do
+  if [[ -z $(echo "$conda_ls" | grep -e "${package%=*}") ]]; then
+    echo "Installing package $package ..."
+    conda install --yes $package
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $package"
+      failedcconda+="$package "
+    fi
+  else
+    echo "Skipped already installed package: $package"
+  fi
+done
+if [[ -z "$failedconda" ]]; then
+  echo "All conda packages were installed with no obvious problems."
+else
+  echo "Following packages could not be installed with conda: $failedconda"
+fi
+
 section "brew cask installs"
 #failedcasks= # reuse same variable
 echo "Looking up installed brew casks ..."
@@ -1220,6 +1251,11 @@ fi
 if [[ -n "$failedpackages" ]]; then
   echo "# Some python packages failed to install. Retry installing them later:"
   echo "pip install $failedpackages"
+  echo
+fi
+if [[ -n "$failedconda" ]]; then
+  echo "# Some conda packages failed to install. Retry installing them later:"
+  echo "conda install $failedconda"
   echo
 fi
 
