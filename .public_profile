@@ -77,7 +77,8 @@ fdSh() {
 #############################
 ### git
 #############################
-alias gst="git status"
+alias gst="git status | sed -n 1,2p | grep -v 'On branch' | grep -v 'Untracked' && git status --short"
+alias gsti="gst --ignored"
 alias ga="git add"
 alias a="git add"
 alias gup=git_update
@@ -91,6 +92,7 @@ alias gshw="PAGER= git show --word-diff=color"
 # ls
 alias glt='git ls-tree -r --name-only "$(git rev-parse --short HEAD)"'
 alias glu='git ls-files --others --exclude-standard'
+alias gli="glu --ignored"
 # log
 alias glf="git log --graph --abbrev-commit --decorate --format=format:'%C(red)%h%C(reset) - %C(cyan)%ar (%aD)%C(reset)%C(white)%d%C(reset)%n          %s%C(blue)%C(bold) %aN %C(dim)<%aE>%C(reset)' --all"
 alias glfs="glf --stat"
