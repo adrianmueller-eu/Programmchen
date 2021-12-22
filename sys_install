@@ -12,7 +12,6 @@ Warning: Leave in place!
 # TODO: conda install pips (beware: sklearn -> scikit-learn)
 # TODO: execute /opt/homebrew/opt/fzf/install --all, then ln_update
 # TODO: Unify brew & brew casks
-# TODO: sage -python -m pip install tqdm
 # TODO: copy_custom_py_packages with sage -python and /opt/homebrew/Caskroom/miniconda/base/bin/python
 ########################################################################################################
 ##### Args parsing
@@ -167,6 +166,7 @@ brewcasks_pwd=(
   mactex
   miniconda
   #nextcloud # already installed
+  sage # no pwd, but user needs to allow execution for installing custom packages
   #soundflower		# replaced by background-music
   #wine-stable		# currently not working with ARM
   xquartz
@@ -225,7 +225,6 @@ obsidian		# replacement for notational-velocity
 #osxfuse 		#maybe needed for plugging the external drive?
 qlstephen
 #rstudio
-sage
 shottr			# Screenshot measurement and annotation tool
 signal
 #sketch
@@ -735,6 +734,9 @@ if [[ -z "$failedcasks" ]]; then
 else
   echo "Following casks could not be installed: $failedcasks"
 fi
+
+# install custom sage packages, user needed for allowing to execute sage first time
+sage -python -m pip install tqdm
 
 # install chordpro
 #if ! hash chordpro &>/dev/null; then
