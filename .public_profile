@@ -1008,6 +1008,10 @@ function vltomp4() (
   return $return_value
 )
 
+pdf2jpg() {
+  convert -density 150 -trim "$1" -quality 100 -sharpen 0x1.0 out.jpg
+}
+
 
 #############################
 ### pass
