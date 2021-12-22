@@ -749,14 +749,14 @@ fi
 sage -python -m pip install tqdm
 
 # install chordpro
-#if ! hash chordpro &>/dev/null; then
-#  section "Chordpro installation"
+if ! hash chordpro &>/dev/null; then
+  section "Chordpro installation"
   #sudo cpan chordpro
-#  sudo cpan install chordpro || die "installing chordpro failed"
-#  echo
-#else
-#  echo "Skipped chordpro installation"
-#fi
+  sudo cpan install chordpro || die "installing chordpro failed"
+  echo
+else
+  echo "Skipped chordpro installation"
+fi
 
 # Java
 if [[ ! -e "$(brew --prefix)/opt/openjdk/libexec/openjdk.jdk" ]]; then
