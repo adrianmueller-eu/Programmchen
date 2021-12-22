@@ -21,14 +21,12 @@ case $1 in
     exit 0
     ;;
   *)
-    mes=$1
-    if [[ -n "$1" ]]; then
-      if [[ -e "$1" ]]; then
-        echo "Commit message: $1"
-        if [[ -t 0 && -t 1 ]]; then
-          printf "Are you sure you want to continue? Press enter: "
-          read trash
-        fi
+    mes=$*
+    if [[ -n "$mes" ]]; then
+      echo "Commit message: $mes"
+      if [[ -t 0 ]]; then
+        printf "Are you sure you want to continue? Press enter: "
+        read trash
       fi
       shift
     fi
@@ -54,7 +52,7 @@ git pull --rebase || exit $?
 
 if [[ -n "$1" ]]; then # if file to commit given
   untracked=$(git ls-files -z --others --exclude-standard | xargs -0 -n 1 printf "%s\n")
-  doubled=$(printf "%s\n" "$@" && git diff --name-only && printf "%s" "$untracked") # stash removes from stage
+  doubled=$(printf "%s\n" "$@" && git diff --name-only && printf "%s" "$untracked") # stash has already cleared the stage
   toCommit=$(printf "%s" "$doubled" | sort | uniq -d)
   if [[ -n "$toCommit" ]]; then
     git add "$@" \
