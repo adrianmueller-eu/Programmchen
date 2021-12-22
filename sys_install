@@ -105,7 +105,7 @@ jq		# JSON parser
 lorem
 lsd
 lynx		# Text-based web browser
-#mas #already installed
+#mas #~~already installed~~ not working
 #maven
 #maven-completion
 monolith	# Saving complete web pages as a single HTML
@@ -709,19 +709,19 @@ else
 fi
 
 # install mas
-if ! hash mas &>/dev/null; then
-  section "mas installation"
-  brew install mas || echo "brew install mas failed"
-else
-  echo "Skipped mas installation"
-fi
+# if ! hash mas &>/dev/null; then
+#   section "mas installation"
+#   brew install mas || echo "brew install mas failed"
+# else
+#   echo "Skipped mas installation"
+# fi
 
-if hash mas &> /dev/null && ! mas account &> /dev/null; then
-  letRead "Please sign in to App Store!"
-  open /System/Applications/App\ Store.app/
-  pressEnterTo
-  printf "mas account: %s\n" $(mas account)
-fi
+#if hash mas &> /dev/null && ! mas account &> /dev/null; then
+#  letRead "Please sign in to App Store!"
+#  open /System/Applications/App\ Store.app/
+#  pressEnterTo
+#  printf "mas account: %s\n" $(mas account)
+#fi
 
 section "brew cask installs (password required)"
 failedcasks=
@@ -820,30 +820,30 @@ else
 fi
 
 #app store
-if hash mas &>/dev/null; then
-  section "App Store apps installation"
-  failedapps=""
-  masls=$(mas list | awk '{print $1}')
-  for app in ${masinstalls[@]}; do
-    if [[ -z $(echo "$masls" | grep -e "$app") ]]; then
-      echo "Installing $app ..."
-      mas install $app
-      if [[ $? -ne 0 ]]; then
-        echo "Failed installing $app $(mas info $app | sed -n 1p)"
-        failedapps+="$app "
-      fi
-    else
-      echo "Skipped already installed app: $app"
-    fi
-  done
-  if [[ -z "$failedapps" ]]; then
-    echo "All apps installed with no obvious problems."
-  else
-    echo "Following apps could not be installed: $failedapps"
-  fi
-else
-  echo "Skipped App Store app installations"
-fi
+# if hash mas &>/dev/null; then
+#   section "App Store apps installation"
+#   failedapps=""
+#   masls=$(mas list | awk '{print $1}')
+#   for app in ${masinstalls[@]}; do
+#     if [[ -z $(echo "$masls" | grep -e "$app") ]]; then
+#       echo "Installing $app ..."
+#       mas install $app
+#       if [[ $? -ne 0 ]]; then
+#         echo "Failed installing $app $(mas info $app | sed -n 1p)"
+#         failedapps+="$app "
+#       fi
+#     else
+#       echo "Skipped already installed app: $app"
+#     fi
+#   done
+#   if [[ -z "$failedapps" ]]; then
+#     echo "All apps installed with no obvious problems."
+#   else
+#     echo "Following apps could not be installed: $failedapps"
+#   fi
+# else
+#   echo "Skipped App Store app installations"
+# fi
 
 # TOOD: move casks without password here
 
