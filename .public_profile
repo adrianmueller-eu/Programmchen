@@ -35,8 +35,44 @@ fdt() (
   while read f; do
     sec=$(echo "$f" | cut -d " " -f 1)
     printf "%s\t%s\n" "$(date -r $sec)" "$(echo "$f" | cut -d " " -f 2-)"
-  done
+  done | less
 )
+
+sizeFormat() {
+  if [[ $1 -ge 100000000000 ]]; then
+    printf "%.0fG" $(echo "scale=1; $1/1000000000" | bc)
+  elif [[ $1 -ge 10000000000 ]]; then
+    printf "%.1fG" $(echo "scale=2; $1/1000000000" | bc)
+  elif [[ $1 -ge 1000000000 ]]; then
+    printf "%.2fG" $(echo "scale=3; $1/1000000000" | bc)
+  elif [[ $1 -ge 100000000 ]]; then
+    printf "%.0fM" $(echo "scale=1; $1/1000000" | bc)
+  elif [[ $1 -ge 10000000 ]]; then
+    printf "%.1fM" $(echo "scale=2; $1/1000000" | bc)
+  elif [[ $1 -ge 1000000 ]]; then
+    printf "%.2fM" $(echo "scale=3; $1/1000000" | bc)
+  elif [[ $1 -ge 100000 ]]; then
+    printf "%.0fK" $(echo "scale=1; $1/1000" | bc)
+  elif [[ $1 -ge 10000 ]]; then
+    printf "%.1fK" $(echo "scale=2; $1/1000" | bc)
+  elif [[ $1 -ge 1000 ]]; then
+    printf "%.2fK" $(echo "scale=3; $1/1000" | bc)
+  else
+    printf "$1B"
+  fi
+}
+
+fdS() {
+  \fd -t f -H --exclude ".git/*" --exec-batch stat -f '%z %N' "{}" | sort -nr | less
+}
+
+fdSh() {
+  \fd -t f -H --exclude ".git/*" --exec-batch stat -f '%z %N' "{}" | sort -nr | \
+  while read f; do
+    bytes=$(echo "$f" | cut -d " " -f 1)
+    printf "%s\t%s\n" "$(sizeFormat $bytes)" "$(echo "$f" | cut -d " " -f 2-)"
+  done | less
+}
 
 #############################
 ### git
