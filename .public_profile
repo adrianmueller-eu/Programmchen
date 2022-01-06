@@ -298,7 +298,8 @@ function uridecode() {
 }
 
 urldata() {
-  uridecode "${1#*\?}" | tr '&' '\n'
+  [[ -n "$1" ]] && uri=$1 || uri=$(pbpaste)
+  uridecode "${uri#*\?}" | tr '&' '\n'
 }
 
 function fetch_dwd() ( # german weather agency / usage: $0 "state" "city"
