@@ -9,7 +9,7 @@ Fast internet connection recommended.
 Warning: Leave in place!
 "
 
-# TODO: conda install pips (beware: sklearn -> scikit-learn)
+# TODO: conda config --add channels conda-forge && conda config --set channel_priority strict, install scikit-optimize
 # TODO: execute /opt/homebrew/opt/fzf/install --all, then ln_update
 # TODO: Unify brew & brew casks
 # TODO: copy_custom_py_packages with sage -python and /opt/homebrew/Caskroom/miniconda/base/bin/python
