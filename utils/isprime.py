@@ -1,12 +1,8 @@
-import sys
-args = sys.argv
-
-n = int(args[-1])
-
 from random import randint
 from math import gcd, log
 
-def MillerRabinTest(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 55 iterations; < 1e-20 is 67 iterations)
+# Miller-Rabin-Test
+def isPrime(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 55 iterations; < 1e-20 is 67 iterations)
     def getKM(n):
         k = 0
         while n % 2 == 0:
@@ -18,9 +14,8 @@ def MillerRabinTest(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 5
     while p > alpha:
         a = randint(2,n-2)
         if gcd(a,n) != 1:
-            print("False")
             #print(n,"is not prime (1)")
-            return
+            return False
         k,m = getKM(n-1)
         b = pow(a, m, n)
         if b == 1:
@@ -33,17 +28,22 @@ def MillerRabinTest(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 5
                 break
             b = b_new
             if i == k:
-                print("False")
                 #print(n,"is not prime (2)")
-                return
+                return False
         if gcd(b+1,n) == 1 or gcd(b+1,n) == n:
             p *= 1/2
         else:
-            print("False")
             #print(n,"is not prime (3)")
-            return
+            return False
 
-    print("True")
+    return True
     #print("%d is prime with alpha=%E (if Carmichael number: alpha=%f)" % (n, p, (3/4)**log(p,1/2)))
 
-MillerRabinTest(n)
+if __name__ == '__main__':
+  import sys
+  args = sys.argv
+  n = int(args[-1])
+  if isPrime(n):
+    print("True")
+  else:
+    print("False")
