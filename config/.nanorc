@@ -5,8 +5,6 @@ set autoindent
 #set indicator #scroll bar
 #set mouse # side effect: scrolling always skips two lines
 
-bind   ^]           cutwordleft         main
-
 # ls -1 $BREW_PREFIX/share/nano/*.nanorc | sed 's/^\//include \//' >> ~/.nanorc
 include $BREW_PREFIX/share/nano/asm.nanorc
 include $BREW_PREFIX/share/nano/autoconf.nanorc
