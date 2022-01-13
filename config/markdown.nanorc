@@ -3,38 +3,65 @@
 ## Original authors:  Ryan Westlund and Benno Schulenberg
 ## License:  GPL version 3 or newer
 
-syntax markdown "\.md$"
-comment "<!--|-->"
+# Merge from nano default + https://github.com/scopatz/nanorc/blob/master/markdown.nanorc
 
-# Quoted:
-color magenta "^[ 	]*>.*"
+syntax "Markdown" "\.(md|mkd|mkdn|markdown)$"
+#comment "<!--|-->" # does this do anything?
 
-# List-item markers:
-color brightmagenta "^(    |	)* ? ? ?(\*|\+|-|[0-9]+\.)( +|	)"
+# Quotes
+color brightblack  start="^>" end="^$"
+color brightblack  "^[[:space:]]*]>.*"
 
-# Emphasis and strong:
-color green "\*[^* 	][^*]*\*|_[^_ 	][^_]*_"
+# List-item markers
+color yellow "^(    |	)* ? ? ?(\*|\+|-|[0-9]+\.)( +|	)"
+#color blue   "^[[:space:]]*[\*+-] |^[[:space:]]*[0-9]+\. "
+
+# Emphasis and strong
+color green "(^|[[:space:]])(_[^ ][^_]*_|\*[^ ][^*]*\*)"
 color brightgreen "\*\*[^*]+\*\*|__[^_]+__"
+#color brightgreen "(^|[[:space:]])(__[^ ][^_]*__|\*\*[^ ][^*]*\*\*)"
 
-# Strikethrough:
+# Strikethrough
 color grey "~~[^~]+(~~|$)"
+#color red "(^|[[:space:]])~~[^ ][^~]*~~"
 
-# Line breaks:
-color ,blue "  $"
+# Trailing spaces
+color ,green "[[:space:]]+$"
 
-# URLs and links:
+# URLs and links
 color brightblue "\[[^]]+\]\([^)]+\)"
-color brightmagenta "!?\[[^]]+\]"
+#color brightmagenta "!?\[[^]]+\]"
+color brightmagenta "\[([^][]|\[[^]]*\])*\]\([^)]+\)"
+color yellow "https?://[^ )>]+"
+# images
+#color  magenta "!\[[^][]*\](\([^)]+\)|\[[^]]+\])"
 
 # Code snippet, indented code, and fenced code:
 color brightcyan "`[^`]+`"
+#color yellow   "`[^`]*`|^ {4}[^-+*].*"
 color brightcyan "^(    |	)+ *([^*+0-9> 	-]|[*+-]\S|[0-9][^.]).*"
-color brightcyan start="```" end="```$"
+color brightcyan start="^```" end="^```$"
+#color yellow start="^```[^$]" end="^```$"
+#color yellow "^```$"
 
 # Headings and the underlining of headings:
-color brightyellow "^#.*"
+color brightyellow "^#{1,6}.*"
 color brightyellow "^(=+|-+)$"
 
-# HTML tags and comments:
-color cyan "<[^>]+>"
-color cyan start="<!--" end="-->"
+# HTML tags and comments
+color cyan "<[^!][^>]+>"
+color grey start="<!--" end="-->"
+color brightblue "\[[^]]+\]"
+
+# horizontal rules
+color brightmagenta "^(---+|===+|___+|\*\*\*+)\s*$"
+
+# Tables (Github extension)
+color cyan ".*[ :]\|[ :].*"
+
+# leading whitespace
+#color black    "^[[:space:]]+"
+
+# misc
+#color magenta   "\(([CcRr]|[Tt][Mm])\)" "\.{3}" "(^|[[:space:]])\-\-($|[[:space:]])"
+
