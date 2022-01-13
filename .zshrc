@@ -15,6 +15,7 @@ plugins=(
   npm
   fd
   conda-zsh-completion
+  fast-syntax-highlighting
 )
 
 source "$ZSH/oh-my-zsh.sh"
