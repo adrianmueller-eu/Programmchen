@@ -421,6 +421,7 @@ bs() {
 }
 alias bi="brew info"
 alias bh="brew home"
+alias J=jconsole
 #alias play="spotify play"
 #alias pause="spotify pause"
 #alias next="spotify next"
