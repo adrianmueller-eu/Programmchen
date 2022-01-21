@@ -74,10 +74,10 @@ done
 
 goal="${1:-$default_name}"
 goal_dir=$(dirname "$goal")
-[[ -n "$2" ]] && multiple=true || multiple=
+[[ -n "$2" ]] && echo "Arguments \"${@:2}\" will be ignored!"
 
 if [[ -z $SHORT ]]; then
-  if ! cat "$goal" | sed 's/^%.*//;s/[^\]%.*//g' | grep -e '\\cite' -e '\\citep' -e '\\parencite' -e '\\\citet' -e '\\textcite' -e '\\ref' &>/dev/null; then
+  if ! cat "$goal" | sed 's/^%.*//;s/[^\]%.*//g' | sed -n '/begin{document}/,$p' | grep -e '\\cite' -e '\\citep' -e '\\parencite' -e '\\\citet' -e '\\textcite' -e '\\ref' &>/dev/null; then
     SHORT=true
   else
     SHORT=false
