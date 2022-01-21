@@ -236,6 +236,7 @@ alias won="wlan on"
 alias woff="wlan off"
 alias blon="blueutil -p 1"
 alias bloff="blueutil -p 0"
+alias off="woff && bloff"
 
 alias serve="py -m http.server"
 
