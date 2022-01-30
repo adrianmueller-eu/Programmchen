@@ -50,6 +50,11 @@ runCmd brew upgrade
 runCmd brew cleanup
 runCmd brew doctor
 
+trash "/Applications/Duolingo.app" &>/dev/null
+trash "/Applications/Graphing Calculator.app" &>/dev/null
+trash "/Applications/Trading212.app" &>/dev/null
+sys_install
+
 # hash mas &>/dev/null && runCmd mas upgrade
 # softwareupdate --all --install
 
