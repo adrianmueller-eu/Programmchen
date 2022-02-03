@@ -1007,16 +1007,16 @@ else
 fi
 
 # create WhatsAppWeb.app with nativefier
-if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
-  echo "### Whatsapp Web.app installation"
-  echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
-  nativefier -f -n "WhatsApp Web" http://web.whatsapp.com/ || die "Creating Whatsapp Web.app failed"
-  mv "WhatsApp Web-${platform}-${arch}/WhatsApp Web.app" /Applications/ || die "Moving to /Applications/ failed"
-  rm -rf "WhatsApp Web-${platform}-${arch}"
-  echo
-else
-  echo "Skipped creation of Whatsapp Web.app with nativefier"
-fi
+#if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
+#  echo "### Whatsapp Web.app installation"
+#  echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
+#  nativefier -f -n "WhatsApp Web" http://web.whatsapp.com/ || die "Creating Whatsapp Web.app failed"
+#  mv "WhatsApp Web-${platform}-${arch}/WhatsApp Web.app" /Applications/ || die "Moving to /Applications/ failed"
+#  rm -rf "WhatsApp Web-${platform}-${arch}"
+#  echo
+#else
+#  echo "Skipped creation of Whatsapp Web.app with nativefier"
+#fi
 
 # create Trading212.app with nativefier
 if [[ ! -e "/Applications/Trading212.app" ]]; then
