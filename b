@@ -28,7 +28,7 @@ fi
 if [[ "$input" =~ "base" || ( ! "$input" =~ [[:alpha:]] && ! "$input" =~ % ) ]]; then
   [[ -n $debug ]] && printf "bc: "
   res=$(command bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\\n')
-  if [[ "$res" != *error* ]]; then # assume success
+  if [[ "$res" != *error* && "$res" != *"Runtime warning"* ]]; then # assume success
     echo " = $res"; return
   else
     [[ -n $debug ]] && echo "Error! [$res]"
