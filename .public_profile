@@ -1248,7 +1248,7 @@ if octave:
 else:
   octave = 4 # default octave
 
-print(tone, octave)
+#print(tone, octave)
 
 tone_name_to_distance = {
   "C": -9,
