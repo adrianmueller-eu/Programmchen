@@ -457,7 +457,7 @@ artistNoSpaces: $artistNoSpaces
 
   # implicit if autoselect -gt 0
   if [[ -t 0 && -n ${OVERALL[@]} ]]; then
-    echo "Anyway, some sites where found:" >&2
+    echo "Anyway, some sites have been found:" >&2
     while [[ -n "${OVERALL[@]}" ]]; do
       j=1
       for resURL in ${OVERALL[@]}; do
