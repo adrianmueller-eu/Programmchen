@@ -130,10 +130,10 @@ class SAT:
                     else:
                         res_c.append("¬"+x)
                 if len(res_c) > 1:
-                    res.append("("+" ∧ ".join(res_c)+")")
+                    res.append("("+" ∨ ".join(res_c)+")")
                 else:
                     res.append(res_c[0])
-            print(" ∨ ".join(res))
+            print(" ∧ ".join(res))
         return clauses
 
 ##############################
