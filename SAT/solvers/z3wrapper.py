@@ -1,11 +1,6 @@
-if __name__ == "solvers.z3wrapper": # Is there a better way?
-    from logic import *
-else: # SAT.solvers.z3wrapper
-    from ..logic import *
-
 z3_available = False
 try:
-    from z3 import *
+    from z3 import Solver, sat, And, Or, Bool, Not
     z3_available = True
 except:
     pass
