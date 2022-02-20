@@ -28,7 +28,6 @@ def is_symmetric(a, rtol=1e-05, atol=1e-08):
 
 def matexp(A0, eps=1e-5):
     from math import factorial
-    from .utils import is_symmetric
 
     # there is a faster method for symmetric matrices
     if is_symmetric(A0):
