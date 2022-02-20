@@ -240,6 +240,7 @@ alias off="woff && bloff && pmset sleepnow >/dev/null"
 
 alias serve="echo http://127.0.0.1:8000 && py -m http.server"
 
+alias ip="curl -sS ifconfig.me && echo"
 alias wi="wiki -l de"
 alias geta="yt-dlp --no-playlist -x --audio-format mp3 --audio-quality 0"
 alias yt720="yt-dlp --no-playlist -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
