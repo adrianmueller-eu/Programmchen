@@ -30,7 +30,7 @@ def bins(data):
 
 ### more
 # %lsmagic
-# %%capture --no-stdout # hide warnings in a single cell
+# import warnings; warnings.filterwarnings('ignore')
 
 # from ipywidgets import interact, FloatSlider, IntText
 # FloatSlider(min=0, max=1, step=0.1, value=1, continuous_update=False)
