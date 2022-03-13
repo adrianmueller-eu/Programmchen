@@ -37,14 +37,19 @@ def matexp(A0, eps=1e-5):
         eigval, eigvec = np.linalg.eig(A0)
         return eigvec @ np.diag(np.exp(eigval)) @ eigvec.T
 
-    Asum = np.zeros(A0.shape, dtype=float)
+    if is_complex(A0):
+        t=complex
+    else:
+        t=float
+
+    Asum = np.zeros(A0.shape, dtype=t)
     Asum_prev = None
 
     for i in range(0,10000):
         if i == 0:
             A = np.eye(A0.shape[0]) # A^0 = I
         else:
-            A = np.array(factorial(i-1) * A @ A0 / factorial(i), dtype=float)
+            A = np.array(factorial(i-1) * A @ A0 / factorial(i), dtype=t)
         Asum_prev = Asum.copy()
         Asum += A
         if np.sum(np.abs(Asum - Asum_prev)) < eps:
