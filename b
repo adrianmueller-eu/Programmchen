@@ -37,6 +37,17 @@ if hash bc >&/dev/null; then
   fi
 fi
 
+# then ask qalc
+if hash qalc >&/dev/null; then
+  [[ -n $debug ]] && printf "qalc: "
+  res=$(qalc "$input" 2>&1)
+  if [[ "$res" != *error* ]]; then
+    echo "$res"; exit
+  else
+    [[ -n $debug ]] && echo "Error! [$res]"
+  fi
+fi
+
 # then go for wcalc
 if hash wcalc >&/dev/null; then
   [[ -n $debug ]] && printf "wcalc: "
