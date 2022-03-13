@@ -1,0 +1,42 @@
+#!/bin/bash
+
+usage="Usage: \e[1m$(basename $0)\e[0m [-h]"
+help='Provides a framework for interactive instructions (e.g. for a recipe).
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
+'
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -*)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+    ;;
+esac
+
+cnt=0
+
+tell() {
+  ((cnt++))
+  echo "${cnt}. $1"
+  printf "(Press enter to ${2-"continue"})"
+  read waste
+  printf "\e[F\e[K"
+}
+
+tellTimer() {
+  note $1 "$2"
+  ((cnt++))
+  echo "${cnt}. $2"
+}
+
+
+# example
+tell "Task 1"
+tell "Task 2" "start the timer"
+tellTimer 3 "timer runs"
+tellTimer 3 "another timer"
+tell "Goodbye"
