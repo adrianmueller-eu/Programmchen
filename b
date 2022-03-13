@@ -23,44 +23,51 @@ if [[ -z "$input" ]]; then
 fi
 
 # first utilize bc
-# if the input doesn't contain letters (to prevent "variables" to be resolved to 0)
-# and no modulus (doesn't work with scale != 0)
-if [[ "$input" =~ "base" || ( ! "$input" =~ [[:alpha:]] && ! "$input" =~ % ) ]]; then
-  [[ -n $debug ]] && printf "bc: "
-  res=$(command bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\\n')
-  if [[ "$res" != *error* && "$res" != *"Runtime warning"* ]]; then # assume success
-    echo " = $res"; return
+if hash bc >&/dev/null; then
+  # if the input doesn't contain letters (to prevent "variables" to be resolved to 0)
+  # and no modulus (doesn't work with scale != 0)
+  if [[ "$input" =~ "base" || ( ! "$input" =~ [[:alpha:]] && ! "$input" =~ % ) ]]; then
+    [[ -n $debug ]] && printf "bc: "
+    res=$(command bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\\n')
+    if [[ "$res" != *error* && "$res" != *"Runtime warning"* ]]; then # assume success
+      echo " = $res"; exit
+    else
+      [[ -n $debug ]] && echo "Error! [$res]"
+    fi
+  fi
+fi
+
+# then go for wcalc
+if hash wcalc >&/dev/null; then
+  [[ -n $debug ]] && printf "wcalc: "
+  res=$(wcalc --radians -P$precision "${args[@]}" "$input" 2>&1 | sed 's/\.0*$//') # sed 's/\(\.\d*\)0*$/\1/;s/\.0*$//'
+  if [[ "$res" != *error* && "$res" != *Inf* && "$res" != *Undefined* ]]; then
+    echo "$res"; exit
   else
     [[ -n $debug ]] && echo "Error! [$res]"
   fi
 fi
 
-# then go for wcalc
-[[ -n $debug ]] && printf "wcalc: "
-res=$(wcalc --radians -P$precision "${args[@]}" "$input" 2>&1 | sed 's/\.0*$//') # sed 's/\(\.\d*\)0*$/\1/;s/\.0*$//'
-if [[ "$res" != *error* && "$res" != *Inf* && "$res" != *Undefined* ]]; then
-  echo "$res"; return
-else
-  [[ -n $debug ]] && echo "Error! [$res]"
-fi
-
 # also try python
-[[ -n $debug ]] && printf "python: "
-res=$(python -c "
+if hash python >&/dev/null; then
+  [[ -n $debug ]] && printf "python: "
+  res=$(python -c "
 from math import *  # https://docs.python.org/3/library/math.html
 nCr=binom=binomial=comb
 nPr=lambda a,b: comb(a,b)*factorial(b)
 print($input)" 2>/dev/null)
-if [[ $? == 0 ]]; then
-  echo "$res"; return
-else
-  [[ -n $debug ]] && echo "Error! [$res]"
+  if [[ $? == 0 ]]; then
+    echo "$res"; exit
+  else
+    [[ -n $debug ]] && echo "Error! [$res]"
+  fi
 fi
 
 # and if it still seems unsolvable, ask sage
-# see https://paulmasson.github.io/sagemath-docs/functions
-[[ -n $debug ]] && printf "sage: "
-sage -c "
+if hash sage >&/dev/null; then
+  # see https://paulmasson.github.io/sagemath-docs/functions
+  [[ -n $debug ]] && printf "sage: "
+  res=$(sage -c "
 nCr=binom=binomial
 nPr=lambda a,b: factorial(a)/factorial(a-b)
 def Fourier(f, inverse=False):
@@ -68,4 +75,10 @@ def Fourier(f, inverse=False):
   inv = 1 if inverse else -1
   return integral(f*e^(inv*i*2*pi*x*xi),x, -oo, oo)
 
-print($input)"
+print($input)")
+  if [[ $? == 0 ]]; then
+    echo "$res"; exit
+  else
+    [[ -n $debug ]] && echo "Error! [$res]"
+  fi
+fi
