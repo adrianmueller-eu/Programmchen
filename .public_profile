@@ -164,6 +164,9 @@ alias pbp=pbpaste
 alias vwc='pbpaste | wc'
 alias al='echo "\$\$\n\\\\begin{aligned}\n\n\\\\end{aligned}\n\$\$" | pbcopy'
 alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
+alias lower="pbpaste | tr '[:upper:]' '[:lower:]' | pbcopy"
+alias upper="pbpaste | tr '[:lower:]' '[:upper:]' | pbcopy"
+
 alias mvninit="mvn archetype:generate"
 # grep
 alias rg="rg --hidden --glob '!.git/*'"
