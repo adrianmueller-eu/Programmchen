@@ -12,7 +12,7 @@ Logs the results to $dest.
 trap "echo 'Interrupted.' | tee -a $dest; end; exit 1" 2
 
 case $1 in
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;

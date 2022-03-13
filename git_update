@@ -16,7 +16,7 @@ function die() {
 }
 
 case $1 in
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;

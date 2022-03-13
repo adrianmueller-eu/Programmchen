@@ -11,7 +11,7 @@ case $1 in
   -v)
     verbose="active"
     ;;
-  -h)
+  -h|--help)
     printf "No help available."
     exit 0
     ;;

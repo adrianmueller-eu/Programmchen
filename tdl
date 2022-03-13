@@ -39,7 +39,7 @@ while [[ -n $1 ]]; do
     -Sh|-hS)
       sort=2
       ;;
-    -h)
+    -h|--help)
       printf "$help"
       exit 0
       ;;

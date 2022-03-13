@@ -20,7 +20,7 @@ case $1 in
   dev)
    port=31338
    ;;
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;

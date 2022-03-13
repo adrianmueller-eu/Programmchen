@@ -50,7 +50,7 @@ asHours() {
 
 while [[ -n $* ]]; do
   case $1 in
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;

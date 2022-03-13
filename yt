@@ -59,7 +59,7 @@ while [[ -n $1 ]]; do
   -n)
     USE_CACHED=
     ;;
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;

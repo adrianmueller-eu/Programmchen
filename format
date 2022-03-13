@@ -38,7 +38,7 @@ case $1 in
     formatted=$(seq 0 108)
     show
     ;;
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;

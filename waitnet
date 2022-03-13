@@ -23,7 +23,7 @@ Dependencies: ping, note, networksetup (MacOS)
 
 while [[ -n $1 ]]; do
   case $1 in
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;

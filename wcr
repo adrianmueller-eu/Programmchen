@@ -17,7 +17,7 @@ trap 'resumee; exit 0' 2
 
 while [[ $* ]]; do
  case $1 in
-  -h)
+  -h|--help)
     printf "$help"
     exit 0
     ;;
