@@ -169,7 +169,7 @@ alias upper="pbpaste | tr '[:lower:]' '[:upper:]' | pbcopy"
 
 alias mvninit="mvn archetype:generate"
 # grep
-alias rg="rg --hidden --glob '!.git/*'"
+alias rg="rg --hidden --glob '!.git/*' -i"
 alias g=grep
 # date
 alias date="date -j"
