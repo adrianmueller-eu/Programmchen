@@ -206,15 +206,11 @@ def imshow(a, cmap_for_real="hot"):
         c = c.transpose(1,2,0)
         return c
 
-    def iscomplex(a):
-        return np.iscomplex(a).any()
-#         return a.dtype == "complex128"
-
     a = np.array(a)
     if len(a.shape) != 2:
         raise ValueError(f"Array must be 2D, but shape was {a.shape}")
 
-    if iscomplex(a):
+    if is_complex(a):
         img = colorize(a)
         plt.imshow(img)
     else:

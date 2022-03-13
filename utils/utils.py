@@ -25,6 +25,9 @@ def is_symmetric(a, rtol=1e-05, atol=1e-08):
     a[np.isnan(a)] = 0
     return np.allclose(a, a.T, rtol=rtol, atol=atol)
 
+def is_complex(a):
+    return np.iscomplex(a).any()
+#    return a.dtype == "complex128"
 
 def matexp(A0, eps=1e-5):
     from math import factorial
