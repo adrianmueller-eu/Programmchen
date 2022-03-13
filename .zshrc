@@ -1,4 +1,3 @@
-# Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 export ZDOTDIR=$ZSH
 export PATH="/opt/homebrew/bin:$PATH"
@@ -7,7 +6,6 @@ export FPATH="$(brew --prefix)/share/zsh-completions:$FPATH"
 
 # Command execution time stamp shown in the history command output (see 'man strftime')
 HIST_STAMPS="dd.mm.yyyy"
-
 COMPLETION_WAITING_DOTS="true"
 
 plugins=(

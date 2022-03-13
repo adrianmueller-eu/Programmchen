@@ -3,9 +3,8 @@ export HISTCONTROL=erasedups # Erase duplicates in history
 export HISTSIZE=10000 # Store 10k history entries
 
 shopt -s histappend # Append to the history file when exiting instead of overwriting it
-shopt -s autocd > /dev/null 2>&1
-#shopt -s checkwinsize
-shopt -s cdspell
+shopt -s autocd > /dev/null 2>&1 # a command name that is the name of a directory is executed as if it were the argument to the cd command
+shopt -s cdspell # Correct spelling of a directory
 bind 'set completion-ignore-case on'
 
 #PS1='\u@\H \A \W\$ '
