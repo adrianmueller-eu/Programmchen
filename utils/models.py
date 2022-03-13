@@ -1,13 +1,26 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from numpy.polynomial.polynomial import polyfit, polyval
 
-def pm(x,y,deg=1):
+# TODO: exponential fit
+# TODO: log fit
+# TODO: sin, cos
+# TODO: arbitrary kernel
 
+def pm(x, y, deg, plot=True):
     coeff = polyfit(x,y,deg)
-    return PolyFit(coeff)
+    poly = Polynomial(coeff)
+    if plot:
+        ax = poly.plot(x)
+        ax.scatter(x,y)
+        plt.show()
+    return poly
     #return lambda x0: polyval(np.array(x0), coeff)
 
-class PolyFit:
+def lm(x,y, plot=True):
+    return pm(x,y,1, plot)
+
+class Polynomial:
 
     def __init__(self, coeff):
         self.coeff = coeff
@@ -26,3 +39,11 @@ class PolyFit:
 
     def __repr__(self):
         return self.__str__()
+
+    def plot(self, x, ax=None):
+        if ax is None:
+            ax = plt.gca()
+        ax.plot(x, np.sum([c*x**i for i,c in enumerate(self.coeff)], axis=0),
+                     label=" + ".join(["%.3fx^%d" % (c, i) for i,c in enumerate(self.coeff)]))
+        ax.legend()
+        return ax
