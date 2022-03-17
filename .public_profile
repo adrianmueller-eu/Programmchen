@@ -1183,6 +1183,22 @@ alias showUnixTime="$BREW_PREFIX/bin/bash -c 'while true; do printf \"\\r\\e[K\$
 alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
 alias lsusers="dscl . list /Users | grep -v ^_"
 
+randline() (
+  s=1
+  if [[ $1 =~ ^-[0-9]+$ ]]; then
+    s=${1:1:4} # not more than 9999
+    shift
+  fi
+  if [[ $2 =~ ^-[0-9]+$ ]]; then
+    s=${2:1:4} # not more than 9999
+  fi
+  len=$(wc -l "$1" | awk '{print $1}')
+  for i in $(seq 1 $s); do
+    rnd=$(randint $len)
+    sed -n "${rnd}p" "$1"
+  done
+)
+
 function caesar() (
   displacement=$1
   shift
