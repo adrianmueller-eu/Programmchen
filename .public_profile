@@ -1192,11 +1192,15 @@ randline() (
   if [[ $2 =~ ^-[0-9]+$ ]]; then
     s=${2:1:4} # not more than 9999
   fi
-  len=$(wc -l "$1" | awk '{print $1}')
-  for i in $(seq 1 $s); do
-    rnd=$(randint $len)
-    sed -n "${rnd}p" "$1"
-  done
+  if hash shuf &>/dev/null; then
+    shuf -n $s "$1"
+  else
+    len=$(wc -l "$1" | awk '{print $1}')
+    for i in $(seq 1 $s); do
+      rnd=$(randint $len)
+      sed -n "${rnd}p" "$1"
+    done
+  fi
 )
 
 function caesar() (
