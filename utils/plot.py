@@ -198,7 +198,7 @@ def scatter1d(data, xticks=None, **pltargs):
     fig.tight_layout()
     plt.show()
 
-def imshow(a, cmap_for_real="hot"):
+def imshow(a, cmap_for_real="hot", yticks=None): # TODO: figsize
     from colorsys import hls_to_rgb
 
     def colorize(z):
@@ -220,17 +220,22 @@ def imshow(a, cmap_for_real="hot"):
         if is_complex(a):
             fig, axs = plt.subplots(1,2)
             im0 = axs[0].imshow(a.real, cmap=cmap_for_real)
-            axs[0].set_xticks([])
-            axs[0].set_title("Real")
             im1 = axs[1].imshow(a.imag, cmap=cmap_for_real)
+            axs[0].set_xticks([])
             axs[1].set_xticks([])
+            axs[0].set_title("Real")
             axs[1].set_title("Imag")
             fig.colorbar(im0, ax=axs[0], fraction=0.1, pad=0.1)
             fig.colorbar(im1, ax=axs[1], fraction=0.1, pad=0.1)
+            if yticks is not None:
+                axs[0].set_yticks(range(len(a)), yticks)
+                axs[1].set_yticks(range(len(a)), yticks)
         else:
             a = a.real
             plt.imshow(a, cmap=cmap_for_real)
             plt.colorbar()
+            if yticks is not None:
+                plt.yticks(range(len(a)), yticks)
         plt.show()
     elif len(a.shape) == 2:
         if is_complex(a):
