@@ -55,11 +55,19 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
         if y is None:
             y = x
             x = np.linspace(1,len(x),len(x))
-        plt.scatter(x, y, **pltargs)
+        plt.scatter(x, y.real, **pltargs)
+        if is_complex(x) or is_complex(y):
+            plt.scatter(x, y.imag, **pltargs)
     elif y is not None:
-        plt.plot(x, y, fmt, **pltargs)
+        plt.plot(x, y.real, fmt, **pltargs)
+        if is_complex(x) or is_complex(y):
+            plt.plot(x.imag, y.imag, fmt, **pltargs)
     else:
-        plt.plot(x, fmt, **pltargs)
+        if is_complex(x):
+            plt.plot(x.real, fmt, **pltargs)
+            plt.plot(x.imag, fmt, **pltargs)
+        else:
+            plt.plot(x, fmt, **pltargs)
     if xlabel:
         plt.xlabel(xlabel)
     if ylabel:
