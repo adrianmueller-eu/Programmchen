@@ -197,7 +197,7 @@ def imshow(a, cmap_for_real="hot"):
         r = np.abs(z)
         arg = np.angle(z)
 
-        h = (arg + pi)  / (2 * np.pi) + 0.5
+        h = (arg + np.pi)  / (2 * np.pi) + 0.5
         l = 1.0 - 1.0/(1.0 + r**0.3)
         s = 0.8
 
@@ -207,17 +207,36 @@ def imshow(a, cmap_for_real="hot"):
         return c
 
     a = np.array(a)
-    if len(a.shape) != 2:
-        raise ValueError(f"Array must be 2D, but shape was {a.shape}")
-
-    if is_complex(a):
-        img = colorize(a)
-        plt.imshow(img)
+    if len(a.shape) == 1:
+        a = a[:,None] # vertical
+        if is_complex(a):
+            fig, axs = plt.subplots(1,2)
+            im0 = axs[0].imshow(a.real, cmap=cmap_for_real)
+            axs[0].set_xticks([])
+            axs[0].set_title("Real")
+            im1 = axs[1].imshow(a.imag, cmap=cmap_for_real)
+            axs[1].set_xticks([])
+            axs[1].set_title("Imag")
+            fig.colorbar(im0, ax=axs[0], fraction=0.1, pad=0.1)
+            fig.colorbar(im1, ax=axs[1], fraction=0.1, pad=0.1)
+        else:
+            a = a.real
+            plt.imshow(a, cmap=cmap_for_real)
+            plt.colorbar()
+        plt.show()
+    elif len(a.shape) == 2:
+        if is_complex(a):
+            img = colorize(a)
+            plt.imshow(img)
+            plt.colorbar()
+        else:
+            a = a.real
+            plt.imshow(a, cmap=cmap_for_real)
+            plt.colorbar()
+        plt.show()
     else:
-        a = a.real
-        plt.imshow(a, cmap=cmap_for_real)
-        plt.colorbar()
-    plt.show()
+        raise ValueError(f"Array must be 2D or 1D, but shape was {a.shape}")
+
 
 def bar(heights, log=False):
     N = len(heights)
