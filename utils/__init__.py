@@ -4,4 +4,4 @@ from .prob import *
 from .data import *
 from .models import *
 from .examples import *
-from .isprime import isPrime
+from .isprime import *
