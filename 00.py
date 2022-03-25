@@ -9,10 +9,10 @@ try:
     import scipy
     from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
     from scipy.optimize import minimize
+    #from numpy.random import choice
 except:
     from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
 import itertools # https://docs.python.org/3/library/itertools.html
-from random import choice
 ### visual
 # import pandas as pd
 # %matplotlib
