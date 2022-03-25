@@ -203,3 +203,12 @@ def calc_pi(N=3):
      for n in range(N):
          r += factorial(4*n)*(1103+26390*n)/(factorial(n)*396**n)**4
      return 9801/(np.sqrt(8)*r)
+
+def normalize(a, p=2):
+     a = np.array(a)
+     return a / np.linalg.norm(a, ord=p)
+
+def softmax(a, beta=1):
+     a = np.exp(beta*a)
+     Z = np.sum(a)
+     return a / Z
