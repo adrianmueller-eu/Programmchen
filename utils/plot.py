@@ -78,7 +78,7 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
     plt.gca().spines["right"].set_visible(False)
 
 # # basics, no log
-# def hist(data, xlabel="", title="", bins=None, density=False):
+# def hist(data, bins=None, xlabel="", title="", density=False):
 #     def bins_sqrt(data):
 #         return int(np.ceil(np.sqrt(len(data))))
 #
@@ -98,51 +98,25 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
 #     plt.gca().spines["bottom"].set_visible(False)
 #     return n, bins
 
-# # basics
-# def hist(data, xlabel="", title="", bins=None, log=False, density=False):
-#     import collections
-#
-#     def bins_sqrt(data):
-#         return int(np.ceil(np.sqrt(len(data))))
-#
-#     def logbins(data, start=None, stop=None, num=None, scale=2):
-#         if start is None:
-#             start = min(data)/scale
-#         if stop is None:
-#             stop = max(data)*scale
-#         if num is None:
-#             num = bins_sqrt(data)
-#         return 10**(np.linspace(np.log10(start),np.log10(stop),num))
-#
-#     plt.figure(figsize=(10,5))
-#
-#     # bins
-#     if log:
-#         if not isinstance(bins, collections.Sequence):
-#             bins = logbins(data, num=bins)
-#         plt.xscale("log")
-#     elif not bins:
-#         bins = bins_sqrt(data)
-#     n, bins, _ = plt.hist(data, bins=bins, density=density)
-#
-#     # visuals
-#     plt.title(title)
-#     plt.ylabel("Density" if density else "Frequency")
-#     plt.xlabel(xlabel)
-#     plt.gca().spines["top"].set_visible(False)
-#     plt.gca().spines["right"].set_visible(False)
-#     plt.gca().spines["bottom"].set_visible(False)
-#     return n, bins
-
-def histogram(data, bins=None, log=False, density=False):
-    if log:
+def histogram(data, bins=None, xlog=False, density=False):
+    if xlog:
         if not isinstance(bins, collections.Sequence):
             bins = logbins(data, num=bins)
     elif not bins:
         bins = bins_sqrt(data)
     return np.histogram(data, bins=bins, density=density)
 
-def hist(data, title="", xlabel="", colored=None, cmap="viridis", save_file=None, bins=None, log=False, density=False):
+def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=False, colored=None, cmap="viridis", save_file=None):
+    if type(bins) == str:
+        if bins == "log":
+            xlog = True
+        elif bins == "loglog":
+            xlog = True
+            ylog = True
+        else:
+            xlabel = bins
+        bins = None
+
     # create figure
     if colored:
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10,5), sharex=True, gridspec_kw={"height_ratios": [10, 1]})
@@ -150,14 +124,16 @@ def hist(data, title="", xlabel="", colored=None, cmap="viridis", save_file=None
     else:
         fig, ax0 = plt.subplots(figsize=(10,5))
 
-    n, bins = histogram(data, bins=bins, log=log, density=density)
+    n, bins = histogram(data, bins=bins, xlog=xlog, density=density)
     ax0.hist(bins[:-1], bins, weights=n) # TODO: moving_avg(bins,2) instead of bins[:-1]?
-    if log:
+    if xlog:
         ax0.set_xscale("log")
+    if ylog:
+        ax0.set_yscale("log")
 
     # visuals
     ax0.set_title(title)
-    ax0.set_ylabel("Density" if density else "Frequency")
+    ax0.set_ylabel("density" if density else "frequency")
     ax0.spines["top"].set_visible(False)
     ax0.spines["right"].set_visible(False)
     ax0.spines["bottom"].set_visible(False)
