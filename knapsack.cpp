@@ -1,5 +1,9 @@
 
 /*
+This is an edited version of the code accompanying the paper "GKNAP: A Java and C++ package for
+solving the multidimensional knapsack problem" (https://arxiv.org/abs/1908.08022).
+
+
 Genetic Algorithm - 0/1 Multi-Constraint Knapsack Problem (Multi-Dimensional)
 -----------------------------------------------------------------------------
 
@@ -21,12 +25,6 @@ Change the parameters of the genetic algorithm by changing the Globals.
 
 Author: Shalin Shah
 Email: shah.shalin@gmail.com
-
-** Requirements **
-	The program requires an ORLIB or WEING formatted files passed in as arguments.
-	Usage: ./a.out <filename> <fileformat>
-	(The file format is either weing or orlib)
-	Example: ./a.out data.DAT weing
 */
 
 #include <stdio.h>
@@ -1493,32 +1491,43 @@ void greedyAlgorithm(void)
 /* Main */
 int main(int argc, char **argv)
 {
-  if(argc <= 2)
+  if(argc <= 1 || strcmp(argv[1], "--help") == 0)
   {
-    printf("Usage: ./a.out <datafile> <weing/orlib>\n");
-    printf("Examples:\n");
-    printf("./a.out data.DAT weing\n\n");
-    exit(0);
-  }
+    printf("Usage: %s datafile [weing/orlib]\n", argv[0]);
+      printf("\n\"Weing\" format:\n\n");
+      printf("2 28 // 2 knapsacks, 28 objects\n\
+1898 440 22507 270 14148 3100 4650 30800 615 4975\n\
+1160 4225 510 11880 479 440 490 330 110 560\n\
+24355 2885 11748 4550 750 3720 1950 10500 // 28 values\n\
+600 600 // 2 knapsack capacities\n\
+45 0 85 150 65 95 30 0 170 0\n\
+40 25 20 0 0 25 0 0 25 0\n\
+165 0 85 0 0 0 0 100 // #1 weights\n\
+30 20 125 5 80 25 35 73 12 15\n\
+15 40 5 10 10 12 10 9 0 20\n\
+60 40 50 36 49 40 19 150 // #2 weights\n\
+\n\
+// if you know the solution, you can optionally specify it here as well:\n\
+141278 // the result should be (close to) this\n");
+      exit(0);
+    }
 
-  if(strcmp(argv[2], "weing") == 0)
-  {
-    printf("Data file format: weing\n");
-    printf("Data file name: %s\n", argv[1]);
-    /* Process the data in the ORLIB/WEING-WEISH-SENTO format */
-    processDataWEING(argv[1]);
-  }
-  else if(strcmp(argv[2], "orlib") == 0)
+  if(argc == 3 && strcmp(argv[2], "orlib") == 0)
   {
     printf("Data file format: orlib\n");
     printf("Data file name: %s\n", argv[1]);
     /* Process the data in the ORLIB/WEING-WEISH-SENTO format */
     processDataORLIB(argv[1]);
   }
-  else
+  else // if(strcmp(argv[2], "weing") == 0) or empty
   {
-    printf("Unknown file format. Exiting...\n");
-    exit(1);
+    printf("Data file format: weing\n");
+    printf("Data file name: %s\n", argv[1]);
+    /* Process the data in the ORLIB/WEING-WEISH-SENTO format */
+    processDataWEING(argv[1]);
+
+    //printf("Unknown file format. Exiting...\n");
+    //exit(1);
   }
 
 	/* Initialize the random number generator */
