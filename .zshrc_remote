@@ -1,0 +1,88 @@
+HISTFILE=~/.histfile
+HISTSIZE=1000
+SAVEHIST=1000
+
+#autoload -Uz compinit && compinit
+
+export HIST_STAMPS="dd.mm.yyyy"
+PROMPT='%(?..%F{red})%*%f %c%(!.%F{red}.)$%f '
+
+### Prefs, aliases, functions
+alias la="ls -A"
+alias ll="ls -liAFh"
+alias l=ll
+alias n=nano
+alias e=less
+alias t="whence -avs"
+alias ec='echo $?'
+alias g=grep
+alias hist=history
+# misc
+alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
+alias rll="sed 's/.\{250,\}/***LONG LINE HERE***/'"
+
+# python
+alias py=python
+alias ipython="python -m IPython"
+alias pip="python -m pip"
+alias ipy=ipython
+
+# git
+alias gst="git status | sed -n 1,2p | grep -v 'On branch' | grep -v 'Untracked' && git status --short"
+alias gsti="gst --ignored"
+alias ga="git add"
+alias a="git add"
+alias c="git commit -m"
+# git diff
+alias gd="PAGER= git diff"
+alias gds="gd --staged"
+alias gdw="PAGER= git diff --word-diff=color"
+alias gdws="gdw --staged"
+alias gsh="git show"
+alias gshw="PAGER= git show --word-diff=color"
+# git ls
+alias glt='git ls-tree -r --name-only "$(git rev-parse --short HEAD)"'
+alias glu='git ls-files --others --exclude-standard'
+alias gli="glu --ignored"
+# git log
+alias glf="git log --graph --abbrev-commit --decorate --format=format:'%C(red)%h%C(reset) - %C(cyan)%ar (%aD)%C(reset)%C(white)%d%C(reset)%n          %s%C(blue)%C(bold) %aN %C(dim)<%aE>%C(reset)' --all"
+alias glfs="glf --stat"
+alias glfp="glfs -p"
+# git misc
+alias grh^="git reset HEAD^"
+alias grh^^="git reset HEAD^^"
+alias grh^2="git reset HEAD^2"
+alias gurl="git config --get remote.origin.url | sed 's/\.git//;s~:~/~;s~git@~https://~'"
+
+function fip() {
+  for p in $(echo $PATH | sed 's/:/\ /g'); do
+    pushd "$p" &>/dev/null || continue
+    res=$(ls -l | grep "$1")
+    if [[ -n "$res" ]]; then
+      printf "$p\n$res\n"
+    fi
+    popd &>/dev/null
+  done
+}
+
+function fif() {
+  typeset -f | grep --color=never -E ' \(\) \{?' | sed -E 's/ \(\) \{?$//g' | grep -e "$*"
+}
+
+function fia() {
+  alias | sed 's/^alias //g' | grep -e "$*"
+}
+
+function help() {
+  case $1 in
+  test)
+    man -P "less -p'^CONDITIONAL EXPRESSIONS$'" zshall
+    ;;
+  "")
+    man zshall
+    ;;
+  *)
+    man -P "less -p'^ {7}$@ '" zshall
+    ;;
+  esac
+}
