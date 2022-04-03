@@ -1,6 +1,7 @@
 set softwrap
 set nowrap
-set nohelp
+#set nohelp
+set zero
 set autoindent
 #set indicator #scroll bar
 #set mouse # side effect: scrolling always skips two lines
