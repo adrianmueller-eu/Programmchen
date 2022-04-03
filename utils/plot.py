@@ -48,6 +48,11 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
 
     if fmt is None:
         fmt = "-"
+
+    if type(x) != np.ndarray:
+        x = np.array(list(x))
+    if y is not None and type(y) != np.ndarray:
+        y = np.array(list(y))
     # plot
     if len(plt.get_fignums()) == 0:
         plt.figure(figsize=figsize)
