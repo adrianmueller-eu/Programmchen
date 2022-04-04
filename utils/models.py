@@ -10,14 +10,10 @@ from abc import ABC, abstractmethod
 
 # convenience functions
 def pm(x, y, deg, plot=True):
-    x = np.array(list(x))
-    y = np.array(list(y))
     if deg >= 0:
-        coeff = polyfit(x,y,deg)
-        poly = Polynomial(coeff)
+        poly = Polynomial.fit(x, y, deg)
     else:
-        coeff = polyfit(x,1/y,-deg)
-        poly = InversePolynomial(coeff)
+        poly = InversePolynomial.fit(x, y, deg)
     if plot:
         ax = poly.plot(x)
         ax.scatter(x,y)
@@ -26,7 +22,7 @@ def pm(x, y, deg, plot=True):
     #return lambda x0: polyval(np.array(x0), coeff)
 
 def lm(x, y, plot=True):
-    return pm(x,y,1, plot)
+    return pm(x, y, 1, plot)
 
 # helper methods
 def _generate_poly_label(coeff):
@@ -41,6 +37,11 @@ def _generate_poly_label(coeff):
 
 # Functions
 class Function(ABC):
+
+    @staticmethod
+    @abstractmethod
+    def fit(x, y):
+        pass
 
     @abstractmethod
     def __call__(self, x):
@@ -74,6 +75,13 @@ class Polynomial(Function):
     def degree(self):
         return len(self.coeff)-1
 
+    @staticmethod
+    def fit(x, y, deg=1):
+        x = np.array(list(x))
+        y = np.array(list(y))
+        coeff = polyfit(x, y, deg)
+        return Polynomial(coeff)
+
     def __call__(self, x):
         return polyval(np.array(x), self.coeff)
 
@@ -91,6 +99,13 @@ class InversePolynomial(Function):
     @property
     def degree(self):
         return 1-len(self.coeff)
+
+    @staticmethod
+    def fit(x, y, deg=-1):
+        x = np.array(list(x))
+        y = np.array(list(y))
+        coeff = polyfit(x, 1/y, -deg)
+        return InversePolynomial(coeff)
 
     def __call__(self, x):
         return 1/polyval(np.array(x), self.coeff)
