@@ -1,12 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.polynomial.polynomial import polyfit, polyval
+from abc import ABC, abstractmethod
 
 # TODO: exponential fit
 # TODO: log fit
 # TODO: sin, cos
 # TODO: arbitrary kernel
 
+# convenience functions
 def pm(x, y, deg, plot=True):
     x = np.array(list(x))
     y = np.array(list(y))
@@ -26,6 +28,7 @@ def pm(x, y, deg, plot=True):
 def lm(x, y, plot=True):
     return pm(x,y,1, plot)
 
+# helper methods
 def _generate_poly_label(coeff):
     q = len(coeff) - 1
     res = ""
@@ -36,7 +39,33 @@ def _generate_poly_label(coeff):
           res += "%.3fx^%d + " % (c, q-i)
     return res
 
-class Polynomial:
+# Functions
+class Function(ABC):
+
+    @abstractmethod
+    def __call__(self, x):
+        pass
+
+    @abstractmethod
+    def __str__(self):
+        pass
+
+    def __repr__(self):
+        return self.__str__()
+
+    @abstractmethod
+    def _plot_label(self):
+        pass
+
+    def plot(self, x, ax=None):
+        if ax is None:
+            ax = plt.gca()
+        ax.plot(x, self(x), label=self._plot_label())
+        ax.legend()
+        return ax
+
+
+class Polynomial(Function):
 
     def __init__(self, coeff):
         self.coeff = coeff
@@ -45,25 +74,16 @@ class Polynomial:
     def degree(self):
         return len(self.coeff)-1
 
-    def __call__(self, x0):
-        return polyval(np.array(x0), self.coeff)
+    def __call__(self, x):
+        return polyval(np.array(x), self.coeff)
 
     def __str__(self):
         return f"Polynomial of degree %d with coeff %s" % (self.degree, self.coeff)
 
-    def __repr__(self):
-        return self.__str__()
+    def _plot_label(self):
+        return _generate_poly_label(self.coeff)
 
-    def plot(self, x, ax=None):
-        if ax is None:
-            ax = plt.gca()
-        ax.plot(x, np.sum([c*x**i for i,c in enumerate(self.coeff)], axis=0),
-                     label=_generate_poly_label(self.coeff))
-        ax.legend()
-        return ax
-
-
-class InversePolynomial:
+class InversePolynomial(Function):
 
     def __init__(self, coeff):
         self.coeff = coeff
@@ -72,19 +92,11 @@ class InversePolynomial:
     def degree(self):
         return 1-len(self.coeff)
 
-    def __call__(self, x0):
-        return polyval(1/np.array(x0), self.coeff)
+    def __call__(self, x):
+        return 1/polyval(np.array(x), self.coeff)
 
     def __str__(self):
         return f"Inverse polynomial of degree %d with coeff %s" % (self.degree, self.coeff)
 
-    def __repr__(self):
-        return self.__str__()
-
-    def plot(self, x, ax=None):
-        if ax is None:
-            ax = plt.gca()
-        ax.plot(x, 1/np.sum([c*x**i for i,c in enumerate(self.coeff)], axis=0),
-                     label="1/(" + _generate_poly_label(self.coeff) + ")")
-        ax.legend()
-        return ax
+    def _plot_label(self):
+        return "1/(" + _generate_poly_label(self.coeff) + ")"
