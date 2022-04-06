@@ -46,6 +46,46 @@ if [[ $- == *i* ]]; then
   fortune -a
 fi
 
+# update hosts file
+update_hosts_after=$((14*24*60*60 + $RANDOM)) # seconds
+if [[ ! -e /etc/hosts  # not exists
+  || $(wc -l /etc/hosts | awk '{print $1}') -lt 100  # too short
+  || ! $(tail -1 /etc/hosts | cut -c 3-) =~ ^[0-9]{10}$  # timestamp not exists
+  || $(tail -1 /etc/hosts | cut -c 3-) -lt $(($(date +%s) - update_hosts_after))  # timestamp expired
+]]; then
+  echo
+  echo "Time to update hosts file!"
+  # fetch into tmphosts
+  tmphosts="${TMPDIR}hosts"
+  curl -sS -m 3 https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn/hosts > "$tmphosts"
+  if [[ $? -eq 0 ]]; then
+    # append new timestamp
+    echo "# $(date +%s)" >> "$tmphosts"
+    # show updates
+    if [[ -f /etc/hosts ]]; then
+      PAGER= git diff --shortstat /etc/hosts "$tmphosts"
+    else
+      echo "Where is your hosts file? Creating a new one!"
+    fi
+    allowed=($(git config --global hosts.allowed))
+    for link in "${allowed[@]}"; do
+      sed -i "" -r "/[\. ]($link)/d" "$tmphosts"
+    done
+    if [[ ! -w /etc/hosts ]]; then
+      echo "Your password is required to write the hosts file."
+    fi
+    if [[ -f /etc/hosts ]]; then
+      sudo mv /etc/hosts /etc/hosts_backup || echo "Couldn't create a backup!"
+    fi
+    sudo chown root "$tmphosts"
+    sudo mv "$tmphosts" /etc/hosts && echo "Update succeeded!" || echo "Update failed!"
+    sudo -k # invalidate cached credentials
+    unset allowed link
+  else
+    echo "Update failed (couldn't download)!"
+  fi
+fi
+
 #############################
 ### source custom
 #############################
