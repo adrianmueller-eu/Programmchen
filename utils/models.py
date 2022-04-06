@@ -115,3 +115,8 @@ class InversePolynomial(Function):
 
     def _plot_label(self):
         return "1/(" + _generate_poly_label(self.coeff) + ")"
+
+# class Exponential(Function): # y = poly(exp(poly(x)))
+# class Logarithm(Function): # y = poly(log_b(poly(x)))
+# class Sine(Function): # y = poly(sin(poly(x)))
+# class Autoregressive(Function): # x[t] = poly_i(x_i) for x_i in x[t-a:t]
