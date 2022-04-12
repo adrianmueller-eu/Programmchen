@@ -695,7 +695,7 @@ void processDataWEING(char *filename) {
   FILE *file;
   file = fopen(filename, "r");
   if (file == NULL) {
-    printf("Data File Not Found in Current Directory.");
+    printf("%s: No such file or directory\n", filename);
     exit(1);
   }
   char *line = new char[1000];
@@ -1261,15 +1261,15 @@ int main(int argc, char **argv) {
   if (argc == 3 && strcmp(argv[2], "orlib") == 0) {
     printf("Data file format: orlib\n");
     printf("Data file name: %s\n", argv[1]);
-    /* Process the data in the ORLIB/WEING-WEISH-SENTO format */
+    /* Process the data in the ORLIB format */
     processDataORLIB(argv[1]);
-  } else // if(strcmp(argv[2], "weing") == 0) or empty
-  {
+  } else if(argc == 3 && strcmp(argv[2], "weing") == 0) {
     printf("Data file format: weing\n");
     printf("Data file name: %s\n", argv[1]);
-    /* Process the data in the ORLIB/WEING-WEISH-SENTO format */
+    /* Process the data in the WEING-WEISH-SENTO format */
     processDataWEING(argv[1]);
-
+  } else {
+    processDataWEING(argv[1]);
     // printf("Unknown file format. Exiting...\n");
     // exit(1);
   }
@@ -1306,7 +1306,7 @@ int main(int argc, char **argv) {
   KNode gBest;
   KNode prevBest;
 
-  for (i = 0; i < GENERATIONS; i++) {
+  for (i = 1; i <= GENERATIONS; i++) {
     /* The genetic algorithm is generational. All offspring replace their
      parents. newPopulation is populated with the offspring */
     vector<KNode> newPopulation;
@@ -1324,13 +1324,14 @@ is copied to the next generation */
     n++;
     gBest.~KNode();
     gBest = population[0];
-    printf("%d:%d\n", i, gBest.nodeFitness());
+    if (i % 10 == 0)
+      printf("%d:%d\n", i, gBest.nodeFitness());
     if (gBest.nodeFitness() == OPTIMUM) {
       printf("Optimum Found!\n");
       break;
     }
 
-    if (i == 0) {
+    if (i == 1) {
       prevBest = gBest;
     } else {
       /* Update mutation probabilities */
@@ -1396,15 +1397,20 @@ is copied to the next generation */
     population.swap(newPopulation);
     newPopulation.erase(newPopulation.begin(), newPopulation.end());
   }
-  printf("Solution Objective Function: %d\n", gBest.nodeFitness());
-  printf("Objects chosen:\n");
+  printf("\nBest solution: %d\n", gBest.nodeFitness());
+  int *weights = calculateWeights(gBest.getKnapsack());
+  for (int i = 0; i < NUMBER_CONSTRAINTS; i++) {
+    printf("Weights %d: %d\n", i, weights[i]);
+  }
+  printf("Objects chosen: ");
 
+  printf("[ ");
   for (int i = 0; i < NUMBER_OBJECTS; i++) {
     if (gBest.getValueOfIndex(i) == 1) {
-      printf("%d ", i);
+      printf("%d, ", i);
     }
   }
-  printf("\n\n");
+  printf("]\n\n");
 
   population.erase(population.begin(), population.end());
   GREEDY_OBJECTS.erase(GREEDY_OBJECTS.begin(), GREEDY_OBJECTS.end());
