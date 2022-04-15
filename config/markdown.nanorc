@@ -29,10 +29,11 @@ color grey "~~[^~]+(~~|$)"
 color ,green "[[:space:]]+$"
 
 # URLs and links
-color brightblue "\[[^]]+\]\([^)]+\)"
+#color brightblue "\[[^]]+\]\([^)]+\)"
 #color brightmagenta "!?\[[^]]+\]"
 color brightmagenta "\[([^][]|\[[^]]*\])*\]\([^)]+\)"
 color yellow "https?://[^ )>]+"
+color cyan "\[[^]]+\]"
 # images
 #color  magenta "!\[[^][]*\](\([^)]+\)|\[[^]]+\])"
 
@@ -51,7 +52,7 @@ color brightyellow "^(=+|-+)$"
 # HTML tags and comments
 color cyan "<[^!][^>]+>"
 color grey start="<!--" end="-->"
-color brightblue "\[[^]]+\]"
+#color brightblue "\[[^]]+\]"
 
 # horizontal rules
 color brightmagenta "^(---+|===+|___+|\*\*\*+)\s*$"
