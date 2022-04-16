@@ -248,6 +248,64 @@ def bar(heights, log=False):
     plt.tight_layout()
     plt.show()
 
+def plotQ(state, showqubits=None):
+    def tobin(n, places):
+        return ("{0:0" + str(places) + "b}").format(n)
+
+    state = np.array(state)
+    n = int(np.log2(len(state))) # nr of qubits
+
+    # trace out unwanted qubits
+    if showqubits is not None:
+        state = state.reshape(tuple([2]*n)).T
+
+        cur = 0
+        for i in range(n):
+            if i not in showqubits:
+                state = np.mean(state, axis=cur)
+            else:
+                cur += 1
+        state = state.flatten()
+        state /= np.linalg.norm(state) # renormalize
+        n = int(np.log2(len(state))) # update n
+
+    fig, axs = plt.subplots(1,2, figsize=(12,3))
+    fig.subplots_adjust(right=1.2)
+
+    # show coefficient distribution
+    if n < 6:
+        basis = [tobin(i, n) for i in range(2**n)]
+        #plot(basis, state, ".", figsize=(10,3))
+        axs[0].scatter(basis, state.real, label="real")
+        axs[0].scatter(basis, state.imag, label="imag")
+        axs[0].tick_params(axis="x", rotation=45)
+    elif n < 9:
+        axs[0].scatter(range(2**n), state.real, label="real")
+        axs[0].scatter(range(2**n), state.imag, label="imag")
+    else:
+        axs[0].plot(range(2**n), state.real, label="real")
+        axs[0].plot(range(2**n), state.imag, label="imag")
+
+    #from matplotlib.ticker import StrMethodFormatter
+    #axs[0].xaxis.set_major_formatter(StrMethodFormatter("{x:0"+str(n)+"b}"))
+
+    axs[0].legend()
+    axs[0].grid()
+
+    # show probabilities
+    probs = np.abs(state)**2
+    toshow = {}
+    cumsum = 0
+    for idx in probs.argsort()[-20:][::-1]: # only look at 20 largest
+        if cumsum <= 0.96:
+            toshow[tobin(idx, n)] = probs[idx]
+            cumsum += probs[idx]
+    toshow["rest"] = max(0,1-cumsum)
+
+    axs[1].pie(toshow.values(), labels=toshow.keys(), autopct=lambda x: f"%.1f%%" % x)
+
+    fig.tight_layout()
+    plt.show()
 
 def rgb(r,g=1.0,b=1.0,a=1.0, as255=False):
     conv = 1 if as255 else 1/255
