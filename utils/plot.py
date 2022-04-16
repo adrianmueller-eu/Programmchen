@@ -187,7 +187,7 @@ def scatter1d(data, xticks=None, **pltargs):
     fig.tight_layout()
     plt.show()
 
-def imshow(a, cmap_for_real="hot", yticks=None): # TODO: figsize
+def imshow(a, cmap_for_real="hot", yticks=None, figsize=(8,6), **pltargs): # TODO: figsize
     from colorsys import hls_to_rgb
 
     def colorize(z):
@@ -207,9 +207,9 @@ def imshow(a, cmap_for_real="hot", yticks=None): # TODO: figsize
     if len(a.shape) == 1:
         a = a[:,None] # vertical
         if is_complex(a):
-            fig, axs = plt.subplots(1,2)
-            im0 = axs[0].imshow(a.real, cmap=cmap_for_real)
-            im1 = axs[1].imshow(a.imag, cmap=cmap_for_real)
+            fig, axs = plt.subplots(1,2, figsize=figsize)
+            im0 = axs[0].imshow(a.real, cmap=cmap_for_real, **pltargs)
+            im1 = axs[1].imshow(a.imag, cmap=cmap_for_real, **pltargs)
             axs[0].set_xticks([])
             axs[1].set_xticks([])
             axs[0].set_title("Real")
@@ -221,20 +221,21 @@ def imshow(a, cmap_for_real="hot", yticks=None): # TODO: figsize
                 axs[1].set_yticks(range(len(a)), yticks)
         else:
             a = a.real
-            plt.imshow(a, cmap=cmap_for_real)
+            plt.figure(figsize=figsize)
+            plt.imshow(a, cmap=cmap_for_real, **pltargs)
             plt.colorbar()
             if yticks is not None:
                 plt.yticks(range(len(a)), yticks)
         plt.show()
     elif len(a.shape) == 2:
+        plt.figure(figsize=figsize)
         if is_complex(a):
             img = colorize(a)
-            plt.imshow(img)
-            plt.colorbar()
+            plt.imshow(img, **pltargs)
         else:
             a = a.real
-            plt.imshow(a, cmap=cmap_for_real)
-            plt.colorbar()
+            plt.imshow(a, cmap=cmap_for_real, **pltargs)
+        plt.colorbar()
         plt.show()
     else:
         raise ValueError(f"Array must be 2D or 1D, but shape was {a.shape}")
