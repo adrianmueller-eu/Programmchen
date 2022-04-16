@@ -177,7 +177,7 @@ def scatter1d(data, xticks=None, **pltargs):
     fig = plt.figure(figsize=(10,1))
     ax = fig.gca()
     size = np.array(data).flatten().shape
-    plt.scatter(data, np.zeros(*size), alpha=.5, marker="|", s=500, *pltargs)
+    plt.scatter(data, np.zeros(*size), alpha=.5, marker="|", s=500, **pltargs)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_visible(False)
