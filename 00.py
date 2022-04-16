@@ -1,6 +1,7 @@
 import sys, os, time # For timing: %time foo()
 ### math
 import numpy as np
+from numpy.linalg import det
 try:
     integral # see if sage is loaded
 except:
@@ -9,7 +10,7 @@ try:
     import scipy
     from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
     from scipy.optimize import minimize
-    #from numpy.random import choice
+    from numpy.random import choice
 except:
     from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
 import itertools # https://docs.python.org/3/library/itertools.html
