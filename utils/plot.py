@@ -60,17 +60,24 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
         if y is None:
             y = x
             x = np.linspace(1,len(x),len(x))
-        plt.scatter(x, y.real, **pltargs)
-        if is_complex(x) or is_complex(y):
-            plt.scatter(x, y.imag, **pltargs)
+        if is_complex(y):
+            plt.scatter(x, y.real, label="real", **pltargs)
+            plt.scatter(x, y.imag, label="imag", **pltargs)
+            plt.legend()
+        else:
+            plt.scatter(x, y, **pltargs)
     elif y is not None:
-        plt.plot(x, y.real, fmt, **pltargs)
-        if is_complex(x) or is_complex(y):
-            plt.plot(x.imag, y.imag, fmt, **pltargs)
+        if is_complex(y):
+            plt.plot(x, y.real, fmt, label="real", **pltargs)
+            plt.plot(x, y.imag, fmt, label="imag", **pltargs)
+            plt.legend()
+        else:
+            plt.plot(x, y, fmt, **pltargs)
     else:
         if is_complex(x):
-            plt.plot(x.real, fmt, **pltargs)
-            plt.plot(x.imag, fmt, **pltargs)
+            plt.plot(x.real, fmt, label="real", **pltargs)
+            plt.plot(x.imag, fmt, label="imag", **pltargs)
+            plt.legend()
         else:
             plt.plot(x, fmt, **pltargs)
     if xlabel:
@@ -230,7 +237,6 @@ def imshow(a, cmap_for_real="hot", yticks=None): # TODO: figsize
         plt.show()
     else:
         raise ValueError(f"Array must be 2D or 1D, but shape was {a.shape}")
-
 
 def bar(heights, log=False):
     N = len(heights)
