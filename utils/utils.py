@@ -31,6 +31,13 @@ def is_symmetric(a, rtol=1e-05, atol=1e-08):
     a[np.isnan(a)] = 0
     return np.allclose(a, a.T, rtol=rtol, atol=atol)
 
+def is_hermitian(a, rtol=1e-05, atol=1e-08):
+    a = np.array(a)
+    if len(a.shape) != 2 or a.shape[0] != a.shape[1]:
+        return False
+    a[np.isnan(a)] = 0
+    return np.allclose(a, a.conj().T, rtol=rtol, atol=atol)
+
 def is_complex(a):
     return np.iscomplex(a).any()
 #    return a.dtype == "complex128"
