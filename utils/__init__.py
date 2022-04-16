@@ -5,3 +5,4 @@ from .data import *
 from .models import *
 from .examples import *
 from .isprime import *
+from .math import *
