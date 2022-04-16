@@ -331,7 +331,7 @@ def pdcolor(df, threshold=None, minv=None, maxv=None, colors=['#ff0000', '#fffff
     def blackorwhite(r,g=None,b=None):
         if g is None:
             r,g,b,a = rgb(r)
-        return 'white' if perceived_brightness(r,b,g) < 0.42 else 'black'
+        return 'white' if perceived_brightness(r,g,b) < 0.5 else 'black'
 
     df = df.dropna(thresh=1).T.dropna(thresh=1).T # filter out rows and cols with no data
     if bi:
