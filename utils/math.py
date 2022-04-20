@@ -27,28 +27,33 @@ def deg(x):
 def rad(x):
     return x/180*np.pi
 
-def matexp(A0):
-    from math import factorial
+try:
+   expm
+except NameError:
+    def expm(A0):
+        from math import factorial
 
-    # there is a faster method for hermitian matrices
-    if is_hermitian(A0):
-        eigval, eigvec = np.linalg.eig(A0)
-        return eigvec @ np.diag(np.exp(eigval)) @ eigvec.conj().T
+        # there is a faster method for hermitian matrices
+        if is_hermitian(A0):
+            eigval, eigvec = np.linalg.eig(A0)
+            return eigvec @ np.diag(np.exp(eigval)) @ eigvec.conj().T
 
-    Asum = np.zeros(A0.shape, dtype=A0.dtype)
-    Asum_prev = None
+        Asum = np.zeros(A0.shape, dtype=A0.dtype)
 
-    for i in range(0,10000):
-        if i == 0:
-            A = np.eye(A0.shape[0]) # A^0 = I
-        else:
-            A = np.array(factorial(i-1) * A @ A0 / factorial(i), dtype=A0.dtype)
-        Asum_prev = Asum.copy()
-        Asum += A
-        if np.sum(np.abs(Asum - Asum_prev)) < sys.float_info.epsilon:
-            return Asum # return when converged
+        for i in range(0,10000):
+            if i == 0:
+                A = np.eye(A0.shape[0]) # A^0 = I
+            else:
+                A = np.array(factorial(i-1) * A @ A0 / factorial(i), dtype=A0.dtype)
+            Asum += A
+            if np.sum(np.abs(A)) < sys.float_info.epsilon:
+                return Asum # return when converged
 
-    raise ValueError("Convergence failed! (try scipy.linalg.expm instead)")
+        raise ValueError("Convergence failed! (try scipy.linalg.expm instead)")
+
+    def logm(A):
+        evals, evecs = np.linalg.eig(A)
+        return evecs @ np.diag(np.log(evals.astype(complex))) @ evecs.conj().T
 
 # e.g. series(lambda n: 1/factorial(2*n)) + series(lambda n: 1/factorial(2*n + 1))
 def series(f, pr=False, max_iter=100000):
