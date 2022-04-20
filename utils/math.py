@@ -70,3 +70,19 @@ def series(f, pr=False, max_iter=100000):
             break
 
     raise ValueError("Series doesn't converge!")
+
+def normalize(a, p=2, remove_global_phase=True):
+     a = np.array(a)
+     a /= np.linalg.norm(a, ord=p)
+     if remove_global_phase and is_complex(a):
+         a *= np.exp(-1j*np.angle(a[0]))
+     return a
+
+def choice(a, size=None, replace=True, p=None):
+    if p is not None:
+        if np.abs(np.sum(p) - 1) > sys.float_info.epsilon:
+            p = normalize(p, p=1)
+
+    n = len(a)
+    idx = np.random.choice(n, size=size, replace=replace, p=p)
+    return np.array(a)[idx]
