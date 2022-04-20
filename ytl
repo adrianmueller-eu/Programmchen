@@ -1,7 +1,8 @@
 #!/bin/bash
+SHELL=bash # communicate to ~/.profile
 
-shopt -s expand_aliases
-source ~/.profile  # index aliases
+#shopt -s expand_aliases
+source ~/.profile # index aliases
 declare -a yts=($(alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'))
 
 function die() {
