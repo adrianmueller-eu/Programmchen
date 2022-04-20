@@ -158,6 +158,7 @@ alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
 alias rll="sed 's/.\{250,\}/***LONG LINE HERE***/'"
 alias psh="ps aux | head"
 alias h="waitnet -s && howdoi"
+alias path="echo $PATH | tr ':' $'\n'"
 
 alias pbc=pbcopy
 alias pbp=pbpaste
