@@ -72,7 +72,10 @@ def series(f, pr=False, max_iter=100000):
     raise ValueError("Series doesn't converge!")
 
 def normalize(a, p=2, remove_global_phase=True):
-     a = np.array(a)
+     if is_complex(a):
+         a = np.array(a, dtype=complex)
+     else:
+         a = np.array(a, dtype=float)
      a /= np.linalg.norm(a, ord=p)
      if remove_global_phase and is_complex(a):
          a *= np.exp(-1j*np.angle(a[0]))
