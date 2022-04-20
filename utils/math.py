@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+from math import factorial
 
 Phi = (1 + np.sqrt(5))/2
 
@@ -28,11 +29,9 @@ def rad(x):
     return x/180*np.pi
 
 try:
-   expm
-except NameError:
+    from scipy.linalg import expm, logm
+except:
     def expm(A0):
-        from math import factorial
-
         # there is a faster method for hermitian matrices
         if is_hermitian(A0):
             eigval, eigvec = np.linalg.eig(A0)
