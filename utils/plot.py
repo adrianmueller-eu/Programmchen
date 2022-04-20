@@ -194,7 +194,7 @@ def imshow(a, cmap_for_real="hot", yticks=None, figsize=(8,6), **pltargs): # TOD
         r = np.abs(z)
         arg = np.angle(z)
 
-        h = (arg + np.pi)  / (2 * np.pi) + 0.5
+        h = arg  / (2 * np.pi)
         l = 1.0 - 1.0/(1.0 + r**0.3)
         s = 0.8
 
@@ -235,7 +235,7 @@ def imshow(a, cmap_for_real="hot", yticks=None, figsize=(8,6), **pltargs): # TOD
         else:
             a = a.real
             plt.imshow(a, cmap=cmap_for_real, **pltargs)
-        plt.colorbar()
+            plt.colorbar()
         plt.show()
     else:
         raise ValueError(f"Array must be 2D or 1D, but shape was {a.shape}")
