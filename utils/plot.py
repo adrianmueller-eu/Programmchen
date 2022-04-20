@@ -250,7 +250,7 @@ def bar(heights, log=False):
     plt.tight_layout()
     plt.show()
 
-def plotQ(state, showqubits=None):
+def plotQ(state, showqubits=None, figsize=(16,4)):
     def tobin(n, places):
         return ("{0:0" + str(places) + "b}").format(n)
 
@@ -271,7 +271,7 @@ def plotQ(state, showqubits=None):
         state /= np.linalg.norm(state) # renormalize
         n = int(np.log2(len(state))) # update n
 
-    fig, axs = plt.subplots(1,2, figsize=(12,3))
+    fig, axs = plt.subplots(1,2, figsize=figsize)
     fig.subplots_adjust(right=1.2)
 
     # show coefficient distribution
