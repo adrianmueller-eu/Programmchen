@@ -86,6 +86,9 @@ def choice(a, size=None, replace=True, p=None):
         if np.abs(np.sum(p) - 1) > sys.float_info.epsilon:
             p = normalize(p, p=1)
 
-    n = len(a)
-    idx = np.random.choice(n, size=size, replace=replace, p=p)
-    return np.array(a)[idx]
+    if hasattr(a, '__len__'):
+        n = len(a)
+        idx = np.random.choice(n, size=size, replace=replace, p=p)
+        return np.array(a)[idx]
+    else:
+        return np.random.choice(a, size=size, replace=replace, p=p)
