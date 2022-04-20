@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import collections
-from .math import is_complex, is_symmetric
+from .math import is_complex, is_symmetric, normalize
 from .utils import *
 
 def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pltargs):
@@ -256,20 +256,33 @@ def plotQ(state, showqubits=None, figsize=(16,4)):
 
     state = np.array(state)
     n = int(np.log2(len(state))) # nr of qubits
+    probs = np.abs(state)**2
 
     # trace out unwanted qubits
     if showqubits is not None:
+        # sanity checks
+        if not hasattr(showqubits, '__len__'):
+            showqubits = [showqubits]
+        if len(showqubits) == 0:
+            showqubits = range(n)
+        elif max(showqubits) >= n:
+            raise ValueError(f"No such qubit: %d" % max(showqubits))
+
         state = state.reshape(tuple([2]*n)).T
+        probs = probs.reshape(tuple([2]*n)).T
 
         cur = 0
         for i in range(n):
             if i not in showqubits:
-                state = np.mean(state, axis=cur)
+                state = np.sum(state, axis=cur)
+                probs = np.sum(probs, axis=cur)
             else:
                 cur += 1
         state = state.flatten()
-        state /= np.linalg.norm(state) # renormalize
+        state = normalize(state) # renormalize
         n = int(np.log2(len(state))) # update n
+        probs = probs.flatten()
+        assert np.abs(np.sum(probs) - 1) < 1e-15
 
     fig, axs = plt.subplots(1,2, figsize=figsize)
     fig.subplots_adjust(right=1.2)
@@ -295,7 +308,6 @@ def plotQ(state, showqubits=None, figsize=(16,4)):
     axs[0].grid()
 
     # show probabilities
-    probs = np.abs(state)**2
     toshow = {}
     cumsum = 0
     for idx in probs.argsort()[-20:][::-1]: # only look at 20 largest
