@@ -1,5 +1,8 @@
 import numpy as np
 
+T = True
+F = False
+
 def moving_avg(x, w=3):
     return np.convolve(x, np.ones(w), 'valid') / w
 
