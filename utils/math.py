@@ -19,6 +19,8 @@ def is_hermitian(a, rtol=1e-05, atol=1e-08):
     return np.allclose(a, a.conj().T, rtol=rtol, atol=atol)
 
 def is_complex(a):
+    if hasattr(a, 'dtype'):
+        return a.dtype == complex
     return np.iscomplex(a).any()
 #    return a.dtype == "complex128"
 
