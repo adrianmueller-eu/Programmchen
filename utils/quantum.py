@@ -36,6 +36,8 @@ try:
 
         if showstate:
             state = np.array(result.get_statevector())
+            # qiskit outputs the qubits in the reverse order
+            state = reverse_qubit_order(state)
             plotQ(state, showqubits, figsize=figsize)
             return result, state
         else:
