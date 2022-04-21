@@ -1,6 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from .math import expm, normalize
-from .plot import plotQ
+from .plot import _colorize_complex
 
 sigma_x = np.array([
     [0, 1],

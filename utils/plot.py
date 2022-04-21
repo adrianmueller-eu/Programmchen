@@ -187,22 +187,22 @@ def scatter1d(data, xticks=None, **pltargs):
     fig.tight_layout()
     plt.show()
 
-def imshow(a, cmap_for_real="hot", yticks=None, figsize=(8,6), **pltargs): # TODO: figsize
+def _colorize_complex(z):
     from colorsys import hls_to_rgb
 
-    def colorize(z):
-        r = np.abs(z)
-        arg = np.angle(z)
+    r = np.abs(z)
+    arg = np.angle(z)
 
-        h = arg  / (2 * np.pi)
-        l = 1.0 - 1.0/(1.0 + r**0.3)
-        s = 0.8
+    h = arg  / (2 * np.pi)
+    l = 1.0 - 1.0/(1.0 + r**0.3)
+    s = 0.8
 
-        c = np.vectorize(hls_to_rgb) (h,l,s) # --> tuple
-        c = np.array(c)  # -->  array of (3,n,m) shape, but need (n,m,3)
-        c = c.transpose(1,2,0)
-        return c
+    c = np.vectorize(hls_to_rgb) (h,l,s) # --> tuple
+    c = np.array(c)  # -->  array of (3,n,m) shape, but need (n,m,3)
+    c = c.transpose(1,2,0)
+    return c
 
+def imshow(a, cmap_for_real="hot", yticks=None, figsize=(8,6), **pltargs):
     a = np.array(a)
     if len(a.shape) == 1:
         a = a[:,None] # vertical
@@ -230,7 +230,7 @@ def imshow(a, cmap_for_real="hot", yticks=None, figsize=(8,6), **pltargs): # TOD
     elif len(a.shape) == 2:
         plt.figure(figsize=figsize)
         if is_complex(a):
-            img = colorize(a)
+            img = _colorize_complex(a)
             plt.imshow(img, **pltargs)
         else:
             a = a.real
