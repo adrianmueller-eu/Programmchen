@@ -250,76 +250,20 @@ def bar(heights, log=False):
     plt.tight_layout()
     plt.show()
 
-def plotQ(state, showqubits=None, figsize=(16,4)):
-    def tobin(n, places):
-        return ("{0:0" + str(places) + "b}").format(n)
+def _colorize_complex(z):
+    from colorsys import hls_to_rgb
 
-    state = np.array(state)
-    n = int(np.log2(len(state))) # nr of qubits
-    probs = np.abs(state)**2
+    r = np.abs(z)
+    arg = np.angle(z)
 
-    # trace out unwanted qubits
-    if showqubits is not None:
-        # sanity checks
-        if not hasattr(showqubits, '__len__'):
-            showqubits = [showqubits]
-        if len(showqubits) == 0:
-            showqubits = range(n)
-        elif max(showqubits) >= n:
-            raise ValueError(f"No such qubit: %d" % max(showqubits))
+    h = arg  / (2 * np.pi)
+    l = 1.0 - 1.0/(1.0 + r**0.3)
+    s = 0.8
 
-        state = state.reshape(tuple([2]*n)).T
-        probs = probs.reshape(tuple([2]*n)).T
-
-        cur = 0
-        for i in range(n):
-            if i not in showqubits:
-                state = np.sum(state, axis=cur)
-                probs = np.sum(probs, axis=cur)
-            else:
-                cur += 1
-        state = state.flatten()
-        state = normalize(state) # renormalize
-        n = int(np.log2(len(state))) # update n
-        probs = probs.flatten()
-        assert np.abs(np.sum(probs) - 1) < 1e-15
-
-    fig, axs = plt.subplots(1,2, figsize=figsize)
-    fig.subplots_adjust(right=1.2)
-
-    # show coefficient distribution
-    if n < 6:
-        basis = [tobin(i, n) for i in range(2**n)]
-        #plot(basis, state, ".", figsize=(10,3))
-        axs[0].scatter(basis, state.real, label="real")
-        axs[0].scatter(basis, state.imag, label="imag")
-        axs[0].tick_params(axis="x", rotation=45)
-    elif n < 9:
-        axs[0].scatter(range(2**n), state.real, label="real")
-        axs[0].scatter(range(2**n), state.imag, label="imag")
-    else:
-        axs[0].plot(range(2**n), state.real, label="real")
-        axs[0].plot(range(2**n), state.imag, label="imag")
-
-    #from matplotlib.ticker import StrMethodFormatter
-    #axs[0].xaxis.set_major_formatter(StrMethodFormatter("{x:0"+str(n)+"b}"))
-
-    axs[0].legend()
-    axs[0].grid()
-
-    # show probabilities
-    toshow = {}
-    cumsum = 0
-    for idx in probs.argsort()[-20:][::-1]: # only look at 20 largest
-        if cumsum <= 0.96:
-            toshow[tobin(idx, n)] = probs[idx]
-            cumsum += probs[idx]
-    toshow["rest"] = max(0,1-cumsum)
-
-    axs[1].pie(toshow.values(), labels=toshow.keys(), autopct=lambda x: f"%.1f%%" % x)
-
-    fig.tight_layout()
-    plt.show()
+    c = np.vectorize(hls_to_rgb) (h,l,s) # --> tuple
+    c = np.array(c)  # -->  array of (3,n,m) shape, but need (n,m,3)
+    c = c.transpose(1,2,0)
+    return c
 
 def rgb(r,g=1.0,b=1.0,a=1.0, as255=False):
     conv = 1 if as255 else 1/255
