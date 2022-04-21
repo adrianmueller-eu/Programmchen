@@ -16,15 +16,15 @@ sigma_z = np.array([
     [0, -1]
 ])
 
-def reverse_qubit_order(state):
-    state = np.array(state)
-    n = int(np.log2(len(state)))
-    return state.reshape([2]*n).T.flatten()
-
 try:
     from qiskit import Aer, transpile, assemble, execute
     from qiskit import QuantumCircuit
     from qiskit.quantum_info.operators import Operator
+
+    # Other useful imports
+    from qiskit import ClassicalRegister, QuantumRegister
+    from qiskit.visualization import plot_histogram, plot_bloch_multivector
+    from qiskit.circuit.library import PhaseEstimation
 
     def run(circuit, shots=2**11, showstate=True, showqubits=None, figsize=(16,4)):
         if showstate:
