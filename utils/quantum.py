@@ -62,6 +62,12 @@ try:
         sim = execute(circ, Aer.get_backend('unitary_simulator')) # run the simulator
         return sim.result().get_unitary(circ, decimals=decimals)
 
+    def get_pe_energies(circ):
+        u = get_unitary(circ)
+        eigvals, eigvecs = np.linalg.eig(u)
+        energies = np.angle(eigvals)/(2*np.pi)
+        return energies
+
 except ModuleNotFoundError:
     print("Warning: qiskit not installed!")
     pass
