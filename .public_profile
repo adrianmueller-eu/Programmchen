@@ -1100,9 +1100,9 @@ function po() (
   [[ -z "$*" ]] && echo "Please give a pass-name for grabbing online login site." && return 1;
   p_res=$(pass "$*") || return $?
 
-  res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^o: ")
+  res=$(printf "%s" "$p_res" | grep --binary-files=text -m 1 -e "^o: ")
   [[ -z $res ]] && echo "No online link found for: $*" && return 1
-  res=$(echo "$res" | cut -c 4-)
+  res=$(printf "%s" "$res" | cut -c 4-)
 
   if [[ "$res" != *".app" ]] && which f >/dev/null; then
     f "$res"
