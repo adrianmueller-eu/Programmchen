@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from .math import expm, normalize
+from .math import matexp, normalize
 from .plot import _colorize_complex
 
 sigma_x = np.array([
@@ -48,13 +48,13 @@ try:
             self.H = H
             self.n = int(np.log2(len(self.H)))
             super().__init__(self.n)     # circuit on n qubits
-            u = expm(1j*self.H)          # create unitary from hamiltonian
+            u = matexp(1j*self.H)          # create unitary from hamiltonian
             self.all_qubits = list(range(self.n))
             self.unitary(Operator(u), self.all_qubits, label="exp^iH") # add unitary to circuit
 
         def power(self, k):
             q_k = QuantumCircuit(self.n)
-            u = expm(1j*k*self.H)
+            u = matexp(1j*k*self.H)
             q_k.unitary(Operator(u), self.all_qubits, label=f"exp^i{k}H")
             return q_k
 

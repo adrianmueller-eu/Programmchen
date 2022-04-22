@@ -31,9 +31,9 @@ def rad(x):
     return x/180*np.pi
 
 try:
-    from scipy.linalg import expm, logm
+    from scipy.linalg import expm as matexp
 except:
-    def expm(A0):
+    def matexp(A0):
         # there is a faster method for hermitian matrices
         if is_hermitian(A0):
             eigval, eigvec = np.linalg.eig(A0)
@@ -52,7 +52,7 @@ except:
 
         raise ValueError("Convergence failed! (try scipy.linalg.expm instead)")
 
-    def logm(A):
+    def matlog(A):
         evals, evecs = np.linalg.eig(A)
         return evecs @ np.diag(np.log(evals.astype(complex))) @ evecs.conj().T
 

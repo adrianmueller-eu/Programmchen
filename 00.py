@@ -10,7 +10,7 @@ try:
     import scipy
     from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
     from scipy.optimize import minimize
-    from scipy.linalg import expm
+    from scipy.linalg import expm as matexp
 except:
     from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
 import itertools # https://docs.python.org/3/library/itertools.html

@@ -3,11 +3,6 @@ import matplotlib.pyplot as plt
 from numpy.polynomial.polynomial import polyfit, polyval
 from abc import ABC, abstractmethod
 
-# TODO: exponential fit
-# TODO: log fit
-# TODO: sin, cos
-# TODO: arbitrary kernel
-
 # convenience functions
 def pm(x, y, deg, plot=True):
     if deg >= 0:
@@ -23,6 +18,11 @@ def pm(x, y, deg, plot=True):
 
 def lm(x, y, plot=True):
     return pm(x, y, 1, plot)
+
+# expm
+# logm
+# sinm
+# arm
 
 # helper methods
 def _generate_poly_label(coeff):
