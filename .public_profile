@@ -22,13 +22,28 @@ alias td="tree -faFhpNd --du"
 alias fd="fd -H"
 alias fdd="fd -t d"
 alias fdf="fd -t f"
-alias fzf="fzf -1 --no-mouse --bind='ctrl-t:toggle-preview' --exit-0 --color=hl:9,hl+:1 --preview=\"if [[ -r {} ]]; then \
-  printf '\e[37m'; file {} | tr -d '\n'; printf ' ('; stat -f '%z' {} | tr -d '\n'; printf ' Bytes)'; printf '\e[0m\n'; cat {}; \
-elif [[ -r {-1} ]]; then \
-  printf '\e[37m'; file {-1} | tr -d '\n'; printf ' ('; stat -f '%z' {-1} | tr -d '\n'; printf ' Bytes)'; printf '\e[0m\n'; cat {-1}; \
-else \
-  echo 'Invalid file name: ' {}; \
-fi\" --preview-window=right" #--preview-window=right:hidden
+function fzf() {
+  command fzf -1 --no-mouse --bind='ctrl-t:toggle-preview' --exit-0 --color=hl:9,hl+:1 --preview="
+if [[ -r {} ]]; then
+  printf '\e[37m'
+  file {} | tr -d '\n'
+  printf ' ('
+  stat -f '%z' {} | tr -d '\n'
+  printf ' Bytes)'
+  printf '\e[0m\n'
+  head -n $((LINES-4)) {} | pygmentize -O style=dracula -g
+elif [[ -r {-1} ]]; then
+  printf '\e[37m'
+  file {-1} | tr -d '\n'
+  printf ' ('
+  stat -f '%z' {-1} | tr -d '\n'
+  printf ' Bytes)'
+  printf '\e[0m\n'
+  head -n $((LINES-4)) {-1} | pygmentize -O style=dracula -g
+else
+  echo 'Invalid file name: ' {}
+fi" --preview-window=right "$@" #--preview-window=right:hidden
+}
 
 fdt() (
   \fd -t f -H --exclude ".git/*" --exec-batch stat -f '%c %N' "{}" \; | sort -nr | \
