@@ -174,10 +174,6 @@ alias rll="sed 's/.\{250,\}/***LONG LINE HERE***/'"
 alias psh="ps aux | head"
 alias h="waitnet -s && howdoi"
 alias path="echo $PATH | tr ':' $'\n'"
-alias pg="pgrep -ila"
-function pgf() {
-  pgrep -ilaf "$@" | grep -v " grep " | grep -i -- "${@: -1}"
-}
 
 alias pbc=pbcopy
 alias pbp=pbpaste
@@ -191,6 +187,10 @@ alias mvninit="mvn archetype:generate"
 # grep
 alias rg="rg --hidden --glob '!.git/*' -i"
 alias g=grep
+alias pg="pgrep -ila"
+function pgf() {
+  pgrep -ilaf "$@" | grep -v " grep " | grep -i -- "${@: -1}"
+}
 # date
 alias date="date -j"
 alias cal="gcal --starting-day=1 --with-week-number -q DE_BY -G"
