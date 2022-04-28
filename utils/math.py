@@ -4,19 +4,33 @@ from math import factorial
 
 Phi = (1 + np.sqrt(5))/2
 
-def is_symmetric(a, rtol=1e-05, atol=1e-08):
+def _sq_matrix_allclose(a, f, rtol=1e-05, atol=1e-08):
     a = np.array(a)
     if len(a.shape) != 2 or a.shape[0] != a.shape[1]:
         return False
     a[np.isnan(a)] = 0
-    return np.allclose(a, a.T, rtol=rtol, atol=atol)
+    a, b = f(a)
+    return np.allclose(a, b, rtol=rtol, atol=atol)
+
+def is_symmetric(a, rtol=1e-05, atol=1e-08):
+    return _sq_matrix_allclose(a, lambda a: (
+    	a, a.T
+    ), rtol=rtol, atol=atol)
 
 def is_hermitian(a, rtol=1e-05, atol=1e-08):
-    a = np.array(a)
-    if len(a.shape) != 2 or a.shape[0] != a.shape[1]:
-        return False
-    a[np.isnan(a)] = 0
-    return np.allclose(a, a.conj().T, rtol=rtol, atol=atol)
+    return _sq_matrix_allclose(a, lambda a: (
+    	a, a.conj().T
+    ), rtol=rtol, atol=atol)
+
+def is_unitary(a, rtol=1e-05, atol=1e-08):
+    return _sq_matrix_allclose(a, lambda a: (
+    	a @ a.conj().T, np.eye(a.shape[0])
+    ), rtol=rtol, atol=atol)
+
+def is_involutory(a, rtol=1e-05, atol=1e-08):
+    return _sq_matrix_allclose(a, lambda a: (
+    	a @ a, np.eye(a.shape[0])
+    ), rtol=rtol, atol=atol)
 
 def is_complex(a):
     if hasattr(a, 'dtype'):
