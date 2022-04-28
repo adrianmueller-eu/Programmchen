@@ -124,9 +124,10 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
         toshow = {}
         cumsum = 0
         for idx in probs.argsort()[-20:][::-1]: # only look at 20 largest
-            if cumsum <= 0.96:
-                toshow[tobin(idx, n)] = probs[idx]
-                cumsum += probs[idx]
+            if cumsum > 0.96 or probs[idx] < 0.01:
+                break
+            toshow[tobin(idx, n)] = probs[idx]
+            cumsum += probs[idx]
         toshow["rest"] = max(0,1-cumsum)
         ax.pie(toshow.values(), labels=toshow.keys(), autopct=lambda x: f"%.1f%%" % x)
 
