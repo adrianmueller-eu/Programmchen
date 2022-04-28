@@ -47,7 +47,7 @@ try:
         def __init__(self, H):
             self.H = H
             self.n = int(np.log2(len(self.H)))
-            super().__init__(self.n)     # circuit on n qubits
+            super().__init__(self.n)       # circuit on n qubits
             u = matexp(1j*self.H)          # create unitary from hamiltonian
             self.all_qubits = list(range(self.n))
             self.unitary(Operator(u), self.all_qubits, label="exp^iH") # add unitary to circuit
