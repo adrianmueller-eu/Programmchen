@@ -172,7 +172,7 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
         state = normalize(state) # renormalize
         n = int(np.log2(len(state))) # update n
         probs = probs.flatten()
-        assert np.abs(np.sum(probs) - 1) < 1e-15
+        assert np.abs(np.sum(probs) - 1) < 1e-5, np.sum(probs)
 
     if showcoeff and showprobs and showrho:
         if figsize is None:
