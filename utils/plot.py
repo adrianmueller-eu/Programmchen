@@ -85,6 +85,8 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
         plt.xlabel(xlabel)
     if ylabel:
         plt.ylabel(ylabel)
+    if "label" in pltargs:
+        plt.legend()
     if title:
         plt.title(title)
     plt.gca().spines["top"].set_visible(False)
