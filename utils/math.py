@@ -107,3 +107,28 @@ def choice(a, size=None, replace=True, p=None):
         return np.array(a)[idx]
     else:
         return np.random.choice(a, size=size, replace=replace, p=p)
+
+def float_to_binstr(f):
+    i = 0
+    while int(f) != f:
+        f *= 2
+        i += 1
+    as_str = str(bin(int(f))).replace('b', '0')
+    if i == 0:
+        return as_str[2:]
+    return as_str[2:-i] + '.' + as_str[-i:]
+
+def binstr_to_float(s):
+    s = s.split('.')
+    if len(s) > 1:
+        pre = 0
+        frac = 0
+        if len(s[0]) > 0:
+            pre = int(s[0], 2)
+        if len(s[1]) > 0:
+            frac = int(s[1], 2) / 2.**len(s[1])
+        return pre + frac
+    return int(s[0], 2)
+
+def int_to_binstr(n, places=0):
+    return ("{0:0" + str(places) + "b}").format(n)
