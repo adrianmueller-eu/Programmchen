@@ -4,9 +4,7 @@ export PATH="/opt/homebrew/bin:$PATH"
 export FPATH="$(brew --prefix)/share/zsh/site-functions:$FPATH"
 export FPATH="$(brew --prefix)/share/zsh-completions:$FPATH"
 
-# Command execution time stamp shown in the history command output (see 'man strftime')
-HIST_STAMPS="dd.mm.yyyy"
-COMPLETION_WAITING_DOTS="true"
+HIST_STAMPS="dd.mm.yyyy" # see man strftime
 
 plugins=(
   git
@@ -22,12 +20,17 @@ source "$ZSH/oh-my-zsh.sh"
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 # setopt sh_word_split
 
-ENABLE_CORRECTION="true"
-autoload -U +X bashcompinit && bashcompinit
-#autoload -U +X compinit && compinit
 source ~/.profile
 
 ### completions
+COMPLETION_WAITING_DOTS="true"
+ENABLE_CORRECTION="true"
+autoload -U +X bashcompinit && bashcompinit
+#autoload -U +X compinit && compinit
+#_comp_options+=(
+#  globdots # show hidden folders in tab completion without preceding "."
+#)
+
 # https://stackoverflow.com/questions/14307086/tab-completion-for-aliased-sub-commands-in-zsh-alias-gco-git-checkout
 if hash pass &>/dev/null; then
   compdef pc=pass
@@ -50,8 +53,8 @@ ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[yellow]%}*"
 # disable marking untracked files under VCS as dirty
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
 ZSH_THEME_GIT_PROMPT_CLEAN=""
-PROMPT='%(?..%F{red})%*%f %c$(git_prompt_info)%(!.%F{red}.)$%f '
 # see http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
+PROMPT='%(?..%F{red})%*%f %c$(git_prompt_info)%(!.%F{red}.)$%f '
 
 ### zsh things
 alias t="whence -avs"
