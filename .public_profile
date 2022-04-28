@@ -678,6 +678,10 @@ function catf() {
   _pick_and_execute -f cat "$@"
 }
 
+function ccat() {
+  _pick_and_execute -f "pygmentize -O style=dracula -g" "$@"
+}
+
 function cdf() {
   local picked__dir=$(fd -t d | grep -v '\.git/' | fzf --query="$1") || return $?
   cd "$picked__dir"
