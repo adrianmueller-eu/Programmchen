@@ -460,6 +460,30 @@ function panoptoDownload() ( # TODO: seems not to work anymore
   echo "$links" | xargs -L 1 youtube-dl
 )
 
+function dm() (
+  if [[ -z $1 ]]; then
+    echo "Enter a word, phrase, description, or pattern to find related words.
+Usage: \e[1m$0\e[0m \e[4mkeyword\e[0m \e[4mquery\e[0m \e[4m...\e[0m
+
+Valid \e[4mkeyword\e[0ms:
+ml      \e[1mMeans like\e[0m constraint: require that the results have a meaning related to \e[4mquery\e[0m.
+        This is effectively the reverse dictionary feature of OneLook [1].
+sl      \e[1mSounds like\e[0m constraint: require that the results are pronounced similarly to \e[4mquery\e[0m.
+sp      \e[1mSpelled like\e[0m constraint: require that the results are spelled similarly to \e[4mquery\e[0m,
+        or that they match this \e[3mwildcard pattern\e[0m [2]. The most commonly used symbols
+        are * (any number of characters) and ? (exactly one character).
+
+More info: https://www.datamuse.com/api/
+[1] https://onelook.com/reverse-dictionary.shtml
+[2] https://onelook.com/thesaurus/#patterns"
+    return 1
+  fi
+  keyword=$1
+  shift
+  res=$(curl -SsG -m 10 "https://api.datamuse.com/words" --data-urlencode "max=42" --data-urlencode "$keyword=$*") || return $?
+  printf "%s" "$res" | jq -c '.[] | .word' | tr -d '"'
+)
+
 #############################
 ### applications
 #############################
