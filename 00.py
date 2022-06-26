@@ -6,6 +6,7 @@ try:
     integral # see if sage is loaded
 except:
     from math import *
+    from numpy import product as mul
 try:
     import scipy
     from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
