@@ -197,6 +197,12 @@ saveToPass ~/.private_profile
 echo "Save dockitems to pass"
 defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g' | pass insert -m dockitems > /dev/null || die "Copying dockitems into pass failed"
 
+# backup im backup im backup ... Notes!
+pushd "$C/Notes" >&/dev/null
+git add .
+git commit -m "Backup"
+popd >&/dev/null
+
 if [[ -z "$target" ]]; then
   if [[ -d "$default_target" ]]; then
     target="$default_target"
