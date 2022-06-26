@@ -75,7 +75,15 @@ except ModuleNotFoundError:
 def reverse_qubit_order(state):
     state = np.array(state)
     n = int(np.log2(len(state)))
-    return state.reshape([2]*n).T.flatten()
+
+    # if vector, just reshape
+    if len(state.shape) == 1 or state.shape[0] != state.shape[1]:
+        return state.reshape([2]*n).T.flatten()
+    # if matrix, reverse qubit order in eigenvectors
+    elif state.shape[0] == state.shape[1]:
+        vals, vecs = np.linalg.eig(state)
+        vecs = np.array([reverse_qubit_order(vecs[:,i]) for i in range(2**n)])
+        return vecs.T @ np.diag(vals) @ vecs
 
 def partial_trace(rho, retain_qubits=[0,1]):
     rho = np.array(rho)
