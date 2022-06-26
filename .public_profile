@@ -1371,12 +1371,24 @@ freq = A4 * 2**n
 print(f"%.4f" % freq)' $1 $2
 }
 
-function guitar() {
+sound() (
+  if [[ -z $1 ]]; then
+    frequency=440 # A4
+  elif [[ $1 =~ '^[0-9]+(\.[0-9]+)?$' ]] ; then
+    frequency=$1
+  else
+    frequency=$(freq $1) || return 1
+  fi
+
+  play -n synth sin $frequency >&/dev/null
+)
+
+guitar() { # don't execute in subshell!
   strings=(E2 A2 D3 G3 H3 E4)
   for string in $strings; do
-    freqency=$(freq $string)
     printf "$string"
-    play -n synth sin $freqency >&/dev/null
+    sound $string
     printf "\r\e[K"
   done
 }
+
