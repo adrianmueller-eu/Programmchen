@@ -95,9 +95,9 @@ elif [[ -n "$goal" ]]; then
   pdflatex -output-directory "$goal_dir" "$goal" || die 'First latex compilation run failed'
   if [[ $SHORT == "false" ]]; then
     if cat "$goal" | grep '^\\printbibliography' >/dev/null; then
-      biber "${goal%.*}"
+      biber "${goal%.*}" || die 'Biber run failed. Try `rm -rf $(biber --cache)`.' # clear cache if exit code 2
     else
-      bibtex "${goal%.*}.aux"
+      bibtex "${goal%.*}.aux" || die 'Bibtex run failed.'
     fi
     pdflatex -output-directory "$goal_dir" "$goal" || die 'Second latex compilation run failed'
     pdflatex -output-directory "$goal_dir" "$goal" || die 'Third latex compilation run failed'
