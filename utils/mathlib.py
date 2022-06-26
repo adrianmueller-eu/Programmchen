@@ -4,6 +4,10 @@ from math import factorial
 
 Phi = (1 + np.sqrt(5))/2
 
+def Fibonacci(n):
+    Psi = 1 - Phi
+    return (Phi**n - Psi**n)/(Phi - Psi) # /np.sqrt(5)
+
 def _sq_matrix_allclose(a, f, rtol=1e-05, atol=1e-08):
     a = np.array(a)
     if len(a.shape) != 2 or a.shape[0] != a.shape[1]:
