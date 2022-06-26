@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from numpy.polynomial.polynomial import polyfit, polyval
 from abc import ABC, abstractmethod
 
@@ -59,6 +58,8 @@ class Function(ABC):
         pass
 
     def plot(self, x, ax=None):
+        import matplotlib.pyplot as plt
+        
         if ax is None:
             ax = plt.gca()
         ax.plot(x, self(x), label=self._plot_label())

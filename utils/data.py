@@ -1,8 +1,9 @@
 import numpy as np
-import pandas as pd
 
 # make a list out of a pd.corr() matrix
 def corrList(corr, index_names=["feature 1", "feature 2"]):
+    import pandas as pd
+    
     corr = corr.where(np.triu(np.ones(corr.shape), 1).astype(bool))
     corr = pd.DataFrame(corr.stack(), columns=["correlation"])
     corr.index.names = index_names

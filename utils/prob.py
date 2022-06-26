@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from math import factorial
 
@@ -33,6 +32,8 @@ def smooth(y, smoothing=0.1):
 
 # converts 1-d data into a pdf, smoothing in [0,1]
 def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=None):
+    import matplotlib.pyplot as plt
+    
     if log:
         bins = logbins(data, scale=2, num=num_bins+1 if num_bins else bins_sqrt(data)+1)
         n, bin_edges = np.histogram(data, bins=bins, density=True)
@@ -160,6 +161,8 @@ class P:
         return self.x[np.argmax(self.y)]
 
     def plot(self, show=False, *pltargs, **pltkwargs):
+        import matplotlib.pyplot as plt
+        
         plt.plot(self.x, self.y, *pltargs, **pltkwargs)
         if show:
             plt.show()
