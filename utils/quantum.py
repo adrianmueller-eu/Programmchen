@@ -152,6 +152,37 @@ def _partial_trace(rho, subsystem_dims, subsystem_to_trace_out=0):
     rho_dim = np.prod(dims_untraced)
     return traced_out_rho.reshape(rho_dim, rho_dim)
 
+def state_trace(state, retain_qubits):
+    state = np.array(state)
+    state[np.isnan(state)] = 0
+    n = int(np.log2(len(state))) # nr of qubits
+
+    # sanity checks
+    if not hasattr(retain_qubits, '__len__'):
+        retain_qubits = [retain_qubits]
+    if len(retain_qubits) == 0:
+        retain_qubits = range(n)
+    elif max(retain_qubits) >= n:
+        raise ValueError(f"No such qubit: %d" % max(retain_qubits))
+
+    state = state.reshape(tuple([2]*n))
+    probs = np.abs(state)**2
+
+    cur = 0
+    for i in range(n):
+        if i not in retain_qubits:
+            state = np.sum(state, axis=cur)
+            probs = np.sum(probs, axis=cur)
+        else:
+            cur += 1
+    state = state.flatten()
+    state = normalize(state) # renormalize
+    n = int(np.log2(len(state))) # update n
+    probs = probs.flatten()
+    assert np.abs(np.sum(probs) - 1) < 1e-5, np.sum(probs)
+
+    return state, probs
+
 def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False, figsize=None):
     def tobin(n, places):
         return ("{0:0" + str(places) + "b}").format(n)
