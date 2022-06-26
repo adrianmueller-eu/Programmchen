@@ -3,18 +3,65 @@ import matplotlib.pyplot as plt
 from .mathlib import matexp, normalize
 from .plot import _colorize_complex
 
-sigma_x = np.array([
+def Rx(theta):
+   return np.array([
+              [np.cos(theta/2), -1j*np.sin(theta/2)],
+              [-1j*np.sin(theta/2), np.cos(theta/2)]
+          ], dtype=complex)
+
+def Ry(theta):
+   return np.array([
+              [np.cos(theta/2), -np.sin(theta/2)],
+              [np.sin(theta/2), np.cos(theta/2)]
+          ], dtype=complex)
+
+def Rz(theta):
+   return np.array([
+              [np.exp(-1j*theta/2), 0],
+              [0, np.exp(1j*theta/2)]
+          ], dtype=complex)
+
+fs = lambda x: 1/np.sqrt(x)
+f2 = fs(2)
+I = np.eye(2)
+X = np.array([ # 1j*Rx(np.pi)
     [0, 1],
     [1, 0]
-])
-sigma_y = np.array([
+], dtype=complex)
+Y = np.array([ # 1j*Ry(np.pi)
     [0, -1j],
     [1j,  0]
-])
-sigma_z = np.array([
+], dtype=complex)
+Z = np.array([ # 1j*Rz(np.pi)
     [1,  0],
     [0, -1]
-])
+], dtype=complex)
+S = np.array([
+    [1,  0],
+    [0, 1j]
+], dtype=complex)
+T = np.array([
+    [1,  0],
+    [0,  np.sqrt(1j)]
+], dtype=complex)
+H = np.array([
+    [1,  1],
+    [1, -1]
+], dtype=complex)
+C_ = lambda A: np.array([
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, A[0,0], A[0,1]],
+    [0, 0, A[1,0], A[1,1]]
+], dtype=complex)
+CX = C_(X)
+CNOT = CX
+SWAP = np.array([ # CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
+    [1, 0, 0, 0],
+    [0, 0, 1, 0],
+    [0, 1, 0, 0],
+    [0, 0, 0, 1]
+], dtype=complex)
 
 try:
     from qiskit import Aer, transpile, assemble, execute
