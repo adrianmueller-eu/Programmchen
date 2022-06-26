@@ -232,36 +232,13 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
             ax.tick_params(axis="x", rotation=45)
 
     state = np.array(state)
-    n = int(np.log2(len(state))) # nr of qubits
-    probs = np.abs(state)**2
 
     # trace out unwanted qubits
     if showqubits is None:
+        n = int(np.log2(len(state))) # nr of qubits
         showqubits = range(n)
-    else:
-        # sanity checks
-        if not hasattr(showqubits, '__len__'):
-            showqubits = [showqubits]
-        if len(showqubits) == 0:
-            showqubits = range(n)
-        elif max(showqubits) >= n:
-            raise ValueError(f"No such qubit: %d" % max(showqubits))
 
-        state = state.reshape(tuple([2]*n))
-        probs = probs.reshape(tuple([2]*n))
-
-        cur = 0
-        for i in range(n):
-            if i not in showqubits:
-                state = np.sum(state, axis=cur)
-                probs = np.sum(probs, axis=cur)
-            else:
-                cur += 1
-        state = state.flatten()
-        state = normalize(state) # renormalize
-        n = int(np.log2(len(state))) # update n
-        probs = probs.flatten()
-        assert np.abs(np.sum(probs) - 1) < 1e-5, np.sum(probs)
+    state, probs = state_trace(state, showqubits)
 
     if showcoeff and showprobs and showrho:
         if figsize is None:
