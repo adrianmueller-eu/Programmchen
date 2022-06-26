@@ -17,8 +17,8 @@ color yellow "^(    |	)* ? ? ?(\*|\+|-|[0-9]+\.)( +|	)"
 #color blue   "^[[:space:]]*[\*+-] |^[[:space:]]*[0-9]+\. "
 
 # Emphasis and strong
-color green "(^|[[:space:]])(_[^_]*_|\*[^*]*\*)"
-color brightgreen "\*\*.+\*\*|__.+__"
+color italic,green "_[^_]*_|\*[^*]*\*"
+color brightgreen "\*\*[^*]+\*\*|__[^_]+__"
 #color brightgreen "(^|[[:space:]])(__[^ ][^_]*__|\*\*[^ ][^*]*\*\*)"
 
 # Strikethrough
