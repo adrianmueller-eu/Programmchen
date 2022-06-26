@@ -9,7 +9,8 @@ def pm(x, y, deg, plot=True):
     else:
         poly = InversePolynomial.fit(x, y, deg)
     if plot:
-        ax = poly.plot(x)
+        x_ = np.linspace(min(x), max(x), 200)
+        ax = poly.plot(x_)
         ax.scatter(x,y)
         #plt.show()
     return poly
