@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from .math import matexp, normalize
+from .mathlib import matexp, normalize
 from .plot import _colorize_complex
 
 sigma_x = np.array([

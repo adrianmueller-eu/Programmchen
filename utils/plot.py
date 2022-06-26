@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import collections
-from .math import is_complex, is_symmetric, normalize
+from .mathlib import is_complex, is_symmetric, normalize
 from .utils import *
 
 def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pltargs):
