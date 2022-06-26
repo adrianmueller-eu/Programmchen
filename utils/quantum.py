@@ -188,6 +188,7 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
         return ("{0:0" + str(places) + "b}").format(n)
 
     def plotcoeff(ax):
+        n = int(np.log2(len(state))) # nr of qubits
         if n < 6:
             basis = [tobin(i, n) for i in range(2**n)]
             #plot(basis, state, ".", figsize=(10,3))
@@ -207,6 +208,7 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
         ax.grid()
 
     def plotprobs(ax):
+        n = int(np.log2(len(state))) # nr of qubits
         toshow = {}
         cumsum = 0
         for idx in probs.argsort()[-20:][::-1]: # only look at 20 largest
@@ -218,6 +220,7 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
         ax.pie(toshow.values(), labels=toshow.keys(), autopct=lambda x: f"%.1f%%" % x)
 
     def plotrho(ax):
+        n = int(np.log2(len(state))) # nr of qubits
         rho = np.outer(state, state.conj())
         rho = partial_trace(rho, retain_qubits=showqubits)
         rho = _colorize_complex(rho)
