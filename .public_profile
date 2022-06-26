@@ -1325,7 +1325,7 @@ python -c '
 # argv parsing
 from sys import argv
 try:
-  A4 = int(argv[1])
+  A4 = float(argv[1])
   pitch = argv[2]
 except:
   A4 = 440
