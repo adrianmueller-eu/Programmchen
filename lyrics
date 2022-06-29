@@ -64,7 +64,8 @@ function google() {
     printf "\"%s\" " "${CURL[@]}" -GLm 10 ${GOOG_URL} --data-urlencode "q=$query" >&2
     echo >&2
   fi
-  res=$(echo "$stream" | pup ".result-url attr{href}")
+  #echo "$stream" >&2
+  res=$(echo "$stream" | pup ".result__link attr{href}")
   #echo "$res" >&2
   if [[ -n $(echo "$res" | grep "songtexte\.com") ]]; then
     res=$(echo "$res" | grep "/songtext/")
