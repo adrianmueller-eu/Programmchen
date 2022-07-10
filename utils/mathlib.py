@@ -75,20 +75,20 @@ except:
         return evecs @ np.diag(np.log(evals.astype(complex))) @ evecs.conj().T
 
 # e.g. series(lambda n: 1/factorial(2*n)) + series(lambda n: 1/factorial(2*n + 1))
-def series(f, pr=False, max_iter=100000):
+def series(f, verbose=False, max_iter=100000):
     res = 0.0
 
     for i in range(max_iter):
         res_i = float(f(i))
         res += res_i
-        if pr:
+        if verbose:
             print(i, res, res_i)
         if res_i < sys.float_info.epsilon:
             return res # return when converged
         if res == np.inf:
             break
 
-    raise ValueError("Series doesn't converge!")
+    raise ValueError("Series didn't converge!")
 
 def normalize(a, p=2, remove_global_phase=True):
      if is_complex(a):
