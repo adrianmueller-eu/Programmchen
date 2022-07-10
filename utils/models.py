@@ -43,6 +43,9 @@ class Function(ABC):
     def fit(x, y):
         pass
 
+    def error(self, x, y):
+        return np.mean(np.abs(self(x) - y)**2)
+
     @abstractmethod
     def __call__(self, x):
         pass
@@ -60,7 +63,7 @@ class Function(ABC):
 
     def plot(self, x, ax=None):
         import matplotlib.pyplot as plt
-        
+
         if ax is None:
             ax = plt.gca()
         ax.plot(x, self(x), label=self._plot_label())
@@ -82,7 +85,9 @@ class Polynomial(Function):
         x = np.array(list(x))
         y = np.array(list(y))
         coeff = polyfit(x, y, deg)
-        return Polynomial(coeff)
+        p = Polynomial(coeff)
+        p.fit_err = p.error(x,y)
+        return p
 
     def __call__(self, x):
         return polyval(np.array(x), self.coeff)
@@ -107,7 +112,9 @@ class InversePolynomial(Function):
         x = np.array(list(x))
         y = np.array(list(y))
         coeff = polyfit(x, 1/y, -deg)
-        return InversePolynomial(coeff)
+        p = InversePolynomial(coeff)
+        p.fit_err = p.error(x,y)
+        return p
 
     def __call__(self, x):
         return 1/polyval(np.array(x), self.coeff)
