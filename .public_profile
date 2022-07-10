@@ -31,7 +31,7 @@ if [[ -r {} ]]; then
   stat -f '%z' {} | tr -d '\n'
   printf ' Bytes)'
   printf '\e[0m\n'
-  head -n $((LINES-4)) {} | pygmentize -O style=dracula -g
+  head -n $((LINES-4)) {} #| pygmentize -O style=dracula -g
 elif [[ -r {-1} ]]; then
   printf '\e[37m'
   file {-1} | tr -d '\n'
@@ -39,7 +39,7 @@ elif [[ -r {-1} ]]; then
   stat -f '%z' {-1} | tr -d '\n'
   printf ' Bytes)'
   printf '\e[0m\n'
-  head -n $((LINES-4)) {-1} | pygmentize -O style=dracula -g
+  head -n $((LINES-4)) {-1} #| pygmentize -O style=dracula -g
 else
   echo 'Invalid file name: ' {}
 fi" --preview-window=right "$@" #--preview-window=right:hidden
