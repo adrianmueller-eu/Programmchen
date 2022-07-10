@@ -5,7 +5,7 @@ def is_prime(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 55 itera
     try:
         return Miller_Rabin_Test(n, alpha)
     except ValueError as e:
-        if n == 1:
+        if n == 1 or n == 4:
             return False
         if n == 2 or n == 3:
             return True
