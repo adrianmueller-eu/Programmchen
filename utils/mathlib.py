@@ -112,7 +112,7 @@ def choice(a, size=None, replace=True, p=None):
     else:
         return np.random.choice(a, size=size, replace=replace, p=p)
 
-def float_to_binstr(f):
+def binstr_from_float(f):
     i = 0
     while int(f) != f:
         f *= 2
@@ -122,17 +122,29 @@ def float_to_binstr(f):
         return as_str[2:]
     return as_str[2:-i] + '.' + as_str[-i:]
 
-def binstr_to_float(s):
+def float_from_binstr(s):
     s = s.split('.')
-    if len(s) > 1:
-        pre = 0
-        frac = 0
-        if len(s[0]) > 0:
-            pre = int(s[0], 2)
-        if len(s[1]) > 0:
-            frac = int(s[1], 2) / 2.**len(s[1])
-        return pre + frac
-    return int(s[0], 2)
 
-def int_to_binstr(n, places=0):
+    pre = 0
+    frac = 0
+    if len(s[0]) > 0:
+        pre = int(s[0], 2)
+    if len(s) > 1 and len(s[1]) > 0:
+        frac = int(s[1], 2) / 2.**len(s[1])
+    return float(pre + frac)
+
+def binstr_from_int(n, places=0):
     return ("{0:0" + str(places) + "b}").format(n)
+
+def int_from_binstr(s):
+    return int(float_from_binstr(s))
+
+def int_from_bincoll(l):
+    #return sum([2**i*v_i for i,v_i in enumerate(reversed(l))])
+    return int_from_binstr(binstr_from_bincoll(l))
+
+def bincoll_from_binstr(s):
+    return [int(x) for x in s]
+
+def binstr_from_bincoll(l):
+    return "".join([str(x) for x in l])
