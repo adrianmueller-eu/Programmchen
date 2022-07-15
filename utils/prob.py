@@ -212,3 +212,6 @@ def softmax(a, beta=1):
      a = np.exp(beta*a)
      Z = np.sum(a)
      return a / Z
+
+def ste(ar):
+    return np.std(ar, ddof=1) / np.sqrt(len(ar))
