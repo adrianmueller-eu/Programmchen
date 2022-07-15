@@ -169,6 +169,8 @@ def state_trace(state, retain_qubits):
         retain_qubits = [retain_qubits]
     if len(retain_qubits) == 0:
         retain_qubits = range(n)
+    elif n == len(retain_qubits):
+        return state, np.abs(state)**2
     elif max(retain_qubits) >= n:
         raise ValueError(f"No such qubit: %d" % max(retain_qubits))
 
