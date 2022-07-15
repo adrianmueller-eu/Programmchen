@@ -115,6 +115,13 @@ try:
         energies = np.angle(eigvals)/(2*np.pi)
         return energies
 
+    def show_eigenvecs(circ):
+        u = get_unitary(circ)
+        eigvals, eigvecs = np.linalg.eig(u)
+        print(np.round(eigvecs, 3))
+        for i in range(eigvecs.shape[1]):
+            plotQ(eigvecs[:,i], figsize=(12,2))
+
 except ModuleNotFoundError:
     print("Warning: qiskit not installed!")
     pass
