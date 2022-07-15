@@ -225,7 +225,8 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
                 break
             toshow[tobin(idx, n)] = probs[idx]
             cumsum += probs[idx]
-        toshow["rest"] = max(0,1-cumsum)
+        if np.abs(1-cumsum) > 1e-15:
+            toshow["rest"] = max(0,1-cumsum)
         ax.pie(toshow.values(), labels=toshow.keys(), autopct=lambda x: f"%.1f%%" % x)
 
     def plotrho(ax):
