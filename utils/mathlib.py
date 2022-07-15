@@ -114,9 +114,16 @@ def choice(a, size=None, replace=True, p=None):
 
 def binstr_from_float(f):
     i = 0
+    if f < 0 and f > -1:
+        f = 1+f
     while int(f) != f:
         f *= 2
         i += 1
+    if f < 0:
+        k = 0
+        while -f > 2**(k-1):
+            k += 1
+        f = 2**k + f
     as_str = str(bin(int(f))).replace('b', '0')
     if i == 0:
         return as_str[2:]
