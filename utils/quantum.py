@@ -105,7 +105,7 @@ try:
             q_k.unitary(Operator(u), self.all_qubits, label=f"exp^i{k}H")
             return q_k
 
-    def get_unitary(circ, decimals=3):
+    def get_unitary(circ, decimals=42):
         sim = execute(circ, Aer.get_backend('unitary_simulator')) # run the simulator
         return sim.result().get_unitary(circ, decimals=decimals)
 
