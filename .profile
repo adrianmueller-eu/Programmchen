@@ -7,8 +7,7 @@ alias p="cd $P"
 
 export BREW_PREFIX=$(brew --prefix)
 export GOROOT=$BREW_PREFIX/opt/go/libexec
-export JAVA_HOME=$(/usr/libexec/java_home) # -v 1.8
-#export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_152.jdk/Contents/Home
+export JAVA_HOME=$(/usr/libexec/java_home -v 1.8) # /Library/Java/JavaVirtualMachines/openjdk.jdk/Contents/Home
 export ANDROID_SDK_ROOT="$BREW_PREFIX/share/android-sdk"
 export ANDROID_HOME=$ANDROID_SDK_ROOT
 export PYTHONSTARTUP=$HOME/.ipython/profile_default/startup/00.py
