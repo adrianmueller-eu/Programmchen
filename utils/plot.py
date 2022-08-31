@@ -187,58 +187,64 @@ def scatter1d(data, xticks=None, alpha=.5, s=500, marker="|", **pltargs):
     fig.tight_layout()
     plt.show()
 
-def _colorize_complex(z):
+def colorize_complex(z):
     from colorsys import hls_to_rgb
 
     r = np.abs(z)
-    arg = np.angle(z)
+    a = np.angle(z)
 
-    h = arg  / (2 * np.pi)
+    h = a / (2*np.pi)
     l = 1.0 - 1.0/(1.0 + r**0.3)
     s = 0.8
 
-    c = np.vectorize(hls_to_rgb) (h,l,s) # --> tuple
-    c = np.array(c)  # -->  array of (3,n,m) shape, but need (n,m,3)
-    c = c.transpose(1,2,0)
+    c = np.vectorize(hls_to_rgb)(h,l,s)
+    c = np.array(c).transpose(1,2,0) # convert shape (3,n,m) -> (n,m,3)
     return c
 
-def imshow(a, cmap_for_real="hot", yticks=None, figsize=(8,6), **pltargs):
+def imshow(a, figsize=(8,6), title="", cmap_for_real="hot", yticks=None, xticks=None, **pltargs):
     a = np.array(a)
+    if np.prod(a.shape) == np.max(a.shape):
+        a = a.flatten()
+    fig = plt.figure(figsize=figsize)
     if len(a.shape) == 1:
         a = a[:,None] # vertical
         if is_complex(a):
-            fig, axs = plt.subplots(1,2, figsize=figsize)
-            im0 = axs[0].imshow(a.real, cmap=cmap_for_real, **pltargs)
-            im1 = axs[1].imshow(a.imag, cmap=cmap_for_real, **pltargs)
-            axs[0].set_xticks([])
-            axs[1].set_xticks([])
-            axs[0].set_title("Real")
-            axs[1].set_title("Imag")
-            fig.colorbar(im0, ax=axs[0], fraction=0.1, pad=0.1)
-            fig.colorbar(im1, ax=axs[1], fraction=0.1, pad=0.1)
-            if yticks is not None:
-                axs[0].set_yticks(range(len(a)), yticks)
-                axs[1].set_yticks(range(len(a)), yticks)
+            img = colorize_complex(a)
+            plt.imshow(img, aspect=5/a.shape[0], **pltargs)
         else:
             a = a.real
-            plt.figure(figsize=figsize)
-            plt.imshow(a, cmap=cmap_for_real, **pltargs)
-            plt.colorbar()
-            if yticks is not None:
-                plt.yticks(range(len(a)), yticks)
-        plt.show()
+            img = plt.imshow(a, cmap=cmap_for_real, **pltargs)
+            fig.colorbar(img, fraction=0.1, pad=0.05)
     elif len(a.shape) == 2:
-        plt.figure(figsize=figsize)
         if is_complex(a):
-            img = _colorize_complex(a)
+            img = colorize_complex(a)
             plt.imshow(img, **pltargs)
         else:
             a = a.real
-            plt.imshow(a, cmap=cmap_for_real, **pltargs)
-            plt.colorbar()
-        plt.show()
+            img = plt.imshow(a, cmap=cmap_for_real, **pltargs)
+            fig.colorbar(img, fraction=0.1, pad=0.05, shrink=0.87)
     else:
         raise ValueError(f"Array must be 2D or 1D, but shape was {a.shape}")
+
+    if xticks is not None:
+        plt.xticks(range(len(a)), xticks)
+    if yticks is not None:
+        plt.yticks(range(len(a)), yticks)
+
+    plt.title(title)
+    plt.show()
+
+def complex_colorbar(figsize=(2,2)):
+    imag, real = np.mgrid[-1:1:0.01,-1:1:0.01]
+    imag = imag[::-1] # convention: turn counter-clockwise
+    x = real + 1j*imag
+    c = colorize_complex(x)
+    plt.figure(figsize=figsize)
+    plt.imshow(c)
+    plt.xticks(np.linspace(0,200,5), np.linspace(-1,1,5))
+    plt.yticks(np.linspace(0,200,5), np.linspace(-1,1,5)[::-1])
+    plt.xlabel("real")
+    plt.ylabel("imag")
 
 def bar(heights, log=False):
     N = len(heights)
