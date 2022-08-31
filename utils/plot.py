@@ -256,21 +256,6 @@ def bar(heights, log=False):
     plt.tight_layout()
     plt.show()
 
-def _colorize_complex(z):
-    from colorsys import hls_to_rgb
-
-    r = np.abs(z)
-    arg = np.angle(z)
-
-    h = arg  / (2 * np.pi)
-    l = 1.0 - 1.0/(1.0 + r**0.3)
-    s = 0.8
-
-    c = np.vectorize(hls_to_rgb) (h,l,s) # --> tuple
-    c = np.array(c)  # -->  array of (3,n,m) shape, but need (n,m,3)
-    c = c.transpose(1,2,0)
-    return c
-
 def rgb(r,g=1.0,b=1.0,a=1.0, as255=False):
     conv = 1 if as255 else 1/255
     if type(r) == str:
