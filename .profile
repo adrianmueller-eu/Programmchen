@@ -56,7 +56,7 @@ if [[ ! -e /etc/hosts  # not exists
   echo "Time to update hosts file!"
   # fetch into tmphosts
   tmphosts="${TMPDIR}hosts"
-  curl -sS -m 3 https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn/hosts > "$tmphosts"
+  curl --connect-timeout 3 --max-time 30 -# --output "$tmphosts" https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn/hosts
   if [[ $? -eq 0 ]]; then
     # append new timestamp
     echo "# $(date +%s)" >> "$tmphosts"
