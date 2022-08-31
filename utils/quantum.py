@@ -40,10 +40,10 @@ S = np.array([
     [1,  0],
     [0, 1j]
 ], dtype=complex)
-T = np.array([
-    [1,  0],
-    [0,  np.sqrt(1j)]
-], dtype=complex)
+#T = np.array([ # avoid overriding T = True
+#    [1,  0],
+#    [0,  np.sqrt(1j)]
+#], dtype=complex)
 H = np.array([
     [1,  1],
     [1, -1]
