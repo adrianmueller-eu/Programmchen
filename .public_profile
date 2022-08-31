@@ -183,13 +183,14 @@ alias al='echo "\$\$\n\\\\begin{aligned}\n\n\\\\end{aligned}\n\$\$" | pbcopy'
 alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
 alias lower="pbpaste | tr '[:upper:]' '[:lower:]' | pbcopy"
 alias upper="pbpaste | tr '[:lower:]' '[:upper:]' | pbcopy"
+alias md2h="pbpaste | md2html | pbcopy"
 
 alias mvninit="mvn archetype:generate"
 # grep
 alias rg="rg --hidden --glob '!.git/*' -i"
 alias g=grep
 alias pg="pgrep -ila"
-function pgf() {
+function pgf() { # process grep full
   pgrep -ilaf "$@" | grep -v " grep " | grep -i -- "${@: -1}"
 }
 # date
@@ -235,7 +236,7 @@ function hex2bytes() (
     if [[ $H != [0-9a-f] ]]; then
       echo "Invalid character at index $i: [$H]" >&2
       return 1
-   fi
+    fi
     if [[ -n $last_H ]]; then
       #printf "%s: %b\n" "${last_H}${H}" "\x${last_H}${H}"
       printf "%b" "\x${last_H}${H}"
