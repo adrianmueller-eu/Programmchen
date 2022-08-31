@@ -214,7 +214,7 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
     def tobin(n, places):
         return ("{0:0" + str(places) + "b}").format(n)
 
-    def plotcoeff(ax):
+    def plotcoeff(ax, state):
         n = int(np.log2(len(state))) # nr of qubits
         if n < 6:
             basis = [tobin(i, n) for i in range(2**n)]
@@ -234,7 +234,7 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
         ax.legend()
         ax.grid()
 
-    def plotprobs(ax):
+    def plotprobs(ax, state):
         n = int(np.log2(len(state))) # nr of qubits
         toshow = {}
         cumsum = 0
@@ -247,11 +247,9 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
             toshow["rest"] = max(0,1-cumsum)
         ax.pie(toshow.values(), labels=toshow.keys(), autopct=lambda x: f"%.1f%%" % x)
 
-    def plotrho(ax):
+    def plotrho(ax, rho):
         n = int(np.log2(len(state))) # nr of qubits
-        rho = np.outer(state, state.conj())
-        rho = partial_trace(rho, retain_qubits=showqubits)
-        rho = _colorize_complex(rho)
+        rho = colorize_complex(rho)
         ax.imshow(rho)
         if n < 6:
             basis = [tobin(i, n) for i in range(2**n)]
@@ -266,6 +264,14 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
         n = int(np.log2(len(state))) # nr of qubits
         showqubits = range(n)
 
+    if showrho:
+        import psutil
+        memory_requirement = (4*len(state))**2
+        #print(memory_requirement / 1024**2, "MB") # rho.nbytes
+        if memory_requirement > psutil.virtual_memory().available:
+            raise ValueError(f"Too high memory requirement (%.1f GB) to calulate the density matrix!" % (memory_requirement / 1024**3))
+        rho = np.outer(state, state.conj())
+        rho = partial_trace(rho, retain_qubits=showqubits)
     state, probs = state_trace(state, showqubits)
 
     if showcoeff and showprobs and showrho:
@@ -273,37 +279,37 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
             figsize=(16,4)
         fig, axs = plt.subplots(1,3, figsize=figsize)
         fig.subplots_adjust(right=1.2)
-        plotrho(axs[0])
-        plotcoeff(axs[1])
-        plotprobs(axs[2])
+        plotrho(axs[0], rho)
+        plotcoeff(axs[1], state)
+        plotprobs(axs[2], state)
     elif showcoeff and showprobs:
         if figsize is None:
             figsize=(18,4)
         fig, axs = plt.subplots(1,2, figsize=figsize)
         fig.subplots_adjust(right=1.2)
-        plotcoeff(axs[0])
-        plotprobs(axs[1])
+        plotcoeff(axs[0], state)
+        plotprobs(axs[1], state)
     elif showcoeff and showrho:
         if figsize is None:
             figsize=(16,4)
         fig, axs = plt.subplots(1,2, figsize=figsize)
         fig.subplots_adjust(right=1.2)
-        plotcoeff(axs[0])
-        plotrho(axs[1])
+        plotcoeff(axs[0], state)
+        plotrho(axs[1], rho)
     elif showprobs and showrho:
         if figsize is None:
             figsize=(6,4)
         fig, axs = plt.subplots(1,2, figsize=figsize)
-        plotrho(axs[0])
-        plotprobs(axs[1])
+        plotrho(axs[0], rho)
+        plotprobs(axs[1], state)
     else:
         fig, ax = plt.subplots(1, figsize=figsize)
         if showcoeff:
-            plotcoeff(ax)
+            plotcoeff(ax, state)
         elif showprobs:
-            plotprobs(ax)
+            plotprobs(ax, state)
         elif showrho:
-            plotrho(ax)
+            plotrho(ax, rho)
 
     fig.tight_layout()
     plt.show()
