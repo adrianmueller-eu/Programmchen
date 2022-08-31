@@ -313,3 +313,8 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
 
     fig.tight_layout()
     plt.show()
+
+def random_state(n=1):
+    real = np.random.random(2**n)
+    imag = np.random.random(2**n)
+    return normalize(real + 1j*imag)
