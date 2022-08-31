@@ -173,11 +173,11 @@ def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=F
 
     return n, bins
 
-def scatter1d(data, xticks=None, **pltargs):
+def scatter1d(data, xticks=None, alpha=.5, s=500, marker="|", **pltargs):
     fig = plt.figure(figsize=(10,1))
     ax = fig.gca()
     size = np.array(data).flatten().shape
-    plt.scatter(data, np.zeros(*size), alpha=.5, marker="|", s=500, **pltargs)
+    plt.scatter(data, np.zeros(*size), alpha=alpha, marker=marker, s=s, **pltargs)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_visible(False)
