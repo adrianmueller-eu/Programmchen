@@ -10,7 +10,9 @@ Warning: Leave in place!
 "
 
 # TODO: conda config --add (--prepend?) channels conda-forge && conda config --set channel_priority strict, install scikit-optimize
-# TODO: create conda envs
+# TODO: create conda envs & install jupyterlab scipy scikit-learn pandas matplotlib ipywidgets tqdm pylatexenc # jupyterlab->python jupyterlab->ipython jupyterlab->notebook scipy->numpy
+# - conda create qc & install 'qiskit[machine-learning]'
+# - conda create dl & install pytorch
 # TODO: execute /opt/homebrew/opt/fzf/install --all, then ln_update
 # TODO: Unify brew & brew casks
 # TODO: copy_custom_py_packages with python, sage -python, and /opt/homebrew/Caskroom/miniconda/base/bin/python, and the other conda envs
@@ -56,16 +58,17 @@ py_ver=python@3.9
 
 # brew formulas  # brew leaves
 brews=(
-airshare
 agedu		# Unix utility for tracking down wasted disk space
+airshare
 #aspell
 bash
 bash-completion
 bash-snippets
+#bats-core      # unit test framework for bash scripts
 bfg
 blueutil
 #bro		# Network security monitor
-broot		# New way to see and navigate directory trees
+#broot		# New way to see and navigate directory trees
 #chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
 #cheat		# Better version contained in bash snippets
 #choose		# reads from stdin, lets user choose one line, prints that line to stdout, exits
@@ -103,13 +106,15 @@ googler
 heksa
 hexedit
 howdoi
+ijq
 imagemagick	# installs convert
-jq		# JSON parser
+#jq		# JSON parser
 #launch4j   	# Cross-platform Java executable wrapper
 #lf		# Terminal visual file manager (I like broot more)
 lorem
 lsd
 lynx		# Text-based web browser
+maclaunch	# startup item manager
 #mas #~~already installed~~ not working
 #maven
 #maven-completion
@@ -134,6 +139,7 @@ pick
 pueue		# queuing shell commands
 pup		# HTML parser
 $py_ver         # also required by tons of things
+#pygments	# generic syntax highlighter
 qalculate-gtk
 #r		# Software environment for statistical computing
 recode		# Convert character sets
@@ -141,8 +147,10 @@ rename
 ripgrep
 rsync
 sha3sum
-shpotify
+#shellcheck	# analysis and lint tool for bash scripts
+#shpotify
 #sic		# Minimal multiplexing IRC client
+#sip
 sox		# SOund eXchange: audio manipulation (e.g. sound recording tool)
 telnet
 tesseract	# also required by ffmeg and tesseract-lang
@@ -187,13 +195,13 @@ adoptopenjdk8
 android-file-transfer
 #android-sdk
 android-studio
-#anki # freeze at https://github.com/ankitects/anki/releases/download/2.1.49/anki-2.1.49-mac.dmg
+anki
 atom
 #avira-antivirus
 #axure-rp
 #balenaetcher 		# utility for writing image files
 bibdesk
-#blender
+blender
 calibre
 #celestia
 devbook
@@ -210,15 +218,16 @@ flux
 font-hack-nerd-font
 #font-times-newer-roman	# slightly wider times font
 geogebra
-#gephi			# Utility to visualize and explore graphs
+gephi			# Utility to visualize and explore graphs
 #graphsketcher		# draw graphs
 intellij-idea
 iterm2
 j			# J language
 #jamkazam		# Low-latency rehearsing, jamming and performing
-#joplin			# Note taking app with nextcloud sync
+joplin			# Note taking app with nextcloud sync
 #jwzlyrics
 #kodi
+manila			# Finder extension for changing folder colors
 #mathpix-snipping-tool  #nice, but only 50 pics/month
 #mp3tag
 mpv
@@ -250,10 +259,11 @@ textmate
 the-unarchiver
 thunderbird
 todoist
+tomatobar
 #tor-browser
 ukelele
 #yippy                  # clipboard manager (in beta) see also: maccy
-zulip
+#zulip
 )
 
 masinstalls=(
@@ -288,6 +298,7 @@ notebook # jupyter
 #tensorflow # not available for arm
 matplotlib
 #nest-asyncio # stan
+jupyterlab
 ipywidgets
 ipython
 ipykernel
@@ -327,7 +338,7 @@ copy() {
     target="$PWD/$1"
     shift
     if [[ ! -e "$origin" ]]; then
-      echo "WARNING: Requested file or dir not available: $origin"
+      echo "WARNING: Requested origin file or dir not available: $origin"
       continue;
     fi
     if [[ -d "$target" && "$origin" == */ ]]; then
