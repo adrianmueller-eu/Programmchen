@@ -157,10 +157,13 @@ def reverse_qubit_order(state):
 def partial_trace(rho, retain_qubits=[0,1]):
     rho = np.array(rho)
     n = int(np.log2(rho.shape[0]))
-    trace_out = set(range(n)) - set(retain_qubits)
+    if type(retain_qubits) == "int":
+        retain_qubits = [retain_qubits]
+    trace_out = np.array(sorted(set(range(n)) - set(retain_qubits)))
     for qubit in trace_out:
         rho = _partial_trace(rho, subsystem_dims=[2]*n, subsystem_to_trace_out=qubit)
         n = int(np.log2(rho.shape[0]))
+        trace_out -= 1
     return rho
 
 # from https://github.com/cvxpy/cvxpy/issues/563
