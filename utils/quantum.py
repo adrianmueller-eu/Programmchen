@@ -118,12 +118,24 @@ try:
         energies = np.angle(eigvals)/(2*np.pi)
         return energies
 
-    def show_eigenvecs(circ):
+    def show_eigenvecs(circ, showrho=False):
         u = get_unitary(circ)
         eigvals, eigvecs = np.linalg.eig(u)
         print(np.round(eigvecs, 3))
         for i in range(eigvecs.shape[1]):
-            plotQ(eigvecs[:,i], figsize=(12,2))
+            plotQ(eigvecs[:,i], figsize=(12,2), showrho=showrho)
+        return eigvecs
+
+    def time_complexity(qc, decompose_iterations=4, isTranspiled=False):
+        if not isTranspiled:
+            simulator = Aer.get_backend('aer_simulator')
+            t_circuit = transpile(qc, simulator)
+        else:
+            t_circuit = qc
+        for _ in range(decompose_iterations):
+            t_circuit = t_circuit.decompose()
+        return len(t_circuit._data)
+
 
 except ModuleNotFoundError:
     print("Warning: qiskit not installed!")
