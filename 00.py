@@ -1,4 +1,5 @@
 import sys, os, time # For timing: %time foo()
+eps = sys.float_info.epsilon
 ### math
 import numpy as np
 from numpy.linalg import det
