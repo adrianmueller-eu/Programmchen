@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .mathlib import matexp, normalize
-from .plot import _colorize_complex
+from .plot import colorize_complex
 
 def Rx(theta):
    return np.array([
