@@ -127,7 +127,7 @@ def binstr_from_float(f):
     as_str = str(bin(int(f))).replace('b', '0')
     if i == 0:
         return as_str[2:]
-    return as_str[2:-i] + '.' + as_str[-i:]
+    return as_str[2:-i] + '.' + '0'*(i-len(as_str[-i:])) + as_str[-i:]
 
 def float_from_binstr(s):
     s = s.split('.')
