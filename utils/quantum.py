@@ -73,7 +73,10 @@ try:
     from qiskit.visualization import plot_histogram, plot_bloch_multivector
     from qiskit.circuit.library import PhaseEstimation
 
-    def run(circuit, shots=2**11, showstate=True, showqubits=None, figsize=(16,4)):
+    def run(circuit, shots=2**0, showstate=True, showqubits=None, showcoeff=True, showprobs=True, showrho=False, figsize=(16,4)):
+        if shots > 10:
+            tc = time_complexity(circuit)
+            print("TC: %d, expected running time: %.3fs" % (tc, tc * 0.01))
         if showstate:
             simulator = Aer.get_backend("statevector_simulator")
         else:
@@ -85,7 +88,7 @@ try:
             state = np.array(result.get_statevector())
             # qiskit outputs the qubits in the reverse order
             state = reverse_qubit_order(state)
-            plotQ(state, showqubits, figsize=figsize)
+            plotQ(state, showqubits=showqubits, showcoeff=showcoeff, showprobs=showprobs, showrho=showrho, figsize=figsize)
             return result, state
         else:
             return result
