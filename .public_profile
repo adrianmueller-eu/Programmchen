@@ -1175,11 +1175,31 @@ __test_b() (
   echo "All tests succeeded!"
 )
 
-function randint() {
-  if [[ $1 -lt 16384 ]]; then
-    echo $((RANDOM % $1+1))
+function randint() { # subshell resets RANDOM
+  local range base
+  if [[ -n $2 ]]; then
+    range=$(($2 - $1))
+    base=$1
   else
-    python -c "from random import randint; print(randint(0,$1))"
+    range=$1
+    base=0
+  fi
+  local size=${3:-1}
+  if [ -t 0 ] && [[ $range -lt 16384 ]] && [[ $size -lt 100 ]]; then
+    for i in $(seq 1 $size); do
+      echo $((RANDOM % $range + $base))
+    done
+  else
+    python -c "
+try:
+  from numpy.random import randint
+  for i in randint($base, $range + $base, $size):
+    print(i)
+except:
+  from random import randint
+  for i in range($size):
+    print(randint($base, $range + $base - 1))
+"
   fi
 }
 
