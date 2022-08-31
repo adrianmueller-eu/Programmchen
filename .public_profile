@@ -573,7 +573,7 @@ function _pick() {
   fi
 
   local picked
-  picked=$(command fd -H "${fd_args[@]}" | grep -v '\.git/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
+  picked=$(command fd -H "${fd_args[@]}" | grep -v '\.git/' | fzf --scheme=path --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
   local exit_code=$?
   if [[ $(printf "%s" "$picked" | wc -l) -gt 0 ]]; then # result found
     query=$(printf "%s" "$picked" | head -1)
@@ -643,7 +643,7 @@ function _pick_and_execute() {
     else
       pwd_name=$(basename "$PWD")
     fi
-    picked=$(echo "$files" | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
+    picked=$(echo "$files" | fzf --scheme=path --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
     exit_code=$?
     picked=$(printf "%s" "$picked" | tail -1)
   fi
@@ -709,7 +709,7 @@ function ccat() {
 }
 
 function cdf() {
-  local picked__dir=$(fd -t d | grep -v '\.git/' | fzf --query="$1") || return $?
+  local picked__dir=$(fd -t d | grep -v '\.git/' | fzf --scheme=path --query="$1") || return $?
   cd "$picked__dir"
 }
 
