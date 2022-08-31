@@ -65,11 +65,11 @@ SWAP = np.array([ # CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
 
 try:
     from qiskit import Aer, transpile, assemble, execute
-    from qiskit import QuantumCircuit
+    from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
     from qiskit.quantum_info.operators import Operator
 
     # Other useful imports
-    from qiskit import ClassicalRegister, QuantumRegister
+    from qiskit.quantum_info import random_statevector
     from qiskit.visualization import plot_histogram, plot_bloch_multivector
     from qiskit.circuit.library import PhaseEstimation
 
