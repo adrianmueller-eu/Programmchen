@@ -55,10 +55,13 @@ runCmd brew doctor
 nver_after=$(nativefier --version)
 
 if [[ $nver_before != $nver_after ]]; then
+  echo
+  echo "*******************************************************"
   echo "nativefier was updated from $nver_before to $nver_after"
-  trash "/Applications/Duolingo.app"
-  trash "/Applications/Graphing Calculator.app"
-  trash "/Applications/Trading212.app"
+  echo "*******************************************************"
+  trash -v "/Applications/Duolingo.app"
+  trash -v "/Applications/Graphing Calculator.app"
+  trash -v "/Applications/Trading212.app"
   sys_install
 fi
 
