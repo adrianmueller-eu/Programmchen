@@ -14,12 +14,11 @@ color brightblack  "^[[:space:]]*]>.*"
 
 # List-item markers
 color yellow "^(    |	)* ? ? ?(\*|\+|-|[0-9]+\.)( +|	)"
-#color blue   "^[[:space:]]*[\*+-] |^[[:space:]]*[0-9]+\. "
 
 # Emphasis and strong
-color brightgreen "\*\*[^*]+(\*[^*]+\*[^*]+)*\*\*|__[^_]+__"
-color italic,green "_[^_\]+_|^\*[^*]+\*|[^\]\*[^*]+[^\]\*"
-#color brightgreen "(^|[[:space:]])(__[^ ][^_]*__|\*\*[^ ][^*]*\*\*)"
+color italic,green "\*[^*]+[^\\]\*"
+color brightgreen "\*\*[^*]+(\*[^*]+\*[^*]*)*[^*]*\*\*"
+color italic,green "[^*\\]\*[^*]+[^\\*]\*"
 
 # Strikethrough
 color grey "~~[^~]+(~~|$)"
@@ -29,8 +28,6 @@ color grey "~~[^~]+(~~|$)"
 color ,green "[[:space:]]+$"
 
 # URLs and links
-#color brightblue "\[[^]]+\]\([^)]+\)"
-#color brightmagenta "!?\[[^]]+\]"
 color brightmagenta "\[([^][]|\[[^]]*\])*\]\([^)]+\)"
 color yellow "https?://[^ )>]+"
 color cyan "\[[^]]+\]"
@@ -52,7 +49,6 @@ color brightyellow "^(=+|-+)$"
 # HTML tags and comments
 color cyan "<[^!][^>]+>"
 color grey start="<!--" end="-->"
-#color brightblue "\[[^]]+\]"
 
 # horizontal rules
 color brightmagenta "^(---+|===+|___+|\*\*\*+)\s*$"
