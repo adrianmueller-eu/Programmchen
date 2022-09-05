@@ -1,0 +1,86 @@
+#!/bin/bash
+
+function die() {
+  mes=$1
+  shift
+  printf "$mes\n" "$*"
+  exit 1
+}
+
+target="$BLOG"
+source="$C/Notes/published"
+
+# create top-level index
+pushd "$target" >/dev/null
+if [[ ! -e "index.php" ]]; then
+  echo "<?php
+header('Location: /');
+?>" > "index.php"
+fi
+
+# Fetch from db
+echo "Fetching existing entries from the db"
+res=$(pass blogdb)
+host=$(printf "%s" "$res" | sed -n '1p')
+dbname=$(printf "%s" "$res" | sed -n '2p')
+username=$(printf "%s" "$res" | sed -n '3p')
+password=$(printf "%s" "$res" | sed -n '4p')
+exists_in_db=$(mysql -h $host -u $username -p$password $dbname <<< "SELECT article_path FROM posts;" | tail -n +2 | sort)
+
+# Generate files from articles
+for f in "${source}/"*.md; do
+  f=$(basename "$f")
+  # generate name
+  f_no_ending=${f%.*}
+  name=$(echo "$f_no_ending" | xargs | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
+  # recreate folder
+  rm -rf "$name"
+  mkdir "$name"
+  # generate html & index.php
+  md2html "$source/$f" > "$name.html" || die
+  echo "<?php
+require __DIR__ . '/../../lib.php';
+generateArticle('$name');
+?>" > "$name/index.php"
+  echo "Generated \"$name\""
+  # create in db if it doesn't exist yet
+  if [[ ! $exists_in_db =~ $name ]]; then
+    echo "Adding $name to the database ($dbname)!"
+    mod_date=$(GetFileInfo -m "$source/$f")
+    mod_date=$(date -j -f "%m/%d/%Y %H:%M:%S" "$mod_date" "+%Y-%m-%d %H:%M:%S")
+    mysql -h $host -u $username -p$password $dbname << EOF
+INSERT INTO posts (title, date, background, article_path, visible)
+VALUES (
+  "$f_no_ending",
+  "$mod_date",
+  "black",
+  "$name",
+  "1"
+);
+EOF
+  fi
+done
+
+# Sync with server
+pushd $(git rev-parse --show-toplevel) >/dev/null
+IFS=$'\n'
+files=($(PAGER= git diff --name-only --cached)) || die      # staged
+files+=($(PAGER= git diff --name-only))                     # not staged, same as "git ls-files -m"
+files+=($(PAGER= git ls-files --others --exclude-standard)) # added
+# echo "FILES: ${files[@]}"
+if [[ -z "$files" ]]; then
+  echo "No changes found."
+  exit 0
+fi
+for f in ${files[@]}; do
+  if [[ -r "$f" ]]; then
+    echo rsync --progress "$f" "$CLOUD_WEB_PREFIX/$f"
+    rsync --progress "$f" "$CLOUD_WEB_PREFIX/$f" \
+    || rsync --mkpath --progress "$f" "$CLOUD_WEB_PREFIX/$f" \
+    || die
+  fi
+done
+
+# Commit changes
+git add .
+git commit -m 'auto commit'
