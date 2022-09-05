@@ -18,6 +18,10 @@ header('Location: /');
 ?>" > "index.php"
 fi
 
+# compile about me
+md2html "../about/about_me.md" > "../about/about_me.html"
+
+if [[ -z $1 ]]; then
 # Fetch from db
 echo "Fetching existing entries from the db"
 res=$(pass blogdb)
@@ -49,17 +53,17 @@ generateArticle('$name');
     mod_date=$(GetFileInfo -m "$source/$f")
     mod_date=$(date -j -f "%m/%d/%Y %H:%M:%S" "$mod_date" "+%Y-%m-%d %H:%M:%S")
     mysql -h $host -u $username -p$password $dbname << EOF
-INSERT INTO posts (title, date, background, article_path, visible)
+INSERT INTO posts (title, date, background, article_path)
 VALUES (
   "$f_no_ending",
   "$mod_date",
   "black",
-  "$name",
-  "1"
+  "$name"
 );
 EOF
   fi
 done
+fi
 
 # Sync with server
 pushd $(git rev-parse --show-toplevel) >/dev/null
