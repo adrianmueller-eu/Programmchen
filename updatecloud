@@ -10,6 +10,10 @@ function die() {
 target="$BLOG"
 source="$C/Notes/published"
 
+# clean up generated files
+rm -rf "$BLOG"
+mkdir "$BLOG"
+
 # create top-level index
 pushd "$target" >/dev/null
 if [[ ! -e "index.php" ]]; then
@@ -30,7 +34,6 @@ dbname=$(printf "%s" "$res" | sed -n '2p')
 username=$(printf "%s" "$res" | sed -n '3p')
 password=$(printf "%s" "$res" | sed -n '4p')
 exists_in_db=$(mysql -h $host -u $username -p$password $dbname <<< "SELECT article_path FROM posts;" | tail -n +2 | sort)
-fi
 
 # Generate files from articles
 for f in "${source}/"*.md; do
@@ -51,9 +54,9 @@ generateArticle('$name');
   if [[ -z $1 ]]; then
   # create in db if it doesn't exist yet
   if [[ ! $exists_in_db =~ $name ]]; then
-    echo "Adding $name to the database ($dbname)!"
+    echo "Adding \"$name\" to the database"
     m_date=$(GetFileInfo -m "$source/$f")
-    m_date=$(date -j -f "%m/%d/%Y %H:%M:%S" "$mod_date" "+%Y-%m-%d %H:%M:%S")
+    m_date=$(date -j -f "%m/%d/%Y %H:%M:%S" "$m_date" "+%Y-%m-%d")
     mysql -h $host -u $username -p$password $dbname << EOF
 INSERT INTO posts (title, date_published, background, article_path)
 VALUES (
@@ -66,6 +69,7 @@ EOF
   fi
   fi
 done
+fi
 
 # Sync with server
 pushd $(git rev-parse --show-toplevel) >/dev/null
@@ -84,12 +88,27 @@ for f in ${files[@]}; do
     rsync --progress "$f" "$CLOUD_WEB_PREFIX/$f" \
     || rsync --mkpath --progress "$f" "$CLOUD_WEB_PREFIX/$f" \
     || die
-    if [[ -n $1 && "$f" =~ .html$ && $f =~ /articles/ ]]; then
+    if [[ -z $1 && "$f" =~ .html$ && $f =~ /articles/ ]]; then
       name=$(basename "$f")
       name=${name%.*}
       word_cnt=$(cat "$f" | sed 's/<[^>]*>//g' | wc -w | awk '{print $1}')
+      echo "Updating word count of \"$f\" to $word_cnt in database"
       mysql -h $host -u $username -p$password $dbname << EOF
 UPDATE posts SET words=$word_cnt WHERE article_path = "$name";
+EOF
+    fi
+  else
+    uh=${CLOUD_WEB_PREFIX%%:*}
+    path=${CLOUD_WEB_PREFIX#*:}
+    echo "Deleting \"$f\" from server"
+    ssh "$uh" "rm -v \"$path/$f\""
+    if [[ -z $1 && "$f" =~ .html$ && $f =~ /articles/ ]]; then
+      ssh "$uh" "rm -vr \"$path/${f%.*}\""
+      name=$(basename "$f")
+      name=${name%.*}
+      echo "Deleting \"$name\" from database"
+      mysql -h $host -u $username -p$password $dbname << EOF
+DELETE FROM posts WHERE article_path = "$name";
 EOF
     fi
   fi
