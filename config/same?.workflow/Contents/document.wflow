@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AMApplicationBuild</key>
-	<string>509</string>
+	<string>512</string>
 	<key>AMApplicationVersion</key>
 	<string>2.10</string>
 	<key>AMDocumentVersion</key>
@@ -61,15 +61,19 @@
 					<key>COMMAND_STRING</key>
 					<string>if [[ -z "$2" ]]; then
   mes="Please select multiple files!"
+elif [[ ! -f "$1" || ! -f "$2" ]]; then
+  mes="Please select files, not folders!"
 else
   PATH=/opt/homebrew/bin:$PATH # for hash function
-  res=$(sha3sum "$@" | sed 's/ .*//' | sort | uniq | wc -l | xargs)
-  if [[ "$res" -gt 2 ]]; then
-    mes="Different! ($res different files)"
-  elif [[ "$res" -eq 2 ]]; then
-    mes="Different!"
+  hashes=$(sha3sum "$@" | sed 's/ .*//' | sort | uniq)
+  cnt=$(printf "%s\n" "$hashes" | wc -l | xargs)
+  hashes=$(printf "%s" "$hashes" | cut -c 1-7 | xargs)
+  if [[ -n "$3" ]]; then
+    mes="Different! ($cnt different files)"
+  elif [[ "$cnt" -eq 2 ]]; then
+    mes="Different! ($hashes)"
   else
-    mes="Same!"
+    mes="Same! ($hashes)"
   fi
 fi
 osascript -e "tell app \"System Events\" to display notification \"$mes\""</string>
@@ -211,7 +215,7 @@ osascript -e "tell app \"System Events\" to display notification \"$mes\""</stri
 			<string>/System/Library/CoreServices/Finder.app</string>
 		</array>
 		<key>inputTypeIdentifier</key>
-		<string>com.apple.Automator.fileSystemObject.document</string>
+		<string>com.apple.Automator.fileSystemObject</string>
 		<key>outputTypeIdentifier</key>
 		<string>com.apple.Automator.nothing</string>
 		<key>presentationMode</key>
@@ -223,7 +227,7 @@ osascript -e "tell app \"System Events\" to display notification \"$mes\""</stri
 		<key>serviceApplicationPath</key>
 		<string>/System/Library/CoreServices/Finder.app</string>
 		<key>serviceInputTypeIdentifier</key>
-		<string>com.apple.Automator.fileSystemObject.document</string>
+		<string>com.apple.Automator.fileSystemObject</string>
 		<key>serviceOutputTypeIdentifier</key>
 		<string>com.apple.Automator.nothing</string>
 		<key>serviceProcessesInput</key>
