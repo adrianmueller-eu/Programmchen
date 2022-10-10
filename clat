@@ -29,7 +29,7 @@ function cltex() {
   fi
 
   local -i removed=0
-  local -a tokill=(-blx.bib .acn .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .glsdefs .idx .ilg .ind .ist .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp)
+  local -a tokill=(-blx.bib .acn .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .glsdefs .idx .ilg .ind .ist .listing .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp)
   [[ $SHORT == "false" ]] && tokill+=(.nav .toc)
   for postfix in ${tokill[@]}; do
     local file="${goal%.*}$postfix"
