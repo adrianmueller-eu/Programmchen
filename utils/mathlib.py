@@ -112,6 +112,13 @@ def choice(a, size=None, replace=True, p=None):
     else:
         return np.random.choice(a, size=size, replace=replace, p=p)
 
+def binFrac_i(j, i):
+    return int(j % (1/2**(i-1)) != j % (1/2**i))
+    #return int(np.ceil((j % (1/2**(i-1))) - (j % (1/2**i))))
+
+def binFrac(j, prec=20):
+    return "." + "".join([str(binFrac_i(j,i)) for i in range(1,prec+1)])
+
 def binstr_from_float(f):
     i = 0
     if f < 0 and f > -1:
