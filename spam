@@ -152,7 +152,7 @@ while true; do
   time=0
   # do countdown
   while [[ $dur -gt 0 ]]; do
-    printf "\r\e[2m\e[K${#msg} Zeichen - %ss" $dur
+    printf "\r\e[2m\e[K${#msg} chars - %ss" $dur
     # read one char, let one sec timeout
     read -n 1 -t 1 inp
     if [[ $? = 0 ]]; then
