@@ -1196,7 +1196,7 @@ function randint() { # subshell resets RANDOM
     base=0
   fi
   local size=${3:-1}
-  if [ -t 0 ] && [[ $range -lt 16384 ]] && [[ $size -lt 100 ]]; then
+  if [ -t 0 ] && [ -t 1 ] && [[ $range -lt 16384 ]] && [[ $size -lt 100 ]]; then
     for i in $(seq 1 $size); do
       echo $((RANDOM % $range + $base))
     done
