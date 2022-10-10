@@ -18,6 +18,7 @@ Warning: Leave in place!
 # TODO: copy_custom_py_packages with python, sage -python, and /opt/homebrew/Caskroom/miniconda/base/bin/python, and the other conda envs
 # TODO: https://github.com/zdharma-continuum/fast-syntax-highlighting (via oh-my-zsh)
 # TODO: cd $P/multi01knapsack/ && sh $P/multi01knapsack/compile.sh
+# TODO: Link julia from /Applications/Julia-*.app/Contents/Resources/julia/bin/julia
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
@@ -54,7 +55,7 @@ firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
 safari_bookmark_backup="$thisdir/Safari/Bookmarks.plist"
 newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 
-py_ver=python@3.9
+py_ver=python@3.10
 
 # brew formulas  # brew leaves
 brews=(
@@ -204,7 +205,6 @@ bibdesk
 blender
 calibre
 #celestia
-devbook
 disablemonitor
 discord
 #docker			# also as formula
