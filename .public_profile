@@ -186,6 +186,15 @@ alias lower="pbpaste | tr '[:upper:]' '[:lower:]' | pbcopy"
 alias upper="pbpaste | tr '[:lower:]' '[:upper:]' | pbcopy"
 alias md2h="pbpaste | md2html | pbcopy"
 
+screen_of_color() {
+  printf "\e[$1m"; for i in $(seq 1 $((COLUMNS * LINES))); do printf " "; done
+}
+
+alias red="screen_of_color 41 | less"
+alias green="screen_of_color 42 | less"
+alias blue="screen_of_color 44 | less"
+alias white="screen_of_color 47 | less"
+
 alias mvninit="mvn archetype:generate"
 # grep
 alias rg="rg --hidden --glob '!.git/*' -i"
