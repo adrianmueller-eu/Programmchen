@@ -175,6 +175,7 @@ alias rll="sed 's/.\{250,\}/***LONG LINE HERE***/'"
 alias psh="ps aux | head"
 alias h="waitnet -s && howdoi"
 alias path="echo $PATH | tr ':' $'\n'"
+alias rm="rm -I"
 
 alias pbc=pbcopy
 alias pbp=pbpaste
