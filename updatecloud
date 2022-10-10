@@ -34,6 +34,7 @@ dbname=$(printf "%s" "$res" | sed -n '2p')
 username=$(printf "%s" "$res" | sed -n '3p')
 password=$(printf "%s" "$res" | sed -n '4p')
 exists_in_db=$(mysql -h $host -u $username -p$password $dbname <<< "SELECT article_path FROM posts;" | tail -n +2 | sort)
+fi
 
 # Generate files from articles
 for f in "${source}/"*.md; do
@@ -55,8 +56,8 @@ generateArticle('$name');
   # create in db if it doesn't exist yet
   if [[ ! $exists_in_db =~ $name ]]; then
     echo "Adding \"$name\" to the database"
-    m_date=$(GetFileInfo -m "$source/$f")
-    m_date=$(date -j -f "%m/%d/%Y %H:%M:%S" "$m_date" "+%Y-%m-%d")
+    m_date=$(stat -f %m "$source/$f")
+    m_date=$(date -j -f "%s" "$m_date" "+%Y-%m-%d")
     mysql -h $host -u $username -p$password $dbname << EOF
 INSERT INTO posts (title, date_published, background, article_path)
 VALUES (
@@ -69,7 +70,6 @@ EOF
   fi
   fi
 done
-fi
 
 # Sync with server
 pushd $(git rev-parse --show-toplevel) >/dev/null
@@ -113,6 +113,8 @@ EOF
     fi
   fi
 done
+
+rm $source/*.bak
 
 # Commit changes
 git add .
