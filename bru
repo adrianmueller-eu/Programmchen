@@ -48,7 +48,7 @@ start
 nver_before=$(nativefier --version)
 
 runCmd brew update
-runCmd brew upgrade
+runCmd brew upgrade --greedy
 runCmd brew cleanup
 runCmd brew doctor
 
