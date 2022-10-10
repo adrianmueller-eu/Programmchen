@@ -61,4 +61,4 @@ color cyan ".*[ :]\|[ :].*"
 
 # misc
 #color magenta   "\(([CcRr]|[Tt][Mm])\)" "\.{3}" "(^|[[:space:]])\-\-($|[[:space:]])"
-
+color brightwhite "TODO"
