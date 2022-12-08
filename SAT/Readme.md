@@ -1,8 +1,9 @@
 A simple [SAT solver](https://en.wikipedia.org/wiki/SAT_solver). Can be used from command line or in a python script.
 
 # Requirements
-- [`node`](https://nodejs.org/en/download/).
-- optional: `pip install z3`
+- python >= 3.8
+- [`node`](https://nodejs.org/en/download/)
+- optional: `pip install [z3-solver](https://github.com/z3prover/z3)`
 
 # Installation
 Copy this directory to your custom python site-packages, which you can find by executing
