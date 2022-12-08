@@ -1,9 +1,17 @@
+A simple [SAT solver](https://en.wikipedia.org/wiki/SAT_solver). Can be used from command line or in a python script.
+
+# Requirements
+- [`node`](https://nodejs.org/en/download/).
+- optional: `pip install z3`
+
+# Installation
 Copy this directory to your custom python site-packages, which you can find by executing
 ```
 python -m site --user-site
 ```
 
-Then, import in python as:
+# Usage
+Then, import in python as
 ```
 from SAT import solve, table
 
@@ -15,12 +23,12 @@ print() # newline
 table('(a -> b) & (b <-> c) <-> (b & ~c)')
 ```
 
-Or execute directly from command line:
+Or execute it directly from command line
 ```
 python -m SAT '(a -> b) & (b <-> c) <-> (b & ~c)'
 ```
 
-The command line help message reads as follows:
+The command line help message gives more details
 ```
 A SAT solver.
 Usage: sat [-h | -t | -tt | -c | --cnf] formula
@@ -39,4 +47,5 @@ Examples:
 	sat --cnf "r and not q or not t"
 ```
 
-TODO: Improve parser performance!
+# TODO
+- Rewrite parser to python

@@ -4,7 +4,7 @@ import re, copy, itertools
 
 class BN:
     """
-    Class that represents Bayesian Networks.
+    A Bayesian Network.
 
     Data structure(s):
         dictionary that maps variable names to a dictonary {
