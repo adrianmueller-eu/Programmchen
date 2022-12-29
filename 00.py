@@ -8,6 +8,10 @@ try:
 except:
     from math import *
     from numpy import product as mul
+    try:
+       from sympy import symbols as sym
+    except:
+       pass
 try:
     import scipy
     from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
