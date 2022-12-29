@@ -1,10 +1,10 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-
 from .utils import moving_avg
 from .prob import smooth
 
 def climateHockey():
+    import pandas as pd
+    import matplotlib.pyplot as plt
+
     # download the data from https://ourworldindata.org/explorers/climate-change
     # get data
     try:
