@@ -166,7 +166,7 @@ def partial_trace(rho, retain_qubits=[0,1]):
     trace_out = np.array(sorted(set(range(n)) - set(retain_qubits)))
     for qubit in trace_out:
         rho = _partial_trace(rho, subsystem_dims=[2]*n, subsystem_to_trace_out=qubit)
-        n = int(np.log2(rho.shape[0]))
+        n -= 1         # one qubit less
         trace_out -= 1 # rename the axes (only "higher" ones are left)
     return rho
 
@@ -206,11 +206,12 @@ def state_trace(state, retain_qubits):
             probs = np.sum(probs, axis=cur)
         else:
             cur += 1
+
     state = state.flatten()
     state = normalize(state) # renormalize
-    n = int(np.log2(len(state))) # update n
+
     probs = probs.flatten()
-    assert np.abs(np.sum(probs) - 1) < 1e-5, np.sum(probs)
+    assert np.abs(np.sum(probs) - 1) < 1e-5, np.sum(probs) # sanity check
 
     return state, probs
 
