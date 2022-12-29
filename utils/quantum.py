@@ -44,7 +44,7 @@ S = np.array([
 #    [1,  0],
 #    [0,  np.sqrt(1j)]
 #], dtype=complex)
-H = np.array([
+H = 1/np.sqrt(2) * np.array([
     [1,  1],
     [1, -1]
 ], dtype=complex)
