@@ -1450,5 +1450,5 @@ txt2img() {
   done
   conda deactivate
   open outputs/
-  #popd &>/dev/null
+  popd &>/dev/null
 }
