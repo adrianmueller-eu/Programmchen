@@ -47,9 +47,7 @@ include $BREW_PREFIX/share/nano/tex.nanorc
 include $BREW_PREFIX/share/nano/texinfo.nanorc
 include $BREW_PREFIX/share/nano/xml.nanorc
 include $BREW_PREFIX/share/nano/extra/ada.nanorc
-include $BREW_PREFIX/share/nano/extra/debian.nanorc
 include $BREW_PREFIX/share/nano/extra/fortran.nanorc
-include $BREW_PREFIX/share/nano/extra/gentoo.nanorc
 include $BREW_PREFIX/share/nano/extra/haskell.nanorc
 include $BREW_PREFIX/share/nano/extra/povray.nanorc
 include $BREW_PREFIX/share/nano/extra/spec.nanorc
