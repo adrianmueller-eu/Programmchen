@@ -184,7 +184,7 @@ alias al='echo "\$\$\n\\\\begin{aligned}\n\n\\\\end{aligned}\n\$\$" | pbcopy'
 alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
 alias lower="pbpaste | tr '[:upper:]' '[:lower:]' | pbcopy"
 alias upper="pbpaste | tr '[:lower:]' '[:upper:]' | pbcopy"
-alias md2h="pbpaste | md2html | pbcopy"
+alias md2h='pbpaste | md2html | tr -d $"\n" | pbcopy'
 
 screen_of_color() {
   printf "\e[$1m"; for i in $(seq 1 $((COLUMNS * LINES))); do printf " "; done
