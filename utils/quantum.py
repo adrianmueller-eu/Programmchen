@@ -69,9 +69,9 @@ try:
     from qiskit.quantum_info.operators import Operator
 
     # Other useful imports
-    from qiskit.quantum_info import random_statevector
+    from qiskit.quantum_info import random_statevector, Statevector
     from qiskit.visualization import plot_histogram, plot_bloch_multivector
-    from qiskit.circuit.library import PhaseEstimation
+    from qiskit.circuit.library import *
 
     def run(circuit, shots=2**0, showstate=True, showqubits=None, showcoeff=True, showprobs=True, showrho=False, figsize=(16,4)):
         if shots > 10:
