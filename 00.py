@@ -20,7 +20,10 @@ import itertools # https://docs.python.org/3/library/itertools.html
 # import pandas as pd
 # %matplotlib
 import matplotlib.pyplot as plt # https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.html#module-matplotlib.pyplot
-from tqdm import tqdm
+try:
+  from tqdm import tqdm
+except:
+  pass
 ### options
 # pd.set_option('display.max_rows', 500)
 # pd.set_option('display.max_colwidth', None) # show complete text in df cells
