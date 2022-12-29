@@ -154,12 +154,11 @@ function parseResults0() {
       const fs = require('fs');
       const json = JSON.parse(fs.readFileSync(filepath));
       let content = json.contents.twoColumnBrowseResultsRenderer.tabs.filter(el => el.tabRenderer?.content)[0].tabRenderer.content
-      let contents = content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0]
 
-      if (contents.gridRenderer) {
-        for (let item of contents.gridRenderer.items) {
-          let v = item.gridVideoRenderer
-          if (!v) continue;
+      if (content.richGridRenderer) {
+        for (let item of content.richGridRenderer.contents) {
+          if (!item.richItemRenderer) continue;
+          let v = item.richItemRenderer.content.videoRenderer
 
           // get data
           let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
@@ -210,7 +209,7 @@ function parseResults0() {
           console.log(link)
         }
       }
-      else if (contents.playlistVideoListRenderer) {
+      else if (content.playlistVideoListRenderer) { // TODO: this is probably wrong by now
         for (let item of contents.playlistVideoListRenderer.contents) {
           let v = item.playlistVideoRenderer
           if (!v) continue;
@@ -248,12 +247,13 @@ function parseResults0() {
           console.log(link)
         }
       }
-      else if (contents.messageRenderer) {
+      else if (content.messageRenderer) { // TODO: this is probably wrong by now
         console.error(contents.messageRenderer.text.simpleText)
         process.exit(42)
       }
       else {
-        console.error('Unknown contents object!')
+        console.error('Unknown content object!')
+        console.error(content)
         process.exit(1)
       }" "$json_file") || return $?
 
