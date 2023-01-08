@@ -120,9 +120,32 @@ def binFrac(j, prec=20):
     return "." + "".join([str(binFrac_i(j,i)) for i in range(1,prec+1)])
 
 def binstr_from_float(f, r=None):
-    i = 0 # number of bits after the comma
+    """
+    Convert a float `f` to a binary string with `r` bits after the comma.
+    If `r` is None, the number of bits is chosen such that the float is
+    represented exactly.
+    If `f` is negative, the positive number modulus `2**k` is returned,
+    where `k` is the smallest integer such that `2**k > -f`.
+
+    Parameters
+    ----------
+    f : float
+        The float to convert.
+    r : int, optional
+        The number of bits after the comma. The default is None.
+
+    Returns
+    -------
+    str
+        The binary string.
+    """
+    # special treatment for negative numbers > -1
     if f < 0 and f > -1:
+        if r is not None and f > -1/2**(r+1):
+            return '.' + '0'*r
         f = 1+f
+
+    i = 0 # number of bits after the comma
     while int(f) != f:
         if i == r:
             f = int(np.round(f))
@@ -145,8 +168,6 @@ def binstr_from_float(f, r=None):
         return as_str[2:] + '.' + '0'*r
 
     before_comma = as_str[2:-i]
-    # if as_str is shorter than the number of bits after the comma,
-    # add the appropriate number of zeros after the comma
     after_comma = '0'*(i-len(as_str[-i:])) + as_str[-i:]
     if r is None:
        return as_str[2:-i] + '.' + after_comma
