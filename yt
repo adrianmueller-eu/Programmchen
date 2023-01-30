@@ -71,7 +71,14 @@ while [[ -n $1 ]]; do
     ;;
   -u)
     shift
-    [[ -z "$1" ]] && die "Please give a user name with option -u. See -h for more help."
+    [[ -z "$1" ]] && die "Please give a user's handle (@*) with option -u. See -h for more help."
+    site="${youtube}/"'@'"${1}/videos"
+    RESULTS_FILE="$RESULTS_STORAGE/$1"
+    JSON_FILE="$JSON_STORAGE/${1}.json"
+    ;;
+  -u2)
+    shift
+    [[ -z "$1" ]] && die "Please give a user name with option -u2. See -h for more help."
     site="${youtube}/user/${1}/videos"
     RESULTS_FILE="$RESULTS_STORAGE/$1"
     JSON_FILE="$JSON_STORAGE/${1}.json"
