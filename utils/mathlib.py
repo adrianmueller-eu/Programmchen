@@ -265,12 +265,13 @@ def is_prime(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 55 itera
     return True
 
 def closest_prime_factors_to(n, m):
-    """Find the set of k prime factors of n with product closest to m."""
+    """Find the set of prime factors of n with product closest to m."""
     pf = prime_factors(n)
 
     min_diff = float("inf")
     min_combo = None
     for k in range(len(pf)):
+        # try all combinations of length k
         for c in combinations(pf, k):
             diff = abs(m - np.prod(c))
             if diff < min_diff:
@@ -278,6 +279,6 @@ def closest_prime_factors_to(n, m):
                 min_combo = c
     return min_combo
 
-def closest_prime_factors_to_sqrt(n):
-    """Find the set of k prime factors of n with product closest to sqrt(n)."""
-    return closest_prime_factors_to(n, sqrt(n))
+def int_sqrt(n):
+    """Find the integer $a$ closest to $\sqrt{n}$, such that $n/a$ is also an integer."""
+    return int(np.prod(closest_prime_factors_to(n, sqrt(n))))

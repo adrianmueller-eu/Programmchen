@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import collections
-from .mathlib import is_complex, is_symmetric, normalize, closest_prime_factors_to_sqrt
+from .mathlib import is_complex, is_symmetric, normalize, int_sqrt
 from .utils import *
 
 def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pltargs):
@@ -209,7 +209,7 @@ def imshow(a, figsize=(8,6), title="", cmap="hot", yticks=None, xticks=None, **p
     if len(a.shape) == 1:
         if a.shape[0] >= 100:
             # magic reshape
-            best_divisor = np.prod(closest_prime_factors_to_sqrt(a.shape[0]))
+            best_divisor = int_sqrt(a.shape[0])
             a = a.reshape(best_divisor, -1)
         else:
             a = a[:,None] # vertical
