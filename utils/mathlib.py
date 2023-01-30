@@ -1,7 +1,8 @@
 import sys
 import numpy as np
-from math import factorial, gcd, log
+from math import factorial, gcd, log, sqrt
 from numpy.random import randint
+from itertools import combinations
 
 Phi = (1 + np.sqrt(5))/2
 
@@ -226,7 +227,7 @@ def is_prime(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 55 itera
         return False
     if n == 2 or n == 3:
         return True
-    
+
     def getKM(n):
         k = 0
         while n % 2 == 0:
@@ -262,3 +263,21 @@ def is_prime(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 55 itera
 
     # print("%d is prime with alpha=%E (if Carmichael number: alpha=%f)" % (n, p, (3/4)**log(p,1/2)))
     return True
+
+def closest_prime_factors_to(n, m):
+    """Find the set of k prime factors of n with product closest to m."""
+    pf = prime_factors(n)
+
+    min_diff = float("inf")
+    min_combo = None
+    for k in range(len(pf)):
+        for c in combinations(pf, k):
+            diff = abs(m - np.prod(c))
+            if diff < min_diff:
+                min_diff = diff
+                min_combo = c
+    return min_combo
+
+def closest_prime_factors_to_sqrt(n):
+    """Find the set of k prime factors of n with product closest to sqrt(n)."""
+    return closest_prime_factors_to(n, sqrt(n))
