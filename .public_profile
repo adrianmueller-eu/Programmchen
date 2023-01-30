@@ -934,8 +934,10 @@ function pdfpages() (
 
 function pdfgrepc() {
   [[ -z "$1" ]] && return 1
-  pdfgrep -c "$@" * | grep -v ':0' | tr ':' ' ' | awk '{print $2"\t"$1}' | sort -n
+  pdfgrep -c "$@" * 2>&1 | grep -v ' Could not open ' | grep -v ':0' | tr ':' ' ' | awk '{cnt=$NF; $NF=""; $0=cnt"\t"$0; print $0}' | sort -n
 }
+alias pdfg=pdfgrep
+alias pdfgc=pdfgrepc
 
 function meta() {
   if hash exiftool &>/dev/null; then
