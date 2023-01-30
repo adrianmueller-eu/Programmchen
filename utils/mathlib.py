@@ -27,6 +27,11 @@ def is_hermitian(a, rtol=1e-05, atol=1e-08):
     	a, a.conj().T
     ), rtol=rtol, atol=atol)
 
+def is_orthogonal(a, rtol=1e-05, atol=1e-08):
+    return _sq_matrix_allclose(a, lambda a: (
+        a @ a.T, np.eye(a.shape[0])
+    ), rtol=rtol, atol=atol)
+
 def is_unitary(a, rtol=1e-05, atol=1e-08):
     return _sq_matrix_allclose(a, lambda a: (
     	a @ a.conj().T, np.eye(a.shape[0])
