@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import collections
-from .mathlib import is_complex, is_symmetric, normalize
+from .mathlib import is_complex, is_symmetric, normalize, closest_prime_factors_to_sqrt
 from .utils import *
 
 def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pltargs):
@@ -201,19 +201,24 @@ def colorize_complex(z):
     c = np.array(c).transpose(1,2,0) # convert shape (3,n,m) -> (n,m,3)
     return c
 
-def imshow(a, figsize=(8,6), title="", cmap_for_real="hot", yticks=None, xticks=None, **pltargs):
+def imshow(a, figsize=(8,6), title="", cmap="hot", yticks=None, xticks=None, **pltargs):
     a = np.array(a)
     if np.prod(a.shape) == np.max(a.shape):
         a = a.flatten()
     fig = plt.figure(figsize=figsize)
     if len(a.shape) == 1:
-        a = a[:,None] # vertical
+        if a.shape[0] >= 100:
+            # magic reshape
+            best_divisor = np.prod(closest_prime_factors_to_sqrt(a.shape[0]))
+            a = a.reshape(best_divisor, -1)
+        else:
+            a = a[:,None] # vertical
         if is_complex(a):
             img = colorize_complex(a)
             plt.imshow(img, aspect=5/a.shape[0], **pltargs)
         else:
             a = a.real
-            img = plt.imshow(a, cmap=cmap_for_real, **pltargs)
+            img = plt.imshow(a, cmap=cmap, **pltargs)
             fig.colorbar(img, fraction=0.1, pad=0.05)
     elif len(a.shape) == 2:
         if is_complex(a):
@@ -221,7 +226,7 @@ def imshow(a, figsize=(8,6), title="", cmap_for_real="hot", yticks=None, xticks=
             plt.imshow(img, **pltargs)
         else:
             a = a.real
-            img = plt.imshow(a, cmap=cmap_for_real, **pltargs)
+            img = plt.imshow(a, cmap=cmap, **pltargs)
             fig.colorbar(img, fraction=0.1, pad=0.05, shrink=0.87)
     else:
         raise ValueError(f"Array must be 2D or 1D, but shape was {a.shape}")
