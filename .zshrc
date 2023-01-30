@@ -45,6 +45,7 @@ compdef _functions fif
 compdef _aliases fia
 compdef '_files -g "*.tex"' clat
 compdef '_files -g "*.tex"' cltex
+compdef '_files -g "*.md"' md2h
 
 ### theme
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[red]%}"
