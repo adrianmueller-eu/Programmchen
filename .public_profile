@@ -184,7 +184,16 @@ alias al='echo "\$\$\n\\\\begin{aligned}\n\n\\\\end{aligned}\n\$\$" | pbcopy'
 alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
 alias lower="pbpaste | tr '[:upper:]' '[:lower:]' | pbcopy"
 alias upper="pbpaste | tr '[:lower:]' '[:upper:]' | pbcopy"
-alias md2h='pbpaste | md2html | tr -d $"\n" | pbcopy'
+md2h() {
+  if [[ ! -t 0 ]]; then
+    cat | md2html | tr -d $'\n'
+  elif [[ -n $1 ]]; then
+    filename=${1%.*}
+    cat "$1" | md2html | tr -d $'\n' > "${filename}.html"
+  else
+    pbpaste | md2html | tr -d $'\n' | pbcopy
+  fi
+}
 
 screen_of_color() {
   printf "\e[$1m"; for i in $(seq 1 $((COLUMNS * LINES))); do printf " "; done
