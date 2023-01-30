@@ -2,7 +2,6 @@ from .utils import *
 from .prob import *
 from .data import *
 from .models import *
-from .isprime import *
 from .mathlib import *
 
 from .plot import *

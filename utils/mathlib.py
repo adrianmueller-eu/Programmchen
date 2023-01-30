@@ -1,6 +1,7 @@
 import sys
 import numpy as np
-from math import factorial
+from math import factorial, gcd, log
+from numpy.random import randint
 
 Phi = (1 + np.sqrt(5))/2
 
@@ -199,3 +200,60 @@ def bincoll_from_binstr(s):
 
 def binstr_from_bincoll(l):
     return "".join([str(x) for x in l])
+
+def prime_factors(n):
+    """Simple brute-force algorithm to find prime factors"""
+    i = 2
+    factors = []
+    while i * i <= n:
+        if n % i:
+            i += 1
+        else:
+            n //= i
+            factors.append(i)
+    if n > 1:
+        factors.append(n)
+    return factors
+
+def is_prime(n, alpha=1e-20): # only up to 2^54 -> alpha < 1e-16.26 (-> 55 iterations; < 1e-20 is 67 iterations)
+    """Miller-Rabin test for primality."""
+    if n == 1 or n == 4:
+        return False
+    if n == 2 or n == 3:
+        return True
+    
+    def getKM(n):
+        k = 0
+        while n % 2 == 0:
+            k += 1
+            n /= 2
+        return k,int(n)
+
+    p = 1
+    while p > alpha:
+        a = randint(2,n-2)
+        if gcd(a,n) != 1:
+            #print(n,"is not prime (1)")
+            return False
+        k,m = getKM(n-1)
+        b = pow(a, m, n)
+        if b == 1:
+            p *= 1/2
+            continue
+        for i in range(1,k+1):
+            b_new = pow(b,2,n)
+            # first appearance of b == 1 is enough
+            if b_new == 1:
+                break
+            b = b_new
+            if i == k:
+                #print(n,"is not prime (2)")
+                return False
+        if gcd(b+1,n) == 1 or gcd(b+1,n) == n:
+            p *= 1/2
+        else:
+            #print(n,"is not prime (3)")
+            return False
+
+    # print("%d is prime with alpha=%E (if Carmichael number: alpha=%f)" % (n, p, (3/4)**log(p,1/2)))
+    return True
