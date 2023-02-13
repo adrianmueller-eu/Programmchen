@@ -88,7 +88,6 @@ function help() {
 # If zsh is slow, try
 # mv ~/.oh-my-zsh/lib/spectrum.zsh ~/.oh-my-zsh/lib/spectrum.zsh_disabled
 
-if [[ $BREW_PREFIX == "/opt/homebrew" ]] && hash conda &>/dev/null; then
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/opt/homebrew/Caskroom/miniconda/base/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
@@ -103,4 +102,3 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
-fi
