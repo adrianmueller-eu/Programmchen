@@ -339,7 +339,7 @@ function ytu() (
   [[ -n "$PROXY" ]] && echo "Using proxy ($PROXY)"
   yts=($(ytul))
   for y in "${yts[@]}"; do
-    echo "$y\n$(eval $y)" &
+    echo "$y\n$(eval $y --update)" &
   done
   wait
 )

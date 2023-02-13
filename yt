@@ -9,9 +9,9 @@ RESULTS_STORAGE="$STORAGE_DIR/results"
 
 # arguments
 DEBUG=
-PRINTALL=
+PRINTALL=true
 OPEN=
-USE_CACHED=
+USE_CACHED=true
 site=""
 query=""
 
@@ -23,19 +23,19 @@ declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
 
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | [--cached | -n ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m \e[4m...\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-o] [-d] [ \e[4msite\e[0m | [--cached | --update [-a] ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m]"
 help="Fetch list of recent videos from YouTube.
 $usage
         \e[1m-h\e[0m         Displays this message and exits.
-        \e[1m-a\e[0m         Print all results from the first page.
-        \e[1m-o\e[0m         Just opens the generated link (uses \"\e[1mf\e[0m\").
-        \e[1m-d\e[0m         Print some debug logs.
-        \e[4msite\e[0m       Youtube user or channel site to grep videos from.
-        \e[1m--cached\e[0m   Read from cache (only if cache already exists).
-        \e[1m-n\e[0m         Undo option \e[1m--cached\e[0m, i.e. don't read from cache (default).
+        \e[1m-o\e[0m         Just opens the generated link (using \"\e[1mf\e[0m\").
+        \e[1m-d\e[0m         Prints some debug logs.
+        \e[4msite\e[0m       Youtube link to user or channel to grep videos from.
+        \e[1m--cached\e[0m   Read from cache (default). Cancels the option \e[1m--update\e[0m, and activates the option \e[1m-a\e[0m.
+        \e[1m--update\e[0m   Update the cache from YouTube. Cancels the option \e[1m--cached\e[0m.
+        \e[1m--showall\e[0m  Print all results from the first page. Has no effect with option \e[1m--cached\e[0m.
         \e[1m-u\e[0m \e[4muser\e[0m    Give a \e[4muser\e[0m name to grep videos from.
         \e[1m-c\e[0m \e[4mname\e[0m    Give a channel's \e[4mname\e[0m to grep videos from.
-        \e[1m-i\e[0m \e[4mID\e[0m      Give a channel's \e[4mID\e[0m ID to grep videos from.
+        \e[1m-i\e[0m \e[4mID\e[0m      Give a channel's \e[4mID\e[0m to grep videos from.
         \e[1m-p\e[0m \e[4mID\e[0m      Give a playlist ID. Takes an optional second argument \e[4mname\e[0m for the cache file name.
         \e[1m-f\e[0m \e[4mfile\e[0m    Give a curl fetch result \e[4mfile\e[0m to grep videos from (for debug, no save).
         \e[4mquery\e[0m       Filters for a query \e[4mquery\e[0m (case insensitive).
@@ -53,17 +53,19 @@ die() {
 
 while [[ -n $1 ]]; do
   case "$1" in
-  --cached)
-    USE_CACHED=true
-    ;;
-  -n)
-    USE_CACHED=
-    ;;
   -h|--help)
     printf "$help"
     exit 0
     ;;
-  -a)
+  --cached)
+    USE_CACHED=true
+    PRINTALL=true
+    ;;
+  --update)
+    USE_CACHED=
+    PRINTALL=
+    ;;
+  --showall)
     PRINTALL=true
     ;;
   -d)
@@ -123,9 +125,12 @@ while [[ -n $1 ]]; do
     elif [[ -z "$site" ]]; then
       site=$1
       shift
+    elif [[ -z "$query" ]]; then
+      query="$1"
+      shift
+    else
+      echo "WARNING: Ignored argument: $1" >&2
     fi
-    query="$*"
-    break
     ;;
   esac
   shift
@@ -134,7 +139,7 @@ done
 if [[ -n $USE_CACHED ]]; then
   [[ -z $site ]] && die "Please specify a channel, user, or playlist id with option \e[1m--cached\e[0m. See \e[1m-h\e[0m for more help."
   [[ -z $JSON_FILE ]] && die "No caches available for websites."
-  [[ ! -f $JSON_FILE ]] && die "Can only use existing caches!"
+  [[ ! -f $JSON_FILE ]] && die "Cache is not created yet. Please update first using option --update."
   FILE=$JSON_FILE
   site=
 fi
@@ -216,10 +221,11 @@ function parseResults0() {
           console.log(link)
         }
       }
-      else if (content.playlistVideoListRenderer) { // TODO: this is probably wrong by now
-        for (let item of contents.playlistVideoListRenderer.contents) {
+      else if (content.sectionListRenderer) { // TODO: this is probably wrong by now
+        let playlistVideoRenderer = content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].playlistVideoListRenderer
+        for (let item of playlistVideoRenderer.contents) {
+          if (!item.playlistVideoRenderer) continue;
           let v = item.playlistVideoRenderer
-          if (!v) continue;
 
           // get data
           let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
@@ -409,7 +415,6 @@ function askForChoose() {
       *)
       ;;
     esac
-    exit 0
   else
     printf "Which one do you want to open? (1-%d/q) [1]: " ${#DESCRIPTIONS[@]}
     read ans
@@ -423,13 +428,11 @@ function askForChoose() {
         else
           printf "f %s" "$link"
         fi
-        [[ $ans -eq 0 ]] && exit 0
       else
         die "Error: Answer must not be zero or larger than ${#DESCRIPTIONS[@]}, but was: $ans."
       fi
     else
       printf "Nothing opened.\n"
-      exit 0
     fi
   fi
 }
@@ -487,9 +490,6 @@ if [[ "$site" = ${youtube}* ]]; then
 
     printf "%s" "$OUTPUTS"
     askForChoose
-    while true; do
-      askForChoose
-    done
   else
     [[ -n "$query" ]] && printf "Warning: query will be ignored: %s\n" "$query" >&2
     if [[ -z $DEBUG ]]; then
@@ -499,12 +499,18 @@ if [[ "$site" = ${youtube}* ]]; then
     fi
   fi
 elif [[ -n "$FILE" ]]; then
-  echo "Reading from file $FILE"
   results=$(cat "$FILE")
   parseResults "$results" "$query"
   setupOutputsVariable
   filterLinks
+
+  if [[ ! -t 1 ]]; then # not interactive
+    printf "%s" "$OUTPUTS"
+    exit 0
+  fi
+
   printf "%s" "$OUTPUTS"
+  askForChoose
 else
   # since $site is just the first given non-option argument, handle it here as part of the query
   query="$site $query"
