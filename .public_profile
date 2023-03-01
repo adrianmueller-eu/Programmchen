@@ -486,7 +486,7 @@ function panoptoDownload() ( # TODO: seems not to work anymore
 )
 
 function dm() (
-  if [[ -z $1 ]]; then
+  if [[ -z $2 ]]; then
     echo "Enter a word, phrase, description, or pattern to find related words.
 Usage: \e[1m$0\e[0m \e[4mkeyword\e[0m \e[4mquery\e[0m \e[4m...\e[0m
 
