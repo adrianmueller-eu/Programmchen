@@ -3,6 +3,7 @@ from .prob import *
 from .data import *
 from .models import *
 from .mathlib import *
+from .isprime import *
 
 from .plot import *
 from .examples import *
