@@ -342,3 +342,313 @@ def random_state(n=1):
     real = np.random.random(2**n)
     imag = np.random.random(2**n)
     return normalize(real + 1j*imag)
+
+###################
+### Hamiltonian ###
+###################
+
+def parse_hamiltonian(hamiltonian):
+    """Parse a string representation of a Hamiltonian into a matrix representation.
+
+    Example:
+    >>> parse_hamiltonian('0.5*(XX + YY + ZZ + II)') # SWAP
+    array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
+           [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]
+           [ 0.+0.j  1.+0.j  0.+0.j  0.+0.j]
+           [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]])
+    >>> parse_hamiltonian('-(XX + YY + .5*ZZ) + 1.5')
+    array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
+           [ 0.+0.j  2.+0.j -2.+0.j  0.+0.j]
+           [ 0.+0.j -2.+0.j  2.+0.j  0.+0.j]
+           [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]])
+    >>> parse_hamiltonian('0.5*(II + ZI - ZX + IX)') # CNOT
+
+    """
+    def s(gate):
+        return globals()[gate]
+
+    # Remove whitespace
+    hamiltonian = hamiltonian.replace(" ", "")
+    # replace - with +-, except before e
+    hamiltonian = hamiltonian \
+                    .replace("-", "+-") \
+                    .replace("e+-", "e-") \
+                    .replace("(+-", "(-")
+
+    # Find parts in parentheses
+    part = ""
+    parts = []
+    depth = 0
+    for c in hamiltonian:
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        if depth > 0:
+            part += c
+        if depth == 0 and c == ")":
+            part += c
+            # reject parts with complex numbers
+            try:
+                assert complex(part).imag == 0, "Complex coefficients lead to non-hermitian matrices"
+            except ValueError:
+                pass
+            parts.append(part)
+            part = ""
+
+    # Replace parts in parentheses with a placeholder
+    for i, part in enumerate(parts):
+        hamiltonian = hamiltonian.replace(part, f"part{i}", 1)
+        # Calculate the part recursively
+        parts[i] = parse_hamiltonian(part[1:-1])
+
+    # Parse the rest of the Hamiltonian
+    chunks = hamiltonian.split("+")
+    # Remove empty chunks
+    chunks = [c for c in chunks if c != ""]
+    # If parts are present, use them to determine the number of qubits
+    if parts:
+        n = int(np.log2(parts[0].shape[0]))
+    else: # Use the first chunk to determine the number of qubits
+        first_chunk = chunks[0]
+        if first_chunk[0] in ["-", "+"]:
+            first_chunk = first_chunk[1:]
+        try:
+            n = len(first_chunk.split("*")[1])
+        except IndexError:
+            n = len(first_chunk)
+
+    H = np.zeros((2**n, 2**n), dtype=complex)
+    for chunk in chunks:
+
+        # print(chunk, hamiltonian)
+        chunk_matrix = None
+        if chunk == "":
+            continue
+        # Parse the weight of the chunk
+        try:
+            if "*" in chunk:
+                weight = complex(chunk.split("*")[0])
+                chunk = chunk.split("*")[1]
+            elif "part" in chunk and chunk[0] != "p":
+                weight = complex(chunk.split("part")[0])
+                chunk = "part" + chunk.split("part")[1]
+            else:
+                weight = complex(chunk)
+                chunk_matrix = np.eye(2**n)
+        except ValueError:
+            if chunk[0] == "-":
+                weight = -1
+                chunk = chunk[1:]
+            elif chunk[0] == "+":
+                weight = 1
+                chunk = chunk[1:]
+            else:
+                weight = 1
+        # If the chunk is a part, add it to the Hamiltonian
+        if chunk_matrix is not None:
+            pass
+        elif chunk.startswith("part"):
+            chunk_matrix = parts[int(chunk.split("part")[1])]
+        else:
+            if len(chunk) != n:
+                raise ValueError(f"Gate count must be {n} but was {len(chunk)} for chunk \"{chunk}\"")
+
+            # Get the matrix representation of the chunk
+            chunk_matrix = s(chunk[0])
+            for gate in chunk[1:]:
+                chunk_matrix = np.kron(chunk_matrix, s(gate))
+
+        # Add the chunk to the Hamiltonian
+        # print("chunk", weight, chunk, hamiltonian, parts)
+        H += weight * chunk_matrix
+
+    assert np.allclose(H, H.conj().T), "Hamiltonian must be Hermitian"
+
+    return H
+
+def random_hamiltonian(n_qubits, n_terms, offset=0, gates='XYZI', scaling=True):
+    """Generate `n_terms` combinations out of `n_qubits` gates drawn from `gates`. If `scaling=True`, the scaling factor is `1/n_terms`."""
+    # generate a list of random terms
+    combs = [''.join(np.random.choice(list(gates), n_qubits)) for _ in range(n_terms)]
+    H_str = ' + '.join(combs)
+    if scaling:
+        H_str = str(1/len(combs)) + '*(' + H_str + ')'
+    if offset != 0:
+        H_str += ' + ' + str(offset)
+    return H_str
+
+def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='2d'):
+    """
+    Generates an Ising model with (optional) longitudinal and (optional) transverse couplings.
+
+    Parameters
+    ----------
+    n_qubits : int
+        Number of qubits, at least 2, has to be a perfect square if kind='2d'.
+    J : float or array
+        Coupling strength. If a scalar, all couplings are set to this value.
+        If a 2-element vector, all couplings are set to a random value in this range.
+        If a matrix, this matrix is used as the coupling matrix. Uses only the upper triangular part.
+    h : float or array, optional
+        Longitudinal field strength. If a scalar, all fields are set to this value.
+        If a 2-element vector, all fields are set to a random value in this range.
+        If a vector of size `n_qubits`, its elements specify the individual strengths of the longitudinal field.
+    g : float or array, optional
+        Transverse field strength. If a scalar, all couplings are set to this value.
+        If a 2-element vector, all couplings are set to a random value in this range.
+        If a vector of size `n_qubits`, its elements specify the individual strengths of the transverse field.
+    offset : float, optional
+        Offset of the Hamiltonian.
+    kind : {'1d', '2d'}, optional
+        Whether the couplings are 1d or 2d.
+
+    Returns
+    -------
+    H : str
+        The Hamiltonian as a string, which can be parsed by parse_hamiltonian.
+    """
+    # parse arguments
+    assert n_qubits > 2, "n_qubits must be greater than 2"
+    if kind == '2d':
+        # assert np.sqrt(n_qubits) % 1 == 0, "n_qubits must be a perfect square for kind='2d'"
+        if hasattr(J, '__len__') and len(J) == 2:
+            J = np.random.uniform(J[0], J[1], (n_qubits, n_qubits))
+        # check if J is scalar or matrix
+        assert np.isscalar(J) or J.shape == (n_qubits, n_qubits), "J must be a scalar, 2-element vector, or matrix of shape (n_qubits, n_qubits)"
+        # use only upper triangular part
+        if not np.isscalar(J):
+            J = np.triu(J)
+    elif kind == '1d':
+        if hasattr(J, '__len__') and len(J) == 2:
+            J = np.random.uniform(J[0], J[1], n_qubits)
+        assert np.isscalar(J) or len(J) == n_qubits, "J must be a scalar, 2-element vector, or vector of length n_qubits"
+    else:
+        raise ValueError(f"Unknown kind {kind}")
+    if h is not None:
+        if hasattr(h, '__len__') and len(h) == 2:
+            h = np.random.uniform(low=h[0], high=h[1], size=n_qubits)
+        assert np.isscalar(h) or len(h) == n_qubits, "h must be a scalar, 2-element vector, or vector of length n_qubits"
+    if g is not None:
+        if hasattr(g, '__len__') and len(g) == 2:
+            g = np.random.uniform(low=g[0], high=g[1], size=n_qubits)
+        assert np.isscalar(g) or len(g) == n_qubits, "g must be a scalar, 2-element vector, or vector of length n_qubits"
+
+    # generate the Hamiltonian
+    H_str = ''
+    # pairwise interactions
+    if kind == '2d':
+        if np.isscalar(J):
+            for i in range(n_qubits):
+                for j in range(i+1, n_qubits):
+                    H_str += 'I'*i + 'Z' + 'I'*(j-i-1) + 'Z' + 'I'*(n_qubits-j-1) + ' + '
+            H_str = str(J) + '*(' + H_str[:-3] + ') + '
+        else:
+            for i in range(n_qubits):
+                for j in range(i+1, n_qubits):
+                    if J[i,j] != 0:
+                        H_str += str(J[i,j]) + '*' + 'I'*i + 'Z' + 'I'*(j-i-1) + 'Z' + 'I'*(n_qubits-j-1) + ' + '
+    elif kind == '1d':
+        if np.isscalar(J):
+            for i in range(n_qubits-1):
+                H_str += 'I'*i + 'ZZ' + 'I'*(n_qubits-i-2) + ' + '
+            # last and first qubit
+            H_str += 'Z' + 'I'*(n_qubits-2) + 'Z' + ' + '
+            H_str = str(J) + '*(' + H_str[:-3] + ') + '
+        else:
+            for i in range(n_qubits-1):
+                if J[i] != 0:
+                    H_str += str(J[i]) + '*' + 'I'*i + 'ZZ' + 'I'*(n_qubits-i-2) + ' + '
+            # last and first qubit
+            if J[n_qubits-1] != 0:
+                H_str += str(J[n_qubits-1]) + '*' + 'Z' + 'I'*(n_qubits-2) + 'Z' + ' + '
+    else:
+        raise ValueError(f"Unknown kind {kind}")
+    # local longitudinal fields
+    if np.any(h):
+        if np.isscalar(h):
+            H_str += str(h) + '*(' + ' + '.join(['I'*i + 'Z' + 'I'*(n_qubits-i-1) for i in range(n_qubits)]) + ') + '
+        else:
+            H_str += ' + '.join([str(h[i]) + '*' + 'I'*i + 'Z' + 'I'*(n_qubits-i-1) for i in range(n_qubits) if h[i] != 0]) + ' + '
+    # local transverse fields
+    if np.any(g):
+        if np.isscalar(g):
+            H_str += str(g) + '*(' + ' + '.join(['I'*i + 'X' + 'I'*(n_qubits-i-1) for i in range(n_qubits)]) + ') + '
+        else:
+            H_str += ' + '.join([str(g[i]) + '*' + 'I'*i + 'X' + 'I'*(n_qubits-i-1) for i in range(n_qubits) if g[i] != 0]) + ' + '
+    # offset
+    if np.any(offset):
+        H_str += str(offset)
+    else:
+        H_str = H_str[:-3]
+    return H_str
+
+def get_H_energies(H, expi=True):
+    """Returns the energies of the given hamiltonian `H`. For `expi=True` (default) it gives the same result as `get_pe_energies(exp_i(H))` (up to sorting) and for `expi=False` it returns the eigenvalues of `H`."""
+    if type(H) == str:
+        H = parse_hamiltonian(H)
+    energies = np.linalg.eigvalsh(H)
+    if expi:
+        energies = (energies % (2*np.pi))/(2*np.pi)
+        energies[energies > 0.5] -= 1
+        energies = np.sort(energies)
+    return energies
+
+
+#############
+### Tests ###
+#############
+
+def tests_quantum_all():
+    tests = [
+        _test_get_H_energies_eq_get_pe_energies,
+        _test_parse_hamiltonian1,
+        _test_parse_hamiltonian2,
+        _test_parse_hamiltonian3,
+        _test_reverse_qubit_order1,
+        _test_reverse_qubit_order2,
+    ]
+
+    for test in tests:
+        print("Running", test.__name__, "... ", end="")
+        if test():
+            print("Test succeed!")
+        else:
+            print("ERROR!")
+            break
+
+def _test_get_H_energies_eq_get_pe_energies():
+    n_qubits = np.random.randint(1,10)
+    n_terms = np.random.randint(1,100)
+    H = random_hamiltonian(n_qubits, n_terms, scaling=False)
+    H = parse_hamiltonian(H)
+
+    A = np.sort(get_pe_energies(exp_i(H)))
+    B = get_H_energies(H)
+    return np.allclose(A, B)
+
+def _test_parse_hamiltonian1():
+    H = parse_hamiltonian('0.5*(II + ZI - ZX + IX)')
+    return np.allclose(H, CNOT)
+
+def _test_parse_hamiltonian2():
+    H = parse_hamiltonian('0.5*(XX + YY + ZZ + II)')
+    return np.allclose(H, SWAP)
+
+def _test_parse_hamiltonian3():
+    H = parse_hamiltonian('-(XX + YY + .5*ZZ) + 1.5')
+    return np.allclose(np.sum(H), 2)
+
+def _test_reverse_qubit_order1():
+    H = parse_hamiltonian('IIIXX')
+    H_rev = parse_hamiltonian('XXIII')
+
+    H_rev2 = reverse_qubit_order(H)
+    return np.allclose(H_rev, H_rev2)
+
+def _test_reverse_qubit_order2():
+    psi = np.kron([1,1], [0,1])
+    psi_rev = np.kron([0,1], [1,1])
+
+    psi_rev2 = reverse_qubit_order(psi)
+    return np.allclose(psi_rev, psi_rev2)
