@@ -284,6 +284,7 @@ alias woff="wlan off"
 alias blon="blueutil -p 1"
 alias bloff="blueutil -p 0"
 alias off="woff && bloff && pmset sleepnow >/dev/null"
+alias on="won && blon"
 
 alias firefox=/Applications/Firefox.app/Contents/MacOS/firefox
 alias serve="echo http://127.0.0.1:8000 && py -m http.server"
