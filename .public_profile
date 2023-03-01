@@ -291,7 +291,7 @@ alias serve="echo http://127.0.0.1:8000 && py -m http.server"
 
 ip() (
   if ipaddr=$(curl -sS ifconfig.me 2>/dev/null); then
-    if ! echo "$ipaddr" | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} html &> /dev/null;then
+    if ! echo "$ipaddr" | grep html &> /dev/null;then
       ssid=$(airport -I | sed -n 13p | sed 's/.*: //')
       printf "%s\t%s\t%s\n" "$(date +'%F %T')" "$ipaddr" "$ssid" >> ~/.ip_history
     fi
