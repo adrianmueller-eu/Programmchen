@@ -356,13 +356,14 @@ function uriencode() {
 }
 
 function uridecode() {
-  node -e 'console.log(decodeURIComponent(process.argv[1]))' "$*"
+  [[ -n "$1" ]] && uri=$1 || uri=$(pbpaste)
+  node -e 'console.log(decodeURIComponent(process.argv[1]))' "$uri"
 }
 
-urldata() {
+function urldata() (
   [[ -n "$1" ]] && uri=$1 || uri=$(pbpaste)
   uridecode "${uri#*\?}" | tr '&' '\n'
-}
+)
 
 function fetch_dwd() ( # german weather agency / usage: $0 "state" "city"
 # see https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/viewer/gemeinden.js?v=2
