@@ -173,7 +173,7 @@ def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=F
 
     return n, bins
 
-def scatter1d(data, xticks=None, alpha=.5, s=500, marker="|", **pltargs):
+def scatter1d(data, xticks=None, alpha=.5, s=500, marker="|", xlim=None, title="", **pltargs):
     fig = plt.figure(figsize=(10,1))
     ax = fig.gca()
     size = np.array(data).flatten().shape
@@ -184,6 +184,10 @@ def scatter1d(data, xticks=None, alpha=.5, s=500, marker="|", **pltargs):
     ax.set_yticks([])
     if xticks:
         ax.set_xticks(xticks)
+    if title:
+        ax.set_title(title)
+    if xlim is not None:
+        ax.set_xlim(xlim)
     fig.tight_layout()
     plt.show()
 
