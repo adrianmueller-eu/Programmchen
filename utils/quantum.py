@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from .mathlib import matexp, normalize
+from .mathlib import matexp, normalize, is_hermitian, is_unitary
 from .plot import colorize_complex
+
+#############
+### Gates ###
+#############
 
 def Rx(theta):
    return np.array([
@@ -64,6 +68,10 @@ SWAP = np.array([ # CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
 ], dtype=complex)
 
 try:
+    ##############
+    ### Qiskit ###
+    ##############
+
     from qiskit import Aer, transpile, assemble, execute
     from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
     from qiskit.quantum_info.operators import Operator
@@ -112,9 +120,10 @@ try:
         sim = execute(circ, Aer.get_backend('unitary_simulator')) # run the simulator
         return sim.result().get_unitary(circ, decimals=decimals)
 
-    def get_pe_energies(circ):
-        u = get_unitary(circ)
-        eigvals, eigvecs = np.linalg.eig(u)
+    def get_pe_energies(U):
+        if isinstance(U, QuantumCircuit):
+            U = get_unitary(U)
+        eigvals, eigvecs = np.linalg.eig(U)
         energies = np.angle(eigvals)/(2*np.pi)
         return energies
 
@@ -138,10 +147,15 @@ try:
 
 
 except ModuleNotFoundError:
-    print("Warning: qiskit not installed!")
+    print("Warning: qiskit not installed! Use `pip install qiskit`.")
     pass
 
+#############
+### State ###
+#############
+
 def reverse_qubit_order(state):
+    """So the last will be first, and the first will be last. Works for both, state vectors and density matrices."""
     state = np.array(state)
     n = int(np.log2(len(state)))
 
@@ -155,6 +169,7 @@ def reverse_qubit_order(state):
         return vecs.T @ np.diag(vals) @ vecs
 
 def partial_trace(rho, retain_qubits=[0,1]):
+    """Trace out all qubits not specified in `retain_qubits`."""
     rho = np.array(rho)
     if len(rho.shape) == 1:
         rho = np.outer(rho, rho.conj())
@@ -170,8 +185,8 @@ def partial_trace(rho, retain_qubits=[0,1]):
         trace_out -= 1 # rename the axes (only "higher" ones are left)
     return rho
 
-# from https://github.com/cvxpy/cvxpy/issues/563
 def _partial_trace(rho, subsystem_dims, subsystem_to_trace_out=0):
+    """Traces out `subsystem_to_trace_out`-th qubit from the given density matrix `rho`. Edited version of the one found in https://github.com/cvxpy/cvxpy/issues/563"""
     dims_ = np.array(subsystem_dims)
     reshaped_rho = rho.reshape(np.concatenate((dims_, dims_), axis=None))
     reshaped_rho = np.moveaxis(reshaped_rho, subsystem_to_trace_out, -1)
@@ -182,6 +197,7 @@ def _partial_trace(rho, subsystem_dims, subsystem_to_trace_out=0):
     return traced_out_rho.reshape(rho_dim, rho_dim)
 
 def state_trace(state, retain_qubits):
+    """This is a pervert version of the partial trace, but for state vectors. I'm not sure about the physical meaning of its output, but it was at times helpful to visualize and interpret subsystems, especially when the density matrix was out of reach (or better: out of memory)."""
     state = np.array(state)
     state[np.isnan(state)] = 0
     n = int(np.log2(len(state))) # nr of qubits
@@ -216,6 +232,8 @@ def state_trace(state, retain_qubits):
     return state, probs
 
 def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False, figsize=None):
+    """My best attempt so far to visualize a state vector. Control with `showqubits` which subsystem you're interested in (`None` will show the whole state). `showcoeff` utilitzes `state_trace`, `showprobs` shows a pie chart of the probabilities when measured in the standard basis, and `showrho` gives a plt.imshow view on the corresponding density matrix."""
+
     def tobin(n, places):
         return ("{0:0" + str(places) + "b}").format(n)
 
@@ -320,6 +338,7 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
     plt.show()
 
 def random_state(n=1):
+    """Generate a random state vector ($2^{n+1}-2$ degrees of freedom). Normalized and without global phase."""
     real = np.random.random(2**n)
     imag = np.random.random(2**n)
     return normalize(real + 1j*imag)
