@@ -48,11 +48,11 @@ def is_complex(a):
     return np.iscomplex(a).any()
 #    return a.dtype == "complex128"
 
-def deg(x):
-    return x/np.pi*180
+def deg(rad):
+    return rad/np.pi*180
 
-def rad(x):
-    return x/180*np.pi
+def rad(deg):
+    return deg/180*np.pi
 
 try:
     from scipy.linalg import expm as matexp
