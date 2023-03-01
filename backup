@@ -12,7 +12,9 @@ $usage
 	\e[1m-c\e[0m	Calculate the space needed for the backup.
 "
 
-# TODO: backup ~/Library/Application Support/Anki2
+# TODO: ~/Library/Application Support/Anki2
+# TODO: Pocket (export html -> import to instapaper -> export HTML & CSV)
+# TODO: Fitnotes, AntennaPod, fairemail
 
 ####################################################
 ### Functions
