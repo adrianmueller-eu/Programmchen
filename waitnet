@@ -149,7 +149,8 @@ while true; do
       turnWifiOn
       sleep 2
     else
-      log "WTF-Error: Unknown state: airport reports no ssid result, but networksetup tells wiki device ($wifiDevice) is not Off."
+      log "WTF-Error: Unknown state: airport reports wifi is Off (no line 13), but networksetup tells wiki device ($wifiDevice) is not Off."
+      log "ssid: [$ssid], wifiDeviceStatus: [$wifiDeviceStatus]"
       exit 1
     fi
   elif [[ ${#ssid} -lt 19 ]]; then
