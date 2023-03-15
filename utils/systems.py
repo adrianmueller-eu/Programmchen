@@ -39,12 +39,6 @@ def ODE_flow_1d(f, x0s=None, x_limits=(-2,2), T=10, n_timesteps=100):
     plt.show()
 
 def ODE_flow_2d(f, x0s=None, xlim=(-2,2), ylim=(-2,2), T=10, n_timesteps=100, ax=None):
-    def simulate(f, x0, T, dt):
-        sol = solve_ivp(lambda t, state: f(*state),
-                    y0=x0, method='RK45', t_span=(0.0, T), dense_output=True)
-        t = np.arange(0, T, dt)
-        return *sol.sol(t), t
-
     dt = T/n_timesteps
 
     if ax is None:
