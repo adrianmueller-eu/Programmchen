@@ -221,7 +221,7 @@ function parseResults0() {
           console.log(link)
         }
       }
-      else if (content.sectionListRenderer) { // TODO: this is probably wrong by now
+      else if (content.sectionListRenderer) {
         let playlistVideoRenderer = content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].playlistVideoListRenderer
         for (let item of playlistVideoRenderer.contents) {
           if (!item.playlistVideoRenderer) continue;
@@ -246,11 +246,18 @@ function parseResults0() {
           // filter query
           if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
 
+          let description
           // Regular video
           let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
           let user = v.shortBylineText.runs[0].text
-
-          let description = title + ' \033[2m' + duration + '\033[0m \033[37m' + by_str + ' ' + user + '\033[0m'
+          if (v.videoInfo) {
+            let views = v.videoInfo.runs[0].text
+            let time = v.videoInfo.runs[2].text
+            description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
+          }
+          else {
+            description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m'
+          }
 
           // create link
           let link = '$youtube' + '/watch?v=' + v.videoId
