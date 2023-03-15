@@ -27,7 +27,8 @@ def Rz(theta):
 
 fs = lambda x: 1/np.sqrt(x)
 f2 = fs(2)
-I = np.eye(2)
+I_ = lambda n: np.eye(2**n)
+I = I_(1)
 X = np.array([ # 1j*Rx(np.pi)
     [0, 1],
     [1, 0]
@@ -52,12 +53,11 @@ H = 1/np.sqrt(2) * np.array([
     [1,  1],
     [1, -1]
 ], dtype=complex)
-C_ = lambda A: np.array([
-    [1, 0, 0, 0],
-    [0, 1, 0, 0],
-    [0, 0, A[0,0], A[0,1]],
-    [0, 0, A[1,0], A[1,1]]
-], dtype=complex)
+def C_(A):
+    if not hasattr(A, 'shape'):
+        A = np.array(A, dtype=complex)
+    n = int(np.log2(A.shape[0]))
+    return np.kron([[1,0],[0,0]], I_(n)) + np.kron([[0,0],[0,1]], A)
 CX = C_(X)
 CNOT = CX
 SWAP = np.array([ # CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
@@ -66,6 +66,11 @@ SWAP = np.array([ # CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
     [0, 1, 0, 0],
     [0, 0, 0, 1]
 ], dtype=complex)
+XX = np.kron(X,X)
+YY = np.kron(Y,Y)
+ZZ = np.kron(Z,Z)
+Toffoli = C_(C_(X))
+
 
 try:
     ##############
