@@ -163,6 +163,9 @@ alias bn="py -m BN"
 alias sat="py -m SAT"
 alias satt="py -m SAT -t"
 alias py_copy="cat $P/00.py | sed 's/from tqdm import tqdm/from tqdm.notebook import tqdm as tq/' | pbcopy"
+piptop() {
+   pipdeptree --python $(t python | sed -n 1p | awk '{print $3}') | grep -v '^ ' | sed 's/==.*//'
+}
 
 #############################
 ### hacky
