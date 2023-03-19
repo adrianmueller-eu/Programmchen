@@ -61,7 +61,7 @@ py_ver=python@3.10
 brews=(
 agedu		# Unix utility for tracking down wasted disk space
 airshare
-#aspell
+aspell
 bash
 bash-completion
 bash-snippets
@@ -79,9 +79,9 @@ clamav
 clang-format    # C++ formatting, e.g. for TextMate
 cloc
 cmake
-coreutils	# GNU File, Shell, and Text utilities
+coreutils	# GNU File, Shell, and Text utilities (SHA!)
 curlie		# Easy-to-use curl
-darkstat
+darkstat	# Network traffic analyzer
 dateutils
 diff-pdf        # needs xquartz
 #docker		# also as cask
@@ -107,7 +107,7 @@ googler
 heksa
 hexedit
 howdoi
-ijq
+ijq		# Interactive jq
 imagemagick	# installs convert
 #jq		# JSON parser
 #launch4j   	# Cross-platform Java executable wrapper
@@ -136,6 +136,7 @@ pandoc		# markup format conversion
 pastel		# Generate, analyze, convert and manipulate colors
 pdfgrep
 pick
+pipdeptree
 #plan9port
 pueue		# queuing shell commands
 pup		# HTML parser
@@ -197,7 +198,7 @@ android-file-transfer
 #android-sdk
 android-studio
 anki
-atom
+#atom
 #avira-antivirus
 #axure-rp
 #balenaetcher 		# utility for writing image files
@@ -225,9 +226,10 @@ iterm2
 j			# J language
 #jamkazam		# Low-latency rehearsing, jamming and performing
 joplin			# Note taking app with nextcloud sync
+jpc-qlcolorcode		# QuickLook plug-in for syntax highlighting
 #jwzlyrics
 #kodi
-manila			# Finder extension for changing folder colors
+#manila			# Finder extension for changing folder colors
 #mathpix-snipping-tool  #nice, but only 50 pics/month
 #mp3tag
 mpv
@@ -243,7 +245,7 @@ pycharm
 qlstephen
 #rstudio
 rwts-pdfwriter          # Print driver for printing documents directly to a pdf file
-shottr			# Screenshot measurement and annotation tool
+#shottr			# Screenshot measurement and annotation tool
 signal
 #sketch
 skim			# PDF reader and note-taking application
@@ -258,10 +260,11 @@ telegram
 textmate
 the-unarchiver
 thunderbird
-todoist
+#todoist
 tomatobar
 #tor-browser
 ukelele
+visual-studio-code
 #yippy                  # clipboard manager (in beta) see also: maccy
 #zulip
 )
@@ -292,30 +295,25 @@ masinstalls=(
 pips=(
 numpy
 pandas
-#scipy # not available for arm
-#sklearn # not available for arm
+scipy
+sklearn
 notebook # jupyter
-#tensorflow # not available for arm
+#tensorflow
 matplotlib
 #nest-asyncio # stan
 jupyterlab
 ipywidgets
 ipython
 ipykernel
+sympy
+torch
 tqdm
 uncertainties # https://uncertainties-python-package.readthedocs.io/
 z3-solver
 )
 
 conda_base=(
-jupyter
-matplotlib
-notebook # ipython, ipykernel
-pandas
-python=3.9
-scikit-learn #scipy, numpy
-tqdm
-uncertainties
+python=3.10
 )
 
 #variables
