@@ -7,41 +7,23 @@ from .plot import colorize_complex
 ### Gates ###
 #############
 
-def Rx(theta):
-   return np.array([
-              [np.cos(theta/2), -1j*np.sin(theta/2)],
-              [-1j*np.sin(theta/2), np.cos(theta/2)]
-          ], dtype=complex)
-
-def Ry(theta):
-   return np.array([
-              [np.cos(theta/2), -np.sin(theta/2)],
-              [np.sin(theta/2), np.cos(theta/2)]
-          ], dtype=complex)
-
-def Rz(theta):
-   return np.array([
-              [np.exp(-1j*theta/2), 0],
-              [0, np.exp(1j*theta/2)]
-          ], dtype=complex)
-
 fs = lambda x: 1/np.sqrt(x)
 f2 = fs(2)
 I_ = lambda n: np.eye(2**n)
 I = I_(1)
-X = np.array([ # 1j*Rx(np.pi)
+X = np.array([ # 1j*Rx(pi)
     [0, 1],
     [1, 0]
 ], dtype=complex)
-Y = np.array([ # 1j*Ry(np.pi)
+Y = np.array([ # 1j*Ry(pi)
     [0, -1j],
     [1j,  0]
 ], dtype=complex)
-Z = np.array([ # 1j*Rz(np.pi)
+Z = np.array([ # 1j*Rz(pi)
     [1,  0],
     [0, -1]
 ], dtype=complex)
-S = np.array([
+S = np.array([ # np.sqrt(Z)
     [1,  0],
     [0, 1j]
 ], dtype=complex)
@@ -52,7 +34,15 @@ S = np.array([
 H = 1/np.sqrt(2) * np.array([
     [1,  1],
     [1, -1]
-], dtype=complex)
+], dtype=complex) # f2*(X + Z)
+
+def R_(gate, theta):
+   return matexp(-1j*gate*theta/2)
+
+Rx = lambda theta: R_(X, theta)
+Ry = lambda theta: R_(Y, theta)
+Rz = lambda theta: R_(Z, theta)
+
 def C_(A):
     if not hasattr(A, 'shape'):
         A = np.array(A, dtype=complex)
@@ -60,7 +50,7 @@ def C_(A):
     return np.kron([[1,0],[0,0]], I_(n)) + np.kron([[0,0],[0,1]], A)
 CX = C_(X)
 CNOT = CX
-SWAP = np.array([ # CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
+SWAP = np.array([ # 0.5*(XX + YY + ZZ + II), CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
     [1, 0, 0, 0],
     [0, 0, 1, 0],
     [0, 1, 0, 0],
@@ -69,6 +59,7 @@ SWAP = np.array([ # CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
 XX = np.kron(X,X)
 YY = np.kron(Y,Y)
 ZZ = np.kron(Z,Z)
+II = I_(2)
 Toffoli = C_(C_(X))
 
 
@@ -82,9 +73,9 @@ try:
     from qiskit.quantum_info.operators import Operator
 
     # Other useful imports
-    from qiskit.quantum_info import random_statevector, Statevector
-    from qiskit.visualization import plot_histogram, plot_bloch_multivector
-    from qiskit.circuit.library import *
+    from qiskit.quantum_info import Statevector
+    from qiskit.visualization import plot_histogram
+    #from qiskit.circuit.library import *
 
     def run(circuit, shots=2**0, showstate=True, showqubits=None, showcoeff=True, showprobs=True, showrho=False, figsize=(16,4)):
         if shots > 10:
