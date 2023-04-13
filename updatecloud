@@ -117,7 +117,7 @@ EOF
   fi
 done
 
-rm $source/*.bak
+rm -f $source/*.bak
 
 # Commit changes
 git add .
