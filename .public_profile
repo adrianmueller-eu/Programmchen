@@ -109,6 +109,7 @@ alias glt='git ls-tree -r --name-only "$(git rev-parse --short HEAD)"'
 alias glu='git ls-files --others --exclude-standard'
 alias gli="glu --ignored"
 # log
+unalias gl &>/dev/null
 alias glf="git log --graph --abbrev-commit --decorate --format=format:'%C(red)%h%C(reset) - %C(cyan)%ar (%aD)%C(reset)%C(white)%d%C(reset)%n          %s%C(blue)%C(bold) %aN %C(dim)<%aE>%C(reset)' --all"
 alias glfs="glf --stat"
 alias glfp='PAGER="/opt/homebrew/share/git-core/contrib/diff-highlight/diff-highlight | less" glfs -p'
