@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import collections
 from .mathlib import is_complex, is_symmetric, normalize, int_sqrt
 from .utils import *
 
@@ -113,9 +112,9 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
 
 def histogram(data, bins=None, xlog=False, density=False):
     if xlog:
-        if not isinstance(bins, collections.Sequence):
+        if not hasattr(bins, '__len__'):
             bins = logbins(data, num=bins)
-    elif not bins:
+    elif bins is None:
         bins = bins_sqrt(data)
     return np.histogram(data, bins=bins, density=density)
 
