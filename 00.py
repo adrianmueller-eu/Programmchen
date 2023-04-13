@@ -13,12 +13,14 @@ except:
     except:
        pass
 try:
+    from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
+
     import scipy
     from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
     from scipy.optimize import minimize
     from scipy.linalg import expm as matexp
 except:
-    from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
+    pass
 import itertools # https://docs.python.org/3/library/itertools.html
 ### visual
 # import pandas as pd
