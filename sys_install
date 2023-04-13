@@ -959,12 +959,6 @@ else
 fi
 
 ### place at HOME
-p2t_conf="$HOME/.p2t"
-if [[ ! -f "$p2t_conf" ]]; then
-  echo "Create p2t config file"
-  printf "token=%s\n" $(git --global config p2t.token) > "$p2t_conf"
-  printf "chatId=%s\n" $(git --global config p2t.chatId) >> "$p2t_conf"
-fi
 
 ### place at /Applications
 cd "/Applications" || die "cd to /Applications failed"
