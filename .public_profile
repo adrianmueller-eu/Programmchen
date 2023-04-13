@@ -227,6 +227,11 @@ alias cal3="gcal --starting-day=1 --with-week-number -q DE_BY --force-highlighti
 function bdate() {
   gdate --date="$1"
 }
+vcal() {
+  pbpaste > $TMPDIR/event.ics
+  open $TMPDIR/event.ics
+  #rm $TMPDIR/event.ics
+}
 # files
 alias q="qlmanage -p &>/dev/null"
 alias mime='file -I'
