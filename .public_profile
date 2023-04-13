@@ -118,7 +118,7 @@ alias gw=glfpw
 alias grh^="git reset HEAD^"
 alias grh^^="git reset HEAD^^"
 alias grh^2="git reset HEAD^2"
-alias gurl="git config --get remote.origin.url | sed 's/\.git//;s~:~/~;s~git@~https://~'"
+alias gurl="git config --get remote.origin.url | sed 's/\.git//;s~:~/~;s~git@~https://~;s~///~://~'"
 
 function c() ( # commit
   git status > /dev/null || return
