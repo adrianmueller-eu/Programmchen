@@ -30,3 +30,6 @@ def logbins(data, start=None, stop=None, num=None, scale=2):
 
 def reversed_keys(d):
     return {k[::-1]:v for k,v in d.items()}
+
+def npp(precision=5):
+    np.set_printoptions(precision=5, suppress=True)
