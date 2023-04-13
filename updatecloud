@@ -25,6 +25,9 @@ fi
 # compile about me
 md2html "../about/about_me.md" > "../about/about_me.html"
 
+# copy telegram bot files
+rsync -r "$PROJ/personal_assistant/" "../tools/gpt/telegram"
+
 if [[ -z $1 ]]; then
 # Fetch from db
 echo "Fetching existing entries from the db"
