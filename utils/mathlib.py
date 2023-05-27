@@ -44,6 +44,12 @@ def is_complex(a):
     return np.iscomplex(a).any()
 #    return a.dtype == "complex128"
 
+def is_psd(a, rtol=1e-05, atol=1e-08):
+    if not is_hermitian(a, rtol=rtol, atol=atol):
+        return False
+    eigv = np.linalg.eigvalsh(a)
+    return np.all(np.abs(eigv.imag) < atol) and np.all(eigv.real >= -atol)
+
 ### Conversion
 
 def deg(rad):
@@ -327,6 +333,7 @@ def test_mathlib_all():
         _test_random_hermitian,
         _test_is_unitary,
         _test_random_unitary,
+        _test_is_psd,
         _test_rad,
         _test_deg,
         _test_matexp,
@@ -420,6 +427,17 @@ def _test_is_unitary():
 def _test_random_unitary():
     a = random_unitary(5)
     assert is_unitary(a)
+    return True
+
+def _test_is_psd():
+    U = random_unitary(5)
+    p = np.random.rand(5)
+    a = U @ np.diag(p) @ U.conj().T
+    assert is_psd(a)
+
+    p -= 1
+    b = U @ np.diag(p) @ U.conj().T
+    assert not is_psd(b)
     return True
 
 def _test_rad():
