@@ -340,6 +340,19 @@ def random_state(n=1):
     imag = np.random.random(2**n)
     return normalize(real + 1j*imag)
 
+def random_density_matrix(n=1, pure=True):
+    """Generate a random density matrix ($2^{n+1}-1$ degrees of freedom). Normalized and without global phase."""
+    if pure:
+        state = random_state(n)
+        return np.outer(state, state.conj())
+    else:
+        probs = normalize(np.random.random(2**n), p=1)
+        res = np.zeros((2**n, 2**n), dtype=complex)
+        for p in probs:
+            state = random_state(n)
+            res += p * np.outer(state, state.conj())
+        return res
+
 ###################
 ### Hamiltonian ###
 ###################
