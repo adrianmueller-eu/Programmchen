@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 import matplotlib.pyplot as plt
 from .mathlib import matexp, normalize, is_hermitian, is_unitary
 from .plot import colorize_complex
@@ -474,18 +475,20 @@ def random_hamiltonian(n_qubits, n_terms, offset=0, gates='XYZI', scaling=True):
         H_str += ' + ' + str(offset)
     return H_str
 
-def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='2d'):
+def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False):
     """
     Generates an Ising model with (optional) longitudinal and (optional) transverse couplings.
 
     Parameters
     ----------
-    n_qubits : int
-        Number of qubits, at least 2, has to be a perfect square if kind='2d'.
-    J : float or array
+    n_qubits : int or tuple
+        Number of qubits, at least 2. For `kind='2d'` or `kind='3d'`, give a tuple of 2 or 3 integers, respectively.
+    J : float, array, or dict
         Coupling strength. If a scalar, all couplings are set to this value.
-        If a 2-element vector, all couplings are set to a random value in this range.
-        If a matrix, this matrix is used as the coupling matrix. Uses only the upper triangular part.
+        If a 2-element vector but `n_qubit > 2` (or tuple), all couplings are set to a random value in this range.
+        If a matrix, this matrix is used as the coupling matrix.
+        For `kind='pairwise'`, `kind='2d'`, or `kind='3d'`, `J` is read as an incidence matrix, where the rows and columns correspond to the qubits and the values are the coupling strengths. Only the upper triangular part of the matrix is used.
+        For `kind='full'`, specify a dictionary with keys being tuples of qubit indices and values being the corresponding coupling strength.
     h : float or array, optional
         Longitudinal field strength. If a scalar, all fields are set to this value.
         If a 2-element vector, all fields are set to a random value in this range.
@@ -496,82 +499,200 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='2d'):
         If a vector of size `n_qubits`, its elements specify the individual strengths of the transverse field.
     offset : float, optional
         Offset of the Hamiltonian.
-    kind : {'1d', '2d'}, optional
-        Whether the couplings are 1d or 2d.
+    kind : {'1d', '2d', '3d', 'pairwise', 'full'}, optional
+        Whether the couplings are along a string (`1d`), on a 2d-lattice (`2d`), 3d-lattice (`3d`), fully connected graph (`pairwise`), or specify the desired multi-particle interactions.
+    circular : bool, optional
+        Whether the couplings are circular (i.e. the outermost qubits are coupled to each other). Only applies to `kind='1d'`, `kind='2d'`, and `kind='3d'`.
 
     Returns
     -------
     H : str
         The Hamiltonian as a string, which can be parsed by parse_hamiltonian.
     """
-    # parse arguments
-    assert n_qubits > 2, "n_qubits must be greater than 2"
-    if kind == '2d':
-        # assert np.sqrt(n_qubits) % 1 == 0, "n_qubits must be a perfect square for kind='2d'"
-        if hasattr(J, '__len__') and len(J) == 2:
-            J = np.random.uniform(J[0], J[1], (n_qubits, n_qubits))
-        # check if J is scalar or matrix
-        assert np.isscalar(J) or J.shape == (n_qubits, n_qubits), "J must be a scalar, 2-element vector, or matrix of shape (n_qubits, n_qubits)"
-        # use only upper triangular part
-        if not np.isscalar(J):
-            J = np.triu(J)
-    elif kind == '1d':
-        if hasattr(J, '__len__') and len(J) == 2:
-            J = np.random.uniform(J[0], J[1], n_qubits)
-        assert np.isscalar(J) or len(J) == n_qubits, "J must be a scalar, 2-element vector, or vector of length n_qubits"
+    # generate the coupling shape
+    n_total_qubits = np.prod(n_qubits)
+    if kind == '1d':
+        assert type(n_qubits) == int or len(n_qubits) == 1, f"For kind={kind}, n_qubits must be an integer or tuple of length 1, but is {n_qubits}"
+        # convert to int if tuple (has attr __len__)
+        if hasattr(n_qubits, '__len__'):
+            n_qubits = n_qubits[0]
+        couplings = (n_qubits if circular and n_qubits > 2 else n_qubits-1,)
+    elif kind == '2d':
+        if type(n_qubits) == int or len(n_qubits) == 1:
+            raise ValueError(f"For kind={kind}, n_qubits must be a tuple of length 2, but is {n_qubits}")
+        couplings = (n_total_qubits, n_total_qubits)
+    elif kind == '3d':
+        if type(n_qubits) == int or len(n_qubits) == 2:
+            raise ValueError(f"For kind={kind}, n_qubits must be a tuple of length 3, but is {n_qubits}")
+        couplings = (n_total_qubits, n_total_qubits)
+    elif kind == 'pairwise':
+        assert type(n_qubits) == int, f"For kind={kind}, n_qubits must be an integer, but is {n_qubits}"
+        couplings = (n_qubits, n_qubits)
+    elif kind == 'full':
+        assert type(n_qubits) == int, f"For kind={kind}, n_qubits must be an integer, but is {n_qubits}"
+        couplings = (2**n_qubits,)
     else:
         raise ValueError(f"Unknown kind {kind}")
+
+    # if J is not scalar or dict, it must be either the array of the couplings or the limits of the random range
+    if not (np.isscalar(J) or isinstance(J, dict)):
+        J = np.array(J)
+        if J.shape == (2,):
+            J = np.random.uniform(J[0], J[1], couplings)
+        assert J.shape == couplings, f"For kind={kind}, J must be a scalar, 2-element vector, or matrix of shape {couplings}, but is {J.shape}"
+    elif isinstance(J, dict) and kind != 'full':
+        raise ValueError(f"For kind={kind}, J must not be a dict!")
+
     if h is not None:
-        if hasattr(h, '__len__') and len(h) == 2:
+        if n_total_qubits != 2 and hasattr(h, '__len__') and len(h) == 2:
             h = np.random.uniform(low=h[0], high=h[1], size=n_qubits)
-        assert np.isscalar(h) or len(h) == n_qubits, "h must be a scalar, 2-element vector, or vector of length n_qubits"
+        elif not np.isscalar(h):
+            h = np.array(h)
+        assert np.isscalar(h) or h.shape == (n_qubits,), f"h must be a scalar, 2-element vector, or vector of length {n_qubits}, but is {h.shape if not np.isscalar(h) else h}"
     if g is not None:
-        if hasattr(g, '__len__') and len(g) == 2:
+        if n_total_qubits != 2 and hasattr(g, '__len__') and len(g) == 2:
             g = np.random.uniform(low=g[0], high=g[1], size=n_qubits)
-        assert np.isscalar(g) or len(g) == n_qubits, "g must be a scalar, 2-element vector, or vector of length n_qubits"
+        elif not np.isscalar(g):
+            g = np.array(g)
+        assert np.isscalar(g) or g.shape == (n_qubits,), f"g must be a scalar, 2-element vector, or vector of length {n_qubits}, but is {g.shape if not np.isscalar(g) else g}"
 
     # generate the Hamiltonian
     H_str = ''
     # pairwise interactions
-    if kind == '2d':
-        if np.isscalar(J):
-            for i in range(n_qubits):
-                for j in range(i+1, n_qubits):
-                    H_str += 'I'*i + 'Z' + 'I'*(j-i-1) + 'Z' + 'I'*(n_qubits-j-1) + ' + '
-            H_str = str(J) + '*(' + H_str[:-3] + ') + '
-        else:
-            for i in range(n_qubits):
-                for j in range(i+1, n_qubits):
-                    if J[i,j] != 0:
-                        H_str += str(J[i,j]) + '*' + 'I'*i + 'Z' + 'I'*(j-i-1) + 'Z' + 'I'*(n_qubits-j-1) + ' + '
-    elif kind == '1d':
+    if kind == '1d':
         if np.isscalar(J):
             for i in range(n_qubits-1):
                 H_str += 'I'*i + 'ZZ' + 'I'*(n_qubits-i-2) + ' + '
             # last and first qubit
-            H_str += 'Z' + 'I'*(n_qubits-2) + 'Z' + ' + '
-            H_str = str(J) + '*(' + H_str[:-3] + ') + '
+            if circular:
+                H_str += 'Z' + 'I'*(n_qubits-2) + 'Z' + ' + '
         else:
             for i in range(n_qubits-1):
                 if J[i] != 0:
                     H_str += str(J[i]) + '*' + 'I'*i + 'ZZ' + 'I'*(n_qubits-i-2) + ' + '
             # last and first qubit
-            if J[n_qubits-1] != 0:
+            if circular and J[n_qubits-1] != 0:
                 H_str += str(J[n_qubits-1]) + '*' + 'Z' + 'I'*(n_qubits-2) + 'Z' + ' + '
+    elif kind == '2d':
+        for i in range(n_qubits[0]):
+            for j in range(n_qubits[1]):
+                # find all 2d neighbors, but avoid double counting
+                neighbors = []
+                if i > 0:
+                    neighbors.append((i-1, j))
+                if i < n_qubits[0]-1:
+                    neighbors.append((i+1, j))
+                if j > 0:
+                    neighbors.append((i, j-1))
+                if j < n_qubits[1]-1:
+                    neighbors.append((i, j+1))
+                if circular:
+                    if i == n_qubits[0]-1 and n_qubits[0] > 2:
+                        neighbors.append((0, j))
+                    if j == n_qubits[1]-1 and n_qubits[1] > 2:
+                        neighbors.append((i, 0))
+                # add interactions
+                index_node = i*n_qubits[1] + j
+                for neighbor in neighbors:
+                    # 1. lower row
+                    # 2. same row, but further to the right or row circular (= first column and j is last column)
+                    # 3. same column, but column circular (= first row and i is last row)
+                    if neighbor[0] > i \
+                        or (neighbor[0] == i and (neighbor[1] > j or (j == n_qubits[1]-1 and neighbor[1] == 0 and n_qubits[1] > 2))) \
+                        or (neighbor[1] == j and i == n_qubits[0]-1 and neighbor[0] == 0 and n_qubits[0] > 2):
+                        index_neighbor = neighbor[0]*n_qubits[1] + neighbor[1]
+                        first_index = min(index_node, index_neighbor)
+                        second_index = max(index_node, index_neighbor)
+                        if not np.isscalar(J):
+                            if J[first_index, second_index] == 0:
+                                continue
+                            H_str += str(J[first_index, second_index]) + '*'
+                        H_str += 'I'*first_index + 'Z' + 'I'*(second_index-first_index-1) + 'Z' + 'I'*(n_qubits[0]*n_qubits[1]-second_index-1) + ' + '
+    elif kind == '3d':
+        for i in range(n_qubits[0]):
+            for j in range(n_qubits[1]):
+                for k in range(n_qubits[2]):
+                    # find all 3d neighbors, but avoid double counting
+                    neighbors = []
+                    if i > 0:
+                        neighbors.append((i-1, j, k))
+                    if i < n_qubits[0]-1:
+                        neighbors.append((i+1, j, k))
+                    if j > 0:
+                        neighbors.append((i, j-1, k))
+                    if j < n_qubits[1]-1:
+                        neighbors.append((i, j+1, k))
+                    if k > 0:
+                        neighbors.append((i, j, k-1))
+                    if k < n_qubits[2]-1:
+                        neighbors.append((i, j, k+1))
+                    if circular:
+                        if i == n_qubits[0]-1 and n_qubits[0] > 2:
+                            neighbors.append((0, j, k))
+                        if j == n_qubits[1]-1 and n_qubits[1] > 2:
+                            neighbors.append((i, 0, k))
+                        if k == n_qubits[2]-1 and n_qubits[2] > 2:
+                            neighbors.append((i, j, 0))
+                    # add interactions
+                    index_node = i*n_qubits[1]*n_qubits[2] + j*n_qubits[2] + k
+                    for neighbor in neighbors:
+                        # 1. lower row
+                        # 2. same row, but
+                            # a. same layer, but further to the right or row circular (= first column and j is last column)
+                            # b. same column, but further behind or layer circular (= first layer and k is last layer)
+                        # 3. same column and same layer, but column circular (= first row and i is last row)
+                        if neighbor[0] > i \
+                            or (neighbor[0] == i and (\
+                                (neighbor[2] == k and (neighbor[1] > j or (j == n_qubits[1]-1 and neighbor[1] == 0 and n_qubits[1] > 2))) \
+                                or (neighbor[1] == j and (neighbor[2] > k or (k == n_qubits[2]-1 and neighbor[2] == 0 and n_qubits[2] > 2))) \
+                            )) \
+                            or (neighbor[1] == j and neighbor[2] == k and i == n_qubits[0]-1 and neighbor[0] == 0 and n_qubits[0] > 2):
+                            index_neighbor = neighbor[0]*n_qubits[1]*n_qubits[2] + neighbor[1]*n_qubits[2] + neighbor[2]
+                            first_index = min(index_node, index_neighbor)
+                            second_index = max(index_node, index_neighbor)
+                            if not np.isscalar(J):
+                                if J[first_index, second_index] == 0:
+                                    continue
+                                H_str += str(J[first_index, second_index]) + '*' 
+                            H_str += 'I'*first_index + 'Z' + 'I'*(second_index-first_index-1) + 'Z' + 'I'*(n_qubits[0]*n_qubits[1]*n_qubits[2]-second_index-1) + ' + '
+    elif kind == 'pairwise':
+        for i in range(n_qubits):
+            for j in range(i+1, n_qubits):
+                if not np.isscalar(J):
+                    if J[i,j] == 0:
+                        continue
+                    H_str += str(J[i,j]) + '*'
+                H_str += 'I'*i + 'Z' + 'I'*(j-i-1) + 'Z' + 'I'*(n_qubits-j-1) + ' + '
+    elif kind == 'full':
+        if np.isscalar(J):
+            if n_qubits > 20:
+                raise ValueError("Printing out all interactions for n_qubits > 20 is not recommended. Please use a dict instead.")
+            for i in range(2, n_qubits+1):
+                for membership in itertools.combinations(range(n_qubits), i):
+                    H_str += ''.join(['Z' if j in membership else 'I' for j in range(n_qubits)]) + ' + '
+        else: # J is a dict of tuples of qubit indices to interaction strengths
+            for membership, strength in J.items():
+                if strength == 0:
+                    continue
+                H_str += str(strength) + '*' + ''.join(['Z' if j in membership else 'I' for j in range(n_qubits)]) + ' + '
     else:
         raise ValueError(f"Unknown kind {kind}")
+
+    if np.isscalar(J):
+        H_str = str(J) + '*(' + H_str[:-3] + ') + '
+
     # local longitudinal fields
     if np.any(h):
         if np.isscalar(h):
-            H_str += str(h) + '*(' + ' + '.join(['I'*i + 'Z' + 'I'*(n_qubits-i-1) for i in range(n_qubits)]) + ') + '
+            H_str += str(h) + '*(' + ' + '.join(['I'*i + 'Z' + 'I'*(n_total_qubits-i-1) for i in range(n_total_qubits)]) + ') + '
         else:
-            H_str += ' + '.join([str(h[i]) + '*' + 'I'*i + 'Z' + 'I'*(n_qubits-i-1) for i in range(n_qubits) if h[i] != 0]) + ' + '
+            H_str += ' + '.join([str(h[i]) + '*' + 'I'*i + 'Z' + 'I'*(n_total_qubits-i-1) for i in range(n_total_qubits) if h[i] != 0]) + ' + '
     # local transverse fields
     if np.any(g):
         if np.isscalar(g):
-            H_str += str(g) + '*(' + ' + '.join(['I'*i + 'X' + 'I'*(n_qubits-i-1) for i in range(n_qubits)]) + ') + '
+            H_str += str(g) + '*(' + ' + '.join(['I'*i + 'X' + 'I'*(n_total_qubits-i-1) for i in range(n_total_qubits)]) + ') + '
         else:
-            H_str += ' + '.join([str(g[i]) + '*' + 'I'*i + 'X' + 'I'*(n_qubits-i-1) for i in range(n_qubits) if g[i] != 0]) + ' + '
+            H_str += ' + '.join([str(g[i]) + '*' + 'I'*i + 'X' + 'I'*(n_total_qubits-i-1) for i in range(n_total_qubits) if g[i] != 0]) + ' + '
     # offset
     if np.any(offset):
         H_str += str(offset)
@@ -595,7 +716,7 @@ def get_H_energies(H, expi=True):
 ### Tests ###
 #############
 
-def tests_quantum_all():
+def test_quantum_all():
     tests = [
         _test_get_H_energies_eq_get_pe_energies,
         _test_parse_hamiltonian1,
@@ -603,6 +724,7 @@ def tests_quantum_all():
         _test_parse_hamiltonian3,
         _test_reverse_qubit_order1,
         _test_reverse_qubit_order2,
+        _test_ising_model
     ]
 
     for test in tests:
@@ -648,3 +770,72 @@ def _test_reverse_qubit_order2():
 
     psi_rev2 = reverse_qubit_order(psi)
     return np.allclose(psi_rev, psi_rev2)
+
+def _test_ising_model():
+    # 1d
+    H_str = ising_model(5, J=1.5, h=0, g=0, offset=0, kind='1d', circular=False)
+    expected = "1.5*(ZZIII + IZZII + IIZZI + IIIZZ)"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    H_str = ising_model(5, J=1.5, h=1.1, g=0.5, offset=0.5, kind='1d', circular=True)
+    expected = "1.5*(ZZIII + IZZII + IIZZI + IIIZZ + ZIIIZ) + 1.1*(ZIIII + IZIII + IIZII + IIIZI + IIIIZ) + 0.5*(XIIII + IXIII + IIXII + IIIXI + IIIIX) + 0.5"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    H_str = ising_model(3, J=[0.6,0.7,0.8], h=[0.1,0.2,0.7], g=[0.6,0.1,1.5], offset=0.5, kind='1d', circular=True)
+    expected = "0.6*ZZI + 0.7*IZZ + 0.8*ZIZ + 0.1*ZII + 0.2*IZI + 0.7*IIZ + 0.6*XII + 0.1*IXI + 1.5*IIX + 0.5"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    H_str = ising_model(3, J=[0,1], h=[1,2], g=[2,5], offset=0.5, kind='1d', circular=True)
+    # random, but count terms in H_str instead
+    n_terms = len(H_str.split('+'))
+    assert n_terms == 10, f"n_terms = {n_terms}\nexpected = 10"
+
+    # 2d
+    H_str = ising_model((2,2), J=1.5, h=0, g=0, offset=0, kind='2d', circular=False)
+    expected = "1.5*(ZIZI + ZZII + IZIZ + IIZZ)"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    H_str = ising_model((3,3), J=1.5, h=1.1, g=0.5, offset=0.5, kind='2d', circular=True)
+    expected = "1.5*(ZIIZIIIII + ZZIIIIIII + IZIIZIIII + IZZIIIIII + IIZIIZIII + ZIZIIIIII + IIIZIIZII + IIIZZIIII + IIIIZIIZI + IIIIZZIII + IIIIIZIIZ + IIIZIZIII + IIIIIIZZI + ZIIIIIZII + IIIIIIIZZ + IZIIIIIZI + IIZIIIIIZ + IIIIIIZIZ) + 1.1*(ZIIIIIIII + IZIIIIIII + IIZIIIIII + IIIZIIIII + IIIIZIIII + IIIIIZIII + IIIIIIZII + IIIIIIIZI + IIIIIIIIZ) + 0.5*(XIIIIIIII + IXIIIIIII + IIXIIIIII + IIIXIIIII + IIIIXIIII + IIIIIXIII + IIIIIIXII + IIIIIIIXI + IIIIIIIIX) + 0.5"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    # 3d
+    H_str = ising_model((2,2,3), kind='3d', J=1.8, h=0, g=0, offset=0, circular=False)
+    expected = "1.8*(ZIIIIIZIIIII + ZIIZIIIIIIII + ZZIIIIIIIIII + IZIIIIIZIIII + IZIIZIIIIIII + IZZIIIIIIIII + IIZIIIIIZIII + IIZIIZIIIIII + IIIZIIIIIZII + IIIZZIIIIIII + IIIIZIIIIIZI + IIIIZZIIIIII + IIIIIZIIIIIZ + IIIIIIZIIZII + IIIIIIZZIIII + IIIIIIIZIIZI + IIIIIIIZZIII + IIIIIIIIZIIZ + IIIIIIIIIZZI + IIIIIIIIIIZZ)"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    H_str = ising_model((2,2,3), kind='3d', J=1.2, h=1.5, g=2, offset=0, circular=True)
+    expected = "1.2*(ZIIIIIZIIIII + ZIIZIIIIIIII + ZZIIIIIIIIII + IZIIIIIZIIII + IZIIZIIIIIII + IZZIIIIIIIII + IIZIIIIIZIII + IIZIIZIIIIII + ZIZIIIIIIIII + IIIZIIIIIZII + IIIZZIIIIIII + IIIIZIIIIIZI + IIIIZZIIIIII + IIIIIZIIIIIZ + IIIZIZIIIIII + IIIIIIZIIZII + IIIIIIZZIIII + IIIIIIIZIIZI + IIIIIIIZZIII + IIIIIIIIZIIZ + IIIIIIZIZIII + IIIIIIIIIZZI + IIIIIIIIIIZZ + IIIIIIIIIZIZ) + 1.5*(ZIIIIIIIIIII + IZIIIIIIIIII + IIZIIIIIIIII + IIIZIIIIIIII + IIIIZIIIIIII + IIIIIZIIIIII + IIIIIIZIIIII + IIIIIIIZIIII + IIIIIIIIZIII + IIIIIIIIIZII + IIIIIIIIIIZI + IIIIIIIIIIIZ) + 2*(XIIIIIIIIIII + IXIIIIIIIIII + IIXIIIIIIIII + IIIXIIIIIIII + IIIIXIIIIIII + IIIIIXIIIIII + IIIIIIXIIIII + IIIIIIIXIIII + IIIIIIIIXIII + IIIIIIIIIXII + IIIIIIIIIIXI + IIIIIIIIIIIX)"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    H_str = ising_model((3,3,3), kind='3d', J=1.5, h=0, g=0, offset=0, circular=True)
+    expected = "1.5*(ZIIIIIIIIZIIIIIIIIIIIIIIIII + ZIIZIIIIIIIIIIIIIIIIIIIIIII + ZZIIIIIIIIIIIIIIIIIIIIIIIII + IZIIIIIIIIZIIIIIIIIIIIIIIII + IZIIZIIIIIIIIIIIIIIIIIIIIII + IZZIIIIIIIIIIIIIIIIIIIIIIII + IIZIIIIIIIIZIIIIIIIIIIIIIII + IIZIIZIIIIIIIIIIIIIIIIIIIII + ZIZIIIIIIIIIIIIIIIIIIIIIIII + IIIZIIIIIIIIZIIIIIIIIIIIIII + IIIZIIZIIIIIIIIIIIIIIIIIIII + IIIZZIIIIIIIIIIIIIIIIIIIIII + IIIIZIIIIIIIIZIIIIIIIIIIIII + IIIIZIIZIIIIIIIIIIIIIIIIIII + IIIIZZIIIIIIIIIIIIIIIIIIIII + IIIIIZIIIIIIIIZIIIIIIIIIIII + IIIIIZIIZIIIIIIIIIIIIIIIIII + IIIZIZIIIIIIIIIIIIIIIIIIIII + IIIIIIZIIIIIIIIZIIIIIIIIIII + IIIIIIZZIIIIIIIIIIIIIIIIIII + ZIIIIIZIIIIIIIIIIIIIIIIIIII + IIIIIIIZIIIIIIIIZIIIIIIIIII + IIIIIIIZZIIIIIIIIIIIIIIIIII + IZIIIIIZIIIIIIIIIIIIIIIIIII + IIIIIIIIZIIIIIIIIZIIIIIIIII + IIZIIIIIZIIIIIIIIIIIIIIIIII + IIIIIIZIZIIIIIIIIIIIIIIIIII + IIIIIIIIIZIIIIIIIIZIIIIIIII + IIIIIIIIIZIIZIIIIIIIIIIIIII + IIIIIIIIIZZIIIIIIIIIIIIIIII + IIIIIIIIIIZIIIIIIIIZIIIIIII + IIIIIIIIIIZIIZIIIIIIIIIIIII + IIIIIIIIIIZZIIIIIIIIIIIIIII + IIIIIIIIIIIZIIIIIIIIZIIIIII + IIIIIIIIIIIZIIZIIIIIIIIIIII + IIIIIIIIIZIZIIIIIIIIIIIIIII + IIIIIIIIIIIIZIIIIIIIIZIIIII + IIIIIIIIIIIIZIIZIIIIIIIIIII + IIIIIIIIIIIIZZIIIIIIIIIIIII + IIIIIIIIIIIIIZIIIIIIIIZIIII + IIIIIIIIIIIIIZIIZIIIIIIIIII + IIIIIIIIIIIIIZZIIIIIIIIIIII + IIIIIIIIIIIIIIZIIIIIIIIZIII + IIIIIIIIIIIIIIZIIZIIIIIIIII + IIIIIIIIIIIIZIZIIIIIIIIIIII + IIIIIIIIIIIIIIIZIIIIIIIIZII + IIIIIIIIIIIIIIIZZIIIIIIIIII + IIIIIIIIIZIIIIIZIIIIIIIIIII + IIIIIIIIIIIIIIIIZIIIIIIIIZI + IIIIIIIIIIIIIIIIZZIIIIIIIII + IIIIIIIIIIZIIIIIZIIIIIIIIII + IIIIIIIIIIIIIIIIIZIIIIIIIIZ + IIIIIIIIIIIZIIIIIZIIIIIIIII + IIIIIIIIIIIIIIIZIZIIIIIIIII + IIIIIIIIIIIIIIIIIIZIIZIIIII + IIIIIIIIIIIIIIIIIIZZIIIIIII + ZIIIIIIIIIIIIIIIIIZIIIIIIII + IIIIIIIIIIIIIIIIIIIZIIZIIII + IIIIIIIIIIIIIIIIIIIZZIIIIII + IZIIIIIIIIIIIIIIIIIZIIIIIII + IIIIIIIIIIIIIIIIIIIIZIIZIII + IIZIIIIIIIIIIIIIIIIIZIIIIII + IIIIIIIIIIIIIIIIIIZIZIIIIII + IIIIIIIIIIIIIIIIIIIIIZIIZII + IIIIIIIIIIIIIIIIIIIIIZZIIII + IIIZIIIIIIIIIIIIIIIIIZIIIII + IIIIIIIIIIIIIIIIIIIIIIZIIZI + IIIIIIIIIIIIIIIIIIIIIIZZIII + IIIIZIIIIIIIIIIIIIIIIIZIIII + IIIIIIIIIIIIIIIIIIIIIIIZIIZ + IIIIIZIIIIIIIIIIIIIIIIIZIII + IIIIIIIIIIIIIIIIIIIIIZIZIII + IIIIIIIIIIIIIIIIIIIIIIIIZZI + IIIIIIZIIIIIIIIIIIIIIIIIZII + IIIIIIIIIIIIIIIIIIZIIIIIZII + IIIIIIIIIIIIIIIIIIIIIIIIIZZ + IIIIIIIZIIIIIIIIIIIIIIIIIZI + IIIIIIIIIIIIIIIIIIIZIIIIIZI + IIIIIIIIZIIIIIIIIIIIIIIIIIZ + IIIIIIIIIIIIIIIIIIIIZIIIIIZ + IIIIIIIIIIIIIIIIIIIIIIIIZIZ)"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    # pairwise
+    H_str = ising_model(4, J=-.5, h=.4, g=.7, offset=1, kind='pairwise')
+    expected = "-0.5*(ZZII + ZIZI + ZIIZ + IZZI + IZIZ + IIZZ) + 0.4*(ZIII + IZII + IIZI + IIIZ) + 0.7*(XIII + IXII + IIXI + IIIX) + 1"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    # full
+    H_str = ising_model(3, J=1.5, h=.4, g=.7, offset=1, kind='full')
+    expected = "1.5*(ZZI + ZIZ + IZZ + ZZZ) + 0.4*(ZII + IZI + IIZ) + 0.7*(XII + IXI + IIX) + 1"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    H_str = ising_model(3, kind='full', J={(0,1): 2, (0,1,2): 3, (1,2):0}, h=1.35)
+    expected = "2*ZZI + 3*ZZZ + 1.35*(ZII + IZI + IIZ)"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    J_dict = {
+        (0,1): 1.5,
+        (0,2): 2,
+        (1,2): 0.5,
+        (0,1,2): 3,
+        (0,1,2,3): 0.5
+    }
+    H_str = ising_model(4, J=J_dict, h=.3, g=.5, offset=1.2, kind='full')
+    expected = "1.5*ZZII + 2*ZIZI + 0.5*IZZI + 3*ZZZI + 0.5*ZZZZ + 0.3*(ZIII + IZII + IIZI + IIIZ) + 0.5*(XIII + IXII + IIXI + IIIX) + 1.2"
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    return True
+
