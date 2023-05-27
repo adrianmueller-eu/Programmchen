@@ -313,11 +313,37 @@ ip() (
   fi
 )
 alias wi="wiki -l de"
+
+# youtube
 alias geta="yt-dlp --no-playlist -x --audio-format mp3 --audio-quality 0"
 alias yt720="yt-dlp --no-playlist -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 alias yt1080="yt-dlp --no-playlist -f 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'"
 alias y=yt1080
 alias ytul="alias | grep \"='yt \" | grep -v -- --cached | sed 's/alias //g; s/=.*//g'"
+function ytu() (
+  waitnet -s || return
+  setopt NO_MONITOR # LOCAL_OPTIONS NO_NOTIFY
+  [[ -n "$PROXY" ]] && echo "Using proxy ($PROXY)"
+  yts=($(ytul))
+  for y in "${yts[@]}"; do
+    echo "$y\n$(eval $y --update)" &
+  done
+  wait
+)
+function ytr() ( # youtube recents
+   yts=($(ytul))
+   # collect all "recent" videos
+   yt_recents=$(for ytc in "${yts[@]}"; do eval $ytc | sed "s/^/$ytc | /" | grep --color=none -E '\d\d? (hours?|days?) ago'; done)
+   # output lines with "hours ago", sorted
+   echo "$yt_recents" | grep --color=none -oE '\d\d? (hours?) ago' | sort -n | uniq | while read -r ago; do
+       echo "$yt_recents" | grep --color=none -FE "\D$ago"
+   done
+   # output lines with "days ago", sorted
+   echo "$yt_recents" | grep --color=none -oE '\d\d? (days?) ago' | sort -n | uniq | while read -r ago; do
+       echo "$yt_recents" | grep --color=none -FE "\D$ago"
+   done
+)
+
 alias be="bielefeld_events"
 function curl() {
   if hash curlie &>/dev/null; then
@@ -345,17 +371,6 @@ function findDevicesInNetwork() (
   for i in $(seq $start $end); do
     printf "$pre%d: %s\n" "$i" "$(host 192.168.1.$i)"
   done | g -v NXDOMAIN # filter all unused hosts
-)
-
-function ytu() (
-  waitnet -s || return
-  setopt NO_MONITOR # LOCAL_OPTIONS NO_NOTIFY
-  [[ -n "$PROXY" ]] && echo "Using proxy ($PROXY)"
-  yts=($(ytul))
-  for y in "${yts[@]}"; do
-    echo "$y\n$(eval $y --update)" &
-  done
-  wait
 )
 
 function uriencode() {
