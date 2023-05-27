@@ -40,7 +40,7 @@ def smooth(y, smoothing=0.1):
 # converts 1-d data into a pdf, smoothing in [0,1]
 def density(data, plot=False, label=None, smoothing=0.1, log=False, num_bins=None):
     import matplotlib.pyplot as plt
-    
+
     if log:
         bins = logbins(data, scale=2, num=num_bins+1 if num_bins else bins_sqrt(data)+1)
         n, bin_edges = np.histogram(data, bins=bins, density=True)
@@ -86,6 +86,14 @@ def resample(x, y, size=int(1e6)):
     invcdf = interp1d(y_cs, x, assume_sorted=True, bounds_error=False, fill_value=(0,1))
     u = np.random.uniform(0, 1, size)
     return invcdf(u)
+
+def ste(ar):
+    return np.std(ar, ddof=1) / np.sqrt(len(ar))
+
+
+###############
+### P #########
+###############
 
 # todo: make instance of scipy.stats.rv_continuous
 # todo: save y in log-space
@@ -169,7 +177,7 @@ class P:
 
     def plot(self, show=False, *pltargs, **pltkwargs):
         import matplotlib.pyplot as plt
-        
+
         plt.plot(self.x, self.y, *pltargs, **pltkwargs)
         if show:
             plt.show()
@@ -209,16 +217,4 @@ class P:
         return x, y
 
 
-def calc_pi(N=3):
-     r = 0
-     for n in range(N):
-         r += factorial(4*n)*(1103+26390*n)/(factorial(n)*396**n)**4
-     return 9801/(np.sqrt(8)*r)
 
-def softmax(a, beta=1):
-     a = np.exp(beta*a)
-     Z = np.sum(a)
-     return a / Z
-
-def ste(ar):
-    return np.std(ar, ddof=1) / np.sqrt(len(ar))
