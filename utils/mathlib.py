@@ -62,17 +62,13 @@ def rad(deg):
 ### Functions
 
 # e.g. series(lambda n, _: 1/factorial(2*n)) + series(lambda n, _: 1/factorial(2*n + 1))
-def series(f, start_value=None, start_index=0, eps=sys.float_info.epsilon, max_iter=100000, verbose=False):
-    if start_value is None:
-        res = f(start_index, None)
-        if verbose:
-            print(f"Iteration {start_index}:", res)
-        start_index += 1
-    else:
-        res = start_value
-
+def series(f, start_value=0, start_index=0, eps=sys.float_info.epsilon, max_iter=100000, verbose=False):
+    if not np.isscalar(start_value):
+        start_value = np.array(start_value)
+    res = start_value
+    res_i = res
     for n in range(start_index, max_iter):
-        res_i = f(n, res)
+        res_i = f(n, res_i)
         res += res_i
         if verbose:
             print(f"Iteration {n}:", res, res_i)
@@ -91,15 +87,8 @@ except:
         if is_hermitian(A0):
             eigval, eigvec = np.linalg.eig(A0)
             return eigvec @ np.diag(np.exp(eigval)) @ eigvec.conj().T
-
-        # TODO: investigate why this doesn't work
-        def f(n, A):
-            if n == 0:
-                return np.eye(A0.shape[0])
-            else:
-                return np.array(factorial(n-1) * A @ A0 / factorial(n), dtype=A0.dtype)
-
-        return series(f, start_value=np.eye(A0.shape[0]), start_index=1)
+        # use series expansion
+        return np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=2)
 
     def matlog(A):
         evals, evecs = np.linalg.eig(A)
@@ -338,7 +327,7 @@ def test_mathlib_all():
         _test_deg,
         _test_matexp,
         _test_series,
-        # _test_series2,
+        _test_series2,
         _test_normalize,
         _test_softmax,
         _test_prime_factors,
@@ -462,10 +451,17 @@ def _test_series():
     return True
 
 def _test_series2():
-    A0 = np.random.rand(5,5)
-    a = series(lambda n, A: A @ A0 / n, start_value=A0)
-    # check if matexp(A) == sum_{n=0}^inf A^n/n!
-    assert np.allclose(matexp(a), series(a))
+    # pauli X
+    A0 = np.array([[0, 1.], [1., 0]])
+    a = np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=2)
+    expected = np.array([[np.cosh(1), np.sinh(1)], [np.sinh(1), np.cosh(1)]])
+    assert np.allclose(a, expected)
+
+    # pauli Z
+    A0 = np.array([[1., 0], [0, -1.]])
+    a = np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=2)
+    expected = np.array([[np.e, 0], [0, 1/np.e]])
+    assert np.allclose(a, expected)
     return True
 
 def _test_normalize():
