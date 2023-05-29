@@ -330,11 +330,9 @@ if [[ -n $key ]]; then
   fi
 
   key=$(echo "$key" | grep -m 1 '.\+')
-  # [[ $DEBUG ]] && echo "Key before uri escaping: $key"
-  key=$(curl -Gso /dev/null -w %{url_effective} --data-urlencode "$key" "" | cut -c 3- | sed 's/%20/+/g')
-  # [[ $DEBUG ]] && echo "Key after uri escaping: $key"
+  link=$(curl -Gso /dev/null -w %{url_effective} --data-urlencode "$key" "$(eval echo \$$site)" | sed 's/=&/=/;s/%20/+/g')
 
-  fire "$(eval echo \$$site)$key"
+  fire "$link"
 else
   # if you want, just copy the default link or give a site option
   if [[ -z $openLink || "$site" != "def" ]]; then
