@@ -1232,8 +1232,11 @@ function randint() { # subshell resets RANDOM
   if [[ -n $2 ]]; then
     range=$(($2 - $1))
     base=$1
-  else
+  elif [[ -n $1 ]]; then
     range=$1
+    base=0
+  else
+    range=10000
     base=0
   fi
   local size=${3:-1}
