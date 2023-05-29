@@ -26,7 +26,11 @@ fi
 md2html "../about/about_me.md" > "../about/about_me.html"
 
 # copy telegram bot files
-rsync -r "$PROJ/personal_assistant/" "../tools/gpt/telegram"
+rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram"
+rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram_mh"
+# Replace "/bots/general.php" with "/bots/mental_health.php" in telegram_mh/index.php
+sed -i.bak 's/\/bots\/general.php/\/bots\/mental_health.php/g' "../tools/gpt/telegram_mh/index.php"
+rm -f "../tools/gpt/telegram_mh/index.php.bak"
 
 if [[ -z $1 ]]; then
 # Fetch from db
