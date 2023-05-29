@@ -23,7 +23,7 @@ declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
 
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-o] [-d] [ \e[4msite\e[0m | [--cached | --update [-a] ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-o] [-d] [ --cached | --update ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m | -] | -f \e[4mfile\e[0m ] [\e[4mquery\e[0m]"
 help="Fetch list of recent videos from YouTube.
 $usage
         \e[1m-h\e[0m         Displays this message and exits.
@@ -36,7 +36,7 @@ $usage
         \e[1m-u\e[0m \e[4muser\e[0m    Give a \e[4muser\e[0m name to grep videos from.
         \e[1m-c\e[0m \e[4mname\e[0m    Give a channel's \e[4mname\e[0m to grep videos from.
         \e[1m-i\e[0m \e[4mID\e[0m      Give a channel's \e[4mID\e[0m to grep videos from.
-        \e[1m-p\e[0m \e[4mID\e[0m      Give a playlist ID. Takes an optional second argument \e[4mname\e[0m for the cache file name.
+        \e[1m-p\e[0m \e[4mID\e[0m      Give a playlist ID. Takes an optional second argument \e[4mname\e[0m for the cache file name (use '-' to add a \e[4mquery\e[0m afterward).
         \e[1m-f\e[0m \e[4mfile\e[0m    Give a curl fetch result \e[4mfile\e[0m to grep videos from (for debug, no save).
         \e[4mquery\e[0m       Filters for a query \e[4mquery\e[0m (case insensitive).
 If only \e[4mquery\e[0m given, uses \e[1mf\e[0m to search on YouTube.
@@ -108,7 +108,7 @@ while [[ -n $1 ]]; do
     shift
     [[ -z "$1" ]] && die "Please give a playlist ID with option -p. See -h for more help."
     site="${youtube}/playlist?list=${1}"
-    [[ -n $2 ]] && shift # use alternative name if given
+    [[ -n $2 && $2 != "-" ]] && shift # use alternative name if given, except it's -
     RESULTS_FILE="$RESULTS_STORAGE/$1"
     JSON_FILE="$JSON_STORAGE/${1}.json"
     ;;
@@ -122,11 +122,12 @@ while [[ -n $1 ]]; do
     if [[ -f "$1" ]]; then
       FILE=$1
       shift
-    elif [[ -z "$site" ]]; then
-      site=$1
-      shift
     elif [[ -z "$query" ]]; then
       query="$1"
+      if [[ -z "$JSON_FILE" ]]; then
+        USE_CACHED=
+        PRINTALL=
+      fi
       shift
     else
       echo "WARNING: Ignored argument: $1" >&2
@@ -375,7 +376,11 @@ function setupOutputsVariable() {
   cnt=0
   IFS=$'\n'
   for idx in "${!DESCRIPTIONS[@]}"; do # an array is basically a dictionary with index as key; get keys with ${!arr[@]}
-    OUTPUTS+=$(printf "%s: %s \033[2m%s\033[0m" "$((idx+1))" "${DESCRIPTIONS[$idx]}" "${LINKS[$idx]}")$'\n' # increment for zero-based to one-based conversion; why does newline in printf not work?
+    if [ -t 1 ]; then
+      OUTPUTS+=$(printf "%s: %s \033[2m%s\033[0m" "$((idx+1))" "${DESCRIPTIONS[$idx]}" "${LINKS[$idx]}")$'\n' # increment for zero-based to one-based conversion; why does newline in printf not work?
+    else
+      OUTPUTS+=$(printf "%s \033[2m%s\033[0m" "${DESCRIPTIONS[$idx]}" "${LINKS[$idx]}")$'\n' # increment for zero-based to one-based conversion; why does newline in printf not work?
+    fi
   done
 }
 
@@ -520,10 +525,12 @@ elif [[ -n "$FILE" ]]; then
   askForChoose
 else
   # since $site is just the first given non-option argument, handle it here as part of the query
-  query="$site $query"
+  if [[ -n "$site" ]]; then
+    query="$site $query"
+  fi
   if [[ -z $DEBUG ]]; then
     f yt "$query"
   else
-    printf "f yt %s\n" "$query"
+    printf "f yt \"%s\"\n" "$query"
   fi
 fi
