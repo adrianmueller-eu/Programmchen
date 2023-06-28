@@ -70,13 +70,14 @@ while [[ -n $* ]]; do
     echo "Please specify a time and/or message. See -h for more help."
     exit 1
     ;;
-  [0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9])
-    desttime=$(date -jf "%H:%M:%S" "$1:00" "+%s")
+  [0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]|[0-9]:[0-5][0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]:[0-5][0-9])
+    hours=$(echo $1 | cut -d: -f1)
+    minutes=$(echo $1 | cut -d: -f2)
+    seconds=$(echo $1 | cut -d: -f3)
+    seconds=${seconds:-0}  # default to 0 if not given
+    desttime=$(date -v+${hours}H -v+${minutes}M -v+${seconds}S "+%s")
     ((desttime--))
-    ;;
-  [0-9]:[0-5][0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]:[0-5][0-9])
-    desttime=$(date -jf "%H:%M:%S" $1 "+%s")
-    ((desttime--))
+    shift
     ;;
   *)
     if [[ $1 =~ ^[[:digit:]]+(d([[:digit:]]+(h([[:digit:]]+(m([[:digit:]]+s)?|s))?|m([[:digit:]]+s)?|s))?|h([[:digit:]]+(m([[:digit:]]+s)?|s))?|m([[:digit:]]+s)?|s)?$ ]]; then
