@@ -148,20 +148,23 @@ class P:
     def __op__(self, other, op):
         x = np.concatenate([self.x,other.x])
         x.sort()
-        y = op(x, self.pdf, other.pdf)
+        y = op(x)
         return P(x,y) # normalizes in constructor
 
     def __add__(self, other):
-        return self.__op__(other, lambda x, f, g: f(x)+g(x))
+        return self.__op__(other, lambda x: self(x)+other(x))
 
     def __sub__(self, other):
-        return self.__op__(other, lambda x, f, g: f(x)-g(x))
+        return self.__op__(other, lambda x: self(x)-other(x))
 
     def __mul__(self, other):
-        return self.__op__(other, lambda x, f, g: f(x)*g(x))
+        return self.__op__(other, lambda x: self(x)*other(x))
 
     def __truediv__(self, other):
-        return self.__op__(other, lambda x, f, g: f(x)/g(x))
+        return self.__op__(other, lambda x: self(x)/other(x))
+
+    def __matmul__(self, other):
+        return self.__op__(other, lambda x: np.convolve(self(x), other(x), mode='same'))
 
     def __call__(self, x):
         return self.pdf(x)
