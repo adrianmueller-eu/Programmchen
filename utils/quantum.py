@@ -450,8 +450,8 @@ def random_density_matrix(n=1, pure=True):
 ### Hamiltonian ###
 ###################
 
-def parse_hamiltonian(hamiltonian):
-    """Parse a string representation of a Hamiltonian into a matrix representation.
+def parse_hamiltonian(hamiltonian, sparse=False):
+    """Parse a string representation of a Hamiltonian into a matrix representation. The result is guaranteed to be Hermitian.
 
     Example:
     >>> parse_hamiltonian('0.5*(XX + YY + ZZ + II)') # SWAP
@@ -468,7 +468,11 @@ def parse_hamiltonian(hamiltonian):
 
     """
     def s(gate):
-        return globals()[gate]
+        if gate == "H":
+            gate_matrix = Had
+        else:
+            gate_matrix = globals()[gate]
+        return gate_matrix if not sparse else scipy.sparse.bsr_array(gate_matrix)
 
     # Remove whitespace
     hamiltonian = hamiltonian.replace(" ", "")
@@ -503,7 +507,7 @@ def parse_hamiltonian(hamiltonian):
     for i, part in enumerate(parts):
         hamiltonian = hamiltonian.replace(part, f"part{i}", 1)
         # Calculate the part recursively
-        parts[i] = parse_hamiltonian(part[1:-1])
+        parts[i] = parse_hamiltonian(part[1:-1], sparse=sparse)
 
     # Parse the rest of the Hamiltonian
     chunks = hamiltonian.split("+")
@@ -521,7 +525,10 @@ def parse_hamiltonian(hamiltonian):
         except IndexError:
             n = len(first_chunk)
 
-    H = np.zeros((2**n, 2**n), dtype=complex)
+    if sparse:
+        H = scipy.sparse.bsr_array((2**n, 2**n), dtype=complex)
+    else:
+        H = np.zeros((2**n, 2**n), dtype=complex)
     for chunk in chunks:
 
         # print(chunk, hamiltonian)
@@ -560,13 +567,20 @@ def parse_hamiltonian(hamiltonian):
             # Get the matrix representation of the chunk
             chunk_matrix = s(chunk[0])
             for gate in chunk[1:]:
-                chunk_matrix = np.kron(chunk_matrix, s(gate))
+                if sparse:
+                    chunk_matrix = scipy.sparse.kron(chunk_matrix, s(gate))
+                else:
+                    chunk_matrix = np.kron(chunk_matrix, s(gate))
 
         # Add the chunk to the Hamiltonian
-        # print("chunk", weight, chunk, hamiltonian, parts)
+        # print("chunk", chunk, hamiltonian, parts)
+        # print(type(H), "+=", weight, type(chunk_matrix))
         H += weight * chunk_matrix
 
-    assert np.allclose(H, H.conj().T), "Hamiltonian must be Hermitian"
+    if sparse:
+        assert np.allclose(H.data, H.conj().T.data), f"The given Hamiltonian {hamiltonian} is not Hermitian: {H.data}"
+    else:
+        assert np.allclose(H, H.conj().T), f"The given Hamiltonian {hamiltonian} is not Hermitian: {H}"
 
     return H
 
