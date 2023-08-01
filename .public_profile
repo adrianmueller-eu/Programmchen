@@ -600,11 +600,12 @@ function fia() {
 ### files
 #############################
 function _pick() {
-  local file_only=$1
+  local file_only=$1 # first argument is forced to set file_only
   shift
 
   local q_dirname query
   local -a fd_args
+
   if [[ -n "$*" ]]; then
     if [[ -f "$*" && -r "$*" ]]; then
       # existing file given
@@ -612,7 +613,7 @@ function _pick() {
       return;
     elif [[ -d "$*" && -r "$*" ]]; then
       # existing dir given (to search in or give back)
-      if $file_only; then
+      if [[ -n $file_only ]]; then
         q_dirname="$*"
       else
         echo "$*"
@@ -631,11 +632,12 @@ function _pick() {
     q_dirname="$PWD"
   fi
 
-  [[ "true" == "$file_only" ]] && fd_args=(-t f)
+  [[ -n "$file_only" ]] && fd_args=(-t f)
 
   if [[ -n "$q_dirname" ]]; then # if valid dirname given, cd there
     pushd "$q_dirname" > /dev/null
   fi
+
   local pwd_name
   if [[ $PWD == $HOME ]]; then
     fd_args+=(-d 1)
@@ -678,12 +680,12 @@ function _pick_and_execute() {
   if [[ ! -t 0 ]]; then
     files=$(cat)
   fi
-  local file_only=false # set -f if the command can only digest files
+  local file_only # set -f if the command can only digest files
   if [[ "-f" == $1 ]]; then
     file_only=true
     shift
   fi
-  local writer=false # set -w if the command can create new files
+  local writer # set -w if the command can create new files
   if [[ "-w" == $1 ]]; then
     writer=true
     shift
@@ -707,7 +709,7 @@ function _pick_and_execute() {
 
   local picked exit_code
   if [[ -z "$files" ]]; then
-    picked=$(_pick $file_only "$query")
+    picked=$(_pick "$file_only" "$query")
     exit_code=$?
   else
     local pwd_name
@@ -729,7 +731,7 @@ function _pick_and_execute() {
       "${cmd[@]}" "${args[@]}" "$picked"
       ;;
     1) # not found
-      if $writer; then
+      if [[ -n $writer ]]; then
         "${cmd[@]}" "${args[@]}" "$picked"
       else
         return $exit_code
