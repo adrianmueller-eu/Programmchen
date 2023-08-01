@@ -258,7 +258,7 @@ def reverse_qubit_order(state):
         vecs = np.array([reverse_qubit_order(vecs[:,i]) for i in range(2**n)])
         return vecs.T @ np.diag(vals) @ vecs
 
-def partial_trace(rho, retain_qubits=[0,1]):
+def partial_trace(rho, retain_qubits):
     """Trace out all qubits not specified in `retain_qubits`."""
     rho = np.array(rho)
     if len(rho.shape) == 1:
