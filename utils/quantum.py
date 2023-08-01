@@ -1,12 +1,13 @@
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
-from .mathlib import matexp, normalize, is_hermitian, is_unitary
+import scipy
+from .mathlib import normalize, matexp, matlog
 from .plot import colorize_complex
 
-#############
-### Gates ###
-#############
+#################
+### Unitaries ###
+#################
 
 fs = lambda x: 1/np.sqrt(x)
 f2 = fs(2)
@@ -28,14 +29,14 @@ S = np.array([ # np.sqrt(Z)
     [1,  0],
     [0, 1j]
 ], dtype=complex)
-#T = np.array([ # avoid overriding T = True
-#    [1,  0],
-#    [0,  np.sqrt(1j)]
-#], dtype=complex)
-H = 1/np.sqrt(2) * np.array([
+T_gate = np.array([ # avoid overriding T = True
+    [1,  0],
+    [0,  np.sqrt(1j)]
+], dtype=complex)
+Had = 1/np.sqrt(2) * np.array([
     [1,  1],
     [1, -1]
-], dtype=complex) # f2*(X + Z)
+], dtype=complex) # f2*(X + Z) = 1j*f2*(Rx(pi) + Rz(pi))
 
 def R_(gate, theta):
    return matexp(-1j*gate*theta/2)
@@ -49,19 +50,110 @@ def C_(A):
         A = np.array(A, dtype=complex)
     n = int(np.log2(A.shape[0]))
     return np.kron([[1,0],[0,0]], I_(n)) + np.kron([[0,0],[0,1]], A)
-CX = C_(X)
-CNOT = CX
+CNOT = CX = C_(X) # 0.5*(II + ZI - ZX + IX)
+Toffoli = C_(C_(X))
 SWAP = np.array([ # 0.5*(XX + YY + ZZ + II), CNOT @ r(reverse_qubit_order(CNOT)) @ CNOT
     [1, 0, 0, 0],
     [0, 0, 1, 0],
     [0, 1, 0, 0],
     [0, 0, 0, 1]
 ], dtype=complex)
+iSWAP = np.array([ # 0.5*(1j*(XX + YY) + ZZ + II), R_(XX+YY, -pi/2)
+    [1, 0, 0, 0],
+    [0, 0, 1j, 0],
+    [0, 1j, 0, 0],
+    [0, 0, 0, 1]
+], dtype=complex)
+
+def parse_unitary(unitary):
+    """Parse a string representation of a unitary into its matrix representation. The result is guaranteed to be unitary.
+
+    Example:
+    >>> parse_unitary('CX @ XC @ CX') # SWAP
+    array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
+           [ 0.+0.j  1.+0.j  0.+0.j  0.+0.j]
+           [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]
+           [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]])
+    >>> parse_unitary('SS @ HI @ CX @ XC @ IH') # iSWAP
+    array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
+           [ 0.+0.j  0.+0.j  0.+1.j  0.+0.j]
+           [ 0.+0.j  0.+1.j  0.+0.j  0.+0.j]
+           [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]])
+    """
+    def s(chunk):
+        # think of XCXC, which applies X on the first and fifth qubit, controlled on the second and forth qubit
+        # select the first "C", then recursively call s on the part before and after (if they exist), and combine them afterwards
+        chunk_matrix = np.array([1]) # initialize with a stub
+        for i, c in enumerate(chunk):
+            if c == "C":
+                n_before = i
+                n_after = len(chunk) - i - 1
+                # if it's the first C, then there is no part before
+                if n_before == 0:
+                    return np.kron([[1,0],[0,0]], I_(n_after)) + np.kron([[0,0],[0,1]], s(chunk[i+1:]))
+                # if it's the last C, then there is no part after
+                elif n_after == 0:
+                    return np.kron(I_(n_before), [[1,0],[0,0]]) + np.kron(chunk_matrix, [[0,0],[0,1]])
+                # if it's in the middle, then there is a part before and after
+                else:
+                    return np.kron(I_(n_before), np.kron([[1,0],[0,0]], I_(n_after))) + np.kron(chunk_matrix, np.kron([[0,0],[0,1]], s(chunk[i+1:])))
+            # N is negative control, so it's the same as C, but with the roles of 0 and 1 reversed
+            elif c == "N":
+                n_before = i
+                n_after = len(chunk) - i - 1
+                # if it's the first N, then there is no part before
+                if n_before == 0:
+                    return np.kron([[0,0],[0,1]], I_(n_after)) + np.kron([[1,0],[0,0]], s(chunk[i+1:]))
+                # if it's the last N, then there is no part after
+                elif n_after == 0:
+                    return np.kron(I_(n_before), [[0,0],[0,1]]) + np.kron(chunk_matrix, [[1,0],[0,0]])
+                # if it's in the middle, then there is a part before and after
+                else:
+                    return np.kron(I_(n_before), np.kron([[0,0],[0,1]], I_(n_after))) + np.kron(chunk_matrix, np.kron([[1,0],[0,0]], s(chunk[i+1:])))
+            # if there is no C, then it's just a single gate
+            elif c == "T":
+                 gate = T_gate
+            elif c == "H":
+                 gate = Had
+            else:
+                 gate = globals()[chunk[i]]
+            chunk_matrix = np.kron(chunk_matrix, gate)
+        return chunk_matrix
+
+    # Remove whitespace
+    unitary = unitary.replace(" ", "")
+
+    # Parse the unitary
+    chunks = unitary.split("@")
+    # Remove empty chunks
+    chunks = [c for c in chunks if c != ""]
+    # Use the first chunk to determine the number of qubits
+    n = len(chunks[0])
+
+    U = np.eye(2**n, dtype=complex)
+    for chunk in chunks:
+        # print(chunk, unitary)
+        chunk_matrix = None
+        if chunk == "":
+            continue
+        if len(chunk) != n:
+            raise ValueError(f"Gate count must be {n} but was {len(chunk)} for chunk \"{chunk}\"")
+
+        # Get the matrix representation of the chunk
+        chunk_matrix = s(chunk)
+
+        # Update the unitary
+        # print("chunk", chunk, unitary, chunk_matrix)
+        U = U @ chunk_matrix
+
+    assert np.allclose(U @ U.conj().T, np.eye(2**n)), f"Result is not unitary: {U, U @ U.conj().T}"
+
+    return U
+
 XX = np.kron(X,X)
 YY = np.kron(Y,Y)
 ZZ = np.kron(Z,Z)
 II = I_(2)
-Toffoli = C_(C_(X))
 
 
 try:
