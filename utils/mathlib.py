@@ -376,6 +376,43 @@ def calc_pi2(N=5):
         r += r_i
     return Decimal(9801)/(Decimal(8).sqrt()*r)
 
+def sqrt_brain_compatible(x, correction_term=False, n_max = 20):
+    """ Nice way to calculate approximate square roots in the head:
+        1. Find the largest integer n, such that n² < x
+        2. sqrt(x) ≈ n + (x-n²)/(2n+1) + 1/(6(2n+1))
+    The last term is more negligible the larger x.
+        """
+    n_sq_table = [n**2 for n in range(1,n_max)]
+    if x <= 1:
+       raise ValueError("Are you kidding me")
+    if x > n_sq_table[-1]:
+       raise ValueError("Use a proper function for this, please.")
+    for i,n2 in enumerate(n_sq_table):
+       if n2 > x:
+           n = i
+           if correction_term:
+               return i + (x - n_sq_table[i-1])/(2*i + 1) + 1/(6*(2*i+1))
+           else:
+               return i + (x - n_sq_table[i-1])/(2*i + 1)
+
+# Reduction of the halting problem to the equivalence problem, i.e. show that the latter is at least as hard as the former. Give an algorithm `H` and input `x` to decide whether `H(x)` halts. This function returns two functions `f1, f2`. Use your implementation `equiv` solving the equivalence problem to solve the halting problem, e.g. `equiv(*equiv_from_halt(H, x))`.
+def equiv_from_halt(H, x):
+    def f1(y):
+        if y == x:
+            return H(x)
+        return True
+
+    def f2(y):
+        return True
+
+    return f1, f2
+
+def Hutchinson_trace(A, n=1000):
+    if A.shape[0] != A.shape[1]:
+        raise ValueError("A must be square")
+    zs = np.random.normal(0, 1, size=(A.shape[0], n))
+    return np.mean([z.T @ A @ z for z in zs.T])
+
 
 ### Tests
 
