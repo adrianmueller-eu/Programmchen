@@ -2,14 +2,14 @@ import sys, os, time # For timing: %time foo()
 eps = sys.float_info.epsilon
 ### math
 import numpy as np
-from numpy.linalg import det
+from numpy.linalg import matrix_rank as rank
 try:
     integral # see if sage is loaded
 except:
     from math import *
     from numpy import product as mul
     try:
-       from sympy import symbols as sym
+       import sympy as sp
     except:
        pass
 try:
@@ -18,8 +18,9 @@ try:
     import scipy
     from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
     from scipy.optimize import minimize
-    from scipy.linalg import expm as matexp
+    from scipy.linalg import *
 except:
+    from numpy.linalg import *
     pass
 import itertools # https://docs.python.org/3/library/itertools.html
 ### visual
