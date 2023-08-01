@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from math import factorial, sqrt
-from itertools import combinations
+from itertools import combinations, chain
 
 ### Tests
 
@@ -123,6 +123,62 @@ def softmax(a, beta=1):
      return a / Z
 
 
+### Sets
+
+# https://docs.python.org/3/library/itertools.html
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+### Groups
+
+def SO(n):
+    """ Special orthogonal group. Returns n(n-1)/2 functions that take an angle and return the corresponding real rotation matrix """
+    def rotmat(i, j, phi):
+        a = np.eye(n)
+        a[i,i] = np.cos(phi)
+        a[j,j] = np.cos(phi)
+        a[i,j] = -np.sin(phi)
+        a[j,i] = np.sin(phi)
+        return a
+    return [lambda phi: rotmat(i, j, phi) for i,j in combinations(range(n), 2)]
+
+def su(n):
+    """ The Lie algebra associated with the Lie group SU(n). Returns the n^2-1 generators (traceless Hermitian matrices) of the group. """
+    basis = []
+    # Generate the off-diagonal matrices
+    for i in range(n):
+        for j in range(i+1, n):
+            m = np.zeros((n, n), dtype=complex)
+            m[i,j] = 1
+            m[j,i] = 1
+            basis.append(m)
+
+            m = np.zeros((n, n), dtype=complex)
+            m[i, j] = -1j
+            m[j, i] = 1j
+            basis.append(m)
+
+    # Generate the diagonal matrices
+    for i in range(1,n):
+        m = np.zeros((n, n), dtype=complex)
+        for j in range(i):
+            m[j,j] = 1
+        m[i,i] = -i
+        if i > 1:
+            m = np.sqrt(2/(i*(i+1))) * m
+        basis.append(m)
+
+    return basis
+
+def SU(n):
+    """ Special unitary group. Returns n^2-1 functions that take an angle and return the corresponding complex rotation matrix """
+    generators = su(n)
+    def rotmat(i, phi):
+        return matexp(-1j*phi/2*generators[i])
+    return [lambda phi: rotmat(i, phi) for i in range(len(generators))]
+
 ### Random
 
 def choice(a, size=None, replace=True, p=None):
@@ -187,13 +243,11 @@ def closest_prime_factors_to(n, m):
 
     min_diff = float("inf")
     min_combo = None
-    for k in range(len(pf)):
-        # try all combinations of length k
-        for c in combinations(pf, k):
-            diff = abs(m - np.prod(c))
-            if diff < min_diff:
-                min_diff = diff
-                min_combo = c
+    for c in powerset(pf):
+        diff = abs(m - np.prod(c))
+        if diff < min_diff:
+            min_diff = diff
+            min_combo = c
     return min_combo
 
 def int_sqrt(n):
@@ -344,6 +398,7 @@ def test_mathlib_all():
         _test_series2,
         _test_normalize,
         _test_softmax,
+        _test_su,
         _test_prime_factors,
         _test_closest_prime_factors_to,
         _test_int_sqrt,
@@ -494,6 +549,28 @@ def _test_softmax():
     a = np.random.rand(5)
     b = softmax(a)
     assert np.isclose(np.sum(b), 1)
+    return True
+
+def _test_su():
+    n = 5
+    sun = su(n)
+
+    # check the number of generators
+    n_expected = n**2-1
+    assert len(sun) == n_expected, f"Number of generators is {len(sun)}, but should be {n_expected}!"
+
+    # check if all generators are traceless
+    for i, A in enumerate(sun):
+        assert np.isclose(np.trace(A), 0), f"Generator {i} is not traceless!"
+
+    # check if all generators are Hermitian
+    for i, A in enumerate(sun):
+        assert is_hermitian(A), f"Generator {i} is not Hermitian!"
+
+    # check if all generators are orthogonal
+    for i, (A,B) in enumerate(combinations(sun,2)):
+        assert np.allclose(np.trace(A.conj().T @ B), 0), f"Pair {i} is not orthogonal!"
+
     return True
 
 def _test_prime_factors():
