@@ -1317,6 +1317,25 @@ function isprime() {
   fi
 }
 
+function pf() {
+  #python -c "from utils import prime_factors; print(prime_factors($1))"
+  n=$1
+  i=2
+  factors=()
+  while (( i * i <= n )); do
+    if (( n % i )); then
+      ((i++))
+    else
+      n=$((n / i))
+      factors+=($i)
+    fi
+  done
+  if (( n > 1 )); then
+    factors+=($n)
+  fi
+  echo ${factors[@]}
+}
+
 function sec2time() (
     local sec=$1 min=0 hour=0 day=0
     sec=$(echo $1 | awk '{print int($1+0.5)}')
