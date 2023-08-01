@@ -379,3 +379,60 @@ def pdcolor(df, threshold=None, minv=None, maxv=None, colors=['#ff0000', '#fffff
         df = df.where(np.tril(np.ones(df.shape), -1).astype(bool))
         df = df.dropna(thresh=1).T.dropna(thresh=1).T
     return df.style.applymap(highlight)
+
+
+def graph_from_matrix(A, plot=True, lib="networkx"):
+    """Create a graph from a matrix by interpreting the matrix as a weighted adjacency matrix.
+
+    Args:
+        A: The matrix to convert.
+        plot: If True, plot the graph.
+        lib: The library to use. Can be "networkx" (or "nx"), "graphviz" (or "gv"), or "igraph" (or "ig").
+    """
+
+    A = np.array(A)
+    if A.shape[0] != A.shape[1]:
+        # add zeros to make it square
+        A = np.pad(A, ((0, max(A.shape)-A.shape[0]), (0, max(A.shape)-A.shape[1])), 'constant')
+
+    sym = is_symmetric(A)
+
+    if lib == "networkx" or lib == "nx":
+        import networkx as nx
+        if sym:
+            G = nx.from_numpy_array(A, create_using=nx.Graph)
+        else:
+            G = nx.from_numpy_array(A, create_using=nx.DiGraph)
+        if plot:
+            pos = nx.spring_layout(G)
+            nx.draw(G, pos, with_labels=True)
+            labels = nx.get_edge_attributes(G, 'weight')
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+            plt.show()
+    elif lib == "graphviz" or lib == "gv":
+        from graphviz import Graph, Digraph
+
+        if sym:
+            G = Graph()
+        else:
+            G = Digraph()
+        for i in range(A.shape[0]):
+            G.node(str(i))
+        for i in range(A.shape[0]):
+            for j in range(A.shape[1]):
+                # if A is symmetric, only add one edge
+                if sym and i > j:
+                    continue
+                if A[i,j] != 0:
+                    G.edge(str(i), str(j), label=str(A[i,j]))
+        if plot:
+            G.view()
+    elif lib == "igraph" or lib == "ig":
+        import igraph as ig
+        G = ig.Graph.Weighted_Adjacency(A, mode=ig.ADJ_UPPER if sym else ig.ADJ_DIRECTED)
+        if plot:
+            ig.plot(G)
+    else:
+        raise ValueError(f"Unknown lib: {lib}")
+
+    return G
