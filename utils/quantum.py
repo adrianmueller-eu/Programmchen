@@ -253,6 +253,7 @@ def reverse_qubit_order(state):
     if len(state.shape) == 1 or state.shape[0] != state.shape[1]:
         return state.reshape([2]*n).T.flatten()
     # if matrix, reverse qubit order in eigenvectors
+    # TODO: This doesn't work for mixed states!
     elif state.shape[0] == state.shape[1]:
         vals, vecs = np.linalg.eig(state)
         vecs = np.array([reverse_qubit_order(vecs[:,i]) for i in range(2**n)])
@@ -445,6 +446,52 @@ def random_density_matrix(n=1, pure=True):
             state = random_state(n)
             res += p * np.outer(state, state.conj())
         return res
+
+def state(specification):
+    """Convert a string or dictionary of strings and weights to a state vector. The string can be a binary number or a combination of binary numbers and weights. The weights will be normalized to 1."""
+    # if a string is given, convert it to a dictionary
+    if type(specification) == str:
+        # remove whitespace
+        specification = specification.replace(" ", "")
+        specification_dict = dict()
+        specification = specification.split("+")
+        # re-merge parts with parentheses, e.g. (0.5+1j)*100
+        for i, s in enumerate(specification):
+            if s[0] == "(" and s[-1] != ")":
+                specification[i] += "+" + specification[i+1]
+                specification.pop(i+1)
+        # parse the weights
+        for s in specification:
+            if "*" in s:
+                weight, state = s.split("*")
+                specification_dict[state] = weight
+            else:
+                specification_dict[s] = 1
+        specification = specification_dict
+        # convert the weights to floats
+        for key in specification:
+            specification[key] = complex(specification[key])
+    # convert the dictionary to a state vector
+    n = len(list(specification.keys())[0])
+    state = np.zeros(2**n, dtype=complex)
+    for key in specification:
+        state[int(key, 2)] = specification[key]
+    return normalize(state)
+
+def probs(state):
+    """Calculate the probabilities of measuring a state vector in the standard basis."""
+    return np.abs(state)**2
+
+def von_Neumann_entropy(state):
+    """Calculate the von Neumann entropy of a state vector."""
+    state = np.array(state)
+    S = -np.trace(state @ matlog(state)/np.log(2))
+    assert np.allclose(S.imag, 0), f"WTF: Entropy is not real: {S}"
+    return np.max(S.real, 0)  # fix rounding errors
+
+def entanglement_entropy(state, subsystem_qubits):
+    """Calculate the entanglement entropy of a state vector with respect to the given subsystem."""
+    return von_Neumann_entropy(partial_trace(state, subsystem_qubits))
 
 ###################
 ### Hamiltonian ###
@@ -844,6 +891,13 @@ def test_quantum_all():
         _test_parse_hamiltonian3,
         _test_reverse_qubit_order1,
         _test_reverse_qubit_order2,
+        _test_reverse_qubit_order3,
+        _test_reverse_qubit_order4,
+        # _test_reverse_qubit_order5,
+        # _test_reverse_qubit_order6,
+        _test_partial_trace,
+        _test_von_Neumann_entropy,
+        _test_entanglement_entropy,
         _test_ising_model
     ]
 
@@ -878,18 +932,123 @@ def _test_parse_hamiltonian3():
     return np.allclose(np.sum(H), 2)
 
 def _test_reverse_qubit_order1():
+    psi = np.kron(np.kron([1,1], [0,1]), [1,-1])
+    psi_rev = np.kron(np.kron([1,-1], [0,1]), [1,1])
+
+    psi_rev2 = reverse_qubit_order(psi)
+    return np.allclose(psi_rev, psi_rev2)
+
+def _test_reverse_qubit_order2():
+    # same as above, but with n random qubits
+    n = 10
+    psis = [random_state(1) for _ in range(n)]
+    psi = psis[0]
+    for i in range(1,n):
+        psi = np.kron(psi, psis[i])
+    psi_rev = psis[-1]
+    for i in range(1,n):
+        psi_rev = np.kron(psi_rev, psis[-i-1])
+
+    psi_rev2 = reverse_qubit_order(psi)
+    return np.allclose(psi_rev, psi_rev2)
+
+def _test_reverse_qubit_order3():
     H = parse_hamiltonian('IIIXX')
     H_rev = parse_hamiltonian('XXIII')
 
     H_rev2 = reverse_qubit_order(H)
     return np.allclose(H_rev, H_rev2)
 
-def _test_reverse_qubit_order2():
-    psi = np.kron([1,1], [0,1])
-    psi_rev = np.kron([0,1], [1,1])
+def _test_reverse_qubit_order4():
+    # pure density matrix
+    psi = np.kron(np.kron([1,1], [0,1]), [1,-1])
+    rho = np.outer(psi, psi)
+    psi_rev = np.kron(np.kron([1,-1], [0,1]), [1,1])
+    rho_rev = np.outer(psi_rev, psi_rev)
+
+    rho_rev2 = reverse_qubit_order(rho)
+    return np.allclose(rho_rev, rho_rev2)
+
+def _test_reverse_qubit_order5():
+    # draw n times 2 random 1-qubit states and a probability distribution over all n pairs
+    n = 10
+    psis = [[random_density_matrix(1) for _ in range(2)] for _ in range(n)]
+    p = normalize(np.random.rand(n), p=1)
+    # compute the average state
+    psi = np.zeros((2**2, 2**2), dtype=complex)
+    for i in range(n):
+        psi += p[i]*np.kron(psis[i][0], psis[i][1])
+    # compute the average state with reversed qubit order
+    psi_rev = np.zeros((2**2, 2**2), dtype=complex)
+    for i in range(n):
+        psi_rev += p[i]*np.kron(psis[i][1], psis[i][0])
 
     psi_rev2 = reverse_qubit_order(psi)
-    return np.allclose(psi_rev, psi_rev2)
+    assert np.allclose(psi_rev, psi_rev2), f"psi_rev = {psi_rev}\npsi_rev2 = {psi_rev2}"
+    return True
+
+def _test_reverse_qubit_order6():
+    # same as above, but with 3 qubits
+    # draw n times 3 random 1-qubit states and a probability distribution over all n triplets
+    n = 10
+    psis = [[random_density_matrix(1) for _ in range(3)] for _ in range(n)]
+    p = normalize(np.random.rand(n), p=1)
+    # compute the average state
+    psi = np.zeros((2**3, 2**3), dtype=complex)
+    for i in range(n):
+        psi += p[i]*np.kron(np.kron(psis[i][0], psis[i][1]), psis[i][2])
+    # compute the average state with reversed qubit order
+    psi_rev = np.zeros((2**3, 2**3), dtype=complex)
+    for i in range(n):
+        psi_rev += p[i]*np.kron(np.kron(psis[i][2], psis[i][1]), psis[i][0])
+
+    psi_rev2 = reverse_qubit_order(psi)
+    assert np.allclose(psi_rev, psi_rev2), f"psi_rev = {psi_rev}\npsi_rev2 = {psi_rev2}"
+    return True
+
+def _test_partial_trace():
+    rho = np.array([[ 0,  1,  2,  3],
+                [ 4,  5,  6,  7],
+                [ 8,  9, 10, 11],
+                [12, 13, 14, 15]])
+    rhoA_expected = np.array([[ 5, 9], [21, 25]])
+    rhoA_actual   = partial_trace(rho, [0])
+    assert np.allclose(rhoA_expected, rhoA_actual), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
+
+    rhoA = random_density_matrix(2)
+    rhoB = random_density_matrix(2)
+    rho = np.kron(rhoA, rhoB)
+    rhoA_expected = rhoA
+    rhoA_actual   = partial_trace(rho, [0,1])
+    assert np.allclose(rhoA_expected, rhoA_actual), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
+
+    return True
+
+def _test_von_Neumann_entropy():
+    rho = random_density_matrix(2, pure=True)
+    S = von_Neumann_entropy(rho)
+    assert np.allclose(S, 0), f"S = {S} ≠ 0"
+
+    rho = np.eye(2)/2
+    S = von_Neumann_entropy(rho)
+    assert np.allclose(S, 1), f"S = {S} ≠ 1"
+
+    return True
+
+def _test_entanglement_entropy():
+    # Bell state |00> + |11> should for the first qubit have entropy 1
+    rho = 1/2*np.outer(np.array([1,0,0,1]), np.array([1,0,0,1]))
+    S = entanglement_entropy(rho, [0])
+    assert np.allclose(S, 1), f"S = {S} ≠ 1"
+
+    # Two separable systems should for the first system have entropy 0
+    rhoA = random_density_matrix(2)
+    rhoB = random_density_matrix(3)
+    rho = np.kron(rhoA, rhoB)
+    S = entanglement_entropy(rho, [0,1])
+    assert np.allclose(S, 0), f"S = {S} ≠ 0"
+
+    return True
 
 def _test_ising_model():
     # 1d
