@@ -376,21 +376,46 @@ function findDevicesInNetwork() (
 )
 
 function uriencode() {
-  if hash node &>/dev/null; then
-    node -e 'console.log(encodeURIComponent(process.argv[1]))' "$*"
+  local data
+  if [[ ! -t 0 && $1 != -e ]]; then
+    data=$(cat)
+  elif [[ -n $1 ]]; then
+    [[ $1 == -e ]] && shift
+    data=$1
   else
-    curl -Gso /dev/null -w %{url_effective} --data-urlencode "$*" "" | cut -c 3-
+    data=$(pbpaste)
+  fi
+  if hash node &>/dev/null; then
+    node -e 'console.log(encodeURIComponent(process.argv[1]))' "$data"
+  else
+    curl -Gso /dev/null -w %{url_effective} --data-urlencode "$data" "" | cut -c 3-
   fi
 }
 
 function uridecode() {
-  [[ -n "$1" ]] && uri=$1 || uri=$(pbpaste)
-  node -e 'console.log(decodeURIComponent(process.argv[1]))' "$uri"
+  local data
+  if [[ ! -t 0 && $1 != -e ]]; then
+    data=$(cat)
+  elif [[ -n $1 ]]; then
+    [[ $1 == -e ]] && shift
+    data=$1
+  else
+    data=$(pbpaste)
+  fi
+  node -e 'console.log(decodeURIComponent(process.argv[1]))' "$data"
 }
 
 function urldata() (
-  [[ -n "$1" ]] && uri=$1 || uri=$(pbpaste)
-  uridecode "${uri#*\?}" | tr '&' '\n'
+  local data
+  if [[ ! -t 0 && $1 != -e ]]; then
+    data=$(cat)
+  elif [[ -n $1 ]]; then
+    [[ $1 == -e ]] && shift
+    data=$1
+  else
+    data=$(pbpaste)
+  fi
+  uridecode -e "${uri#*\?}" | tr '&' '\n'
 )
 
 function fetch_dwd() ( # german weather agency / usage: $0 "state" "city"
