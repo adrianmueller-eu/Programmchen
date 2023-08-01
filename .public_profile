@@ -1428,6 +1428,10 @@ function zombiesAndStuff() {
 function hexflow() (
   t=${1:-100}
   t=$((1.0/t))
+
+  for i in $(seq 1 $LINES); do
+    openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g'
+  done
   while true; do
     openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g' | command grep --color=always -e "42\|$"
     sleep $t
