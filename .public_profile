@@ -1554,3 +1554,28 @@ txt2img() {
   open outputs/
   popd &>/dev/null
 }
+
+tts() (
+  if [[ ! -t 0 ]]; then
+    text=$(cat)
+  elif [[ -z $1 ]]; then
+    text=$(pbpaste)
+  else
+    text=$1
+  fi
+  tmpfile="${TMPDIR}audio.wav"
+  python -c 'from sys import argv
+from bark import SAMPLE_RATE, generate_audio
+from scipy.io.wavfile import write as write_wav
+
+text = argv[1]
+print("Text:", text, end="\n\n")
+audio_array = generate_audio(text)
+write_wav(argv[2], SAMPLE_RATE, audio_array)
+print("Audio saved to", argv[2])
+
+# from IPython.display import Audio
+# Audio(audio_array, rate=SAMPLE_RATE)
+' "$text" "$tmpfile" || exit 1
+  mpv "$tmpfile"
+)
