@@ -24,6 +24,17 @@ def lm(x, y=None, plot=True):
     return pm(x, y, 1, plot)
 
 # expm
+def expm(x, y=None, plot=True):
+    if y is None:
+        y = x
+        x = np.arange(1, len(y)+1)
+    exp = Exponential.fit(x, y)
+    if plot:
+        x_ = np.linspace(min(x), max(x), 200)
+        ax = exp.plot(x_)
+        ax.scatter(x,y)
+    return exp
+
 # logm
 # sinm
 # arm
@@ -138,6 +149,33 @@ class InversePolynomial(Function):
 
     def _plot_label(self):
         return "1/(" + _generate_poly_label(self.coeff) + ")"
+
+class Exponential(Function):
+    """y = a*exp(b*x+c) + d"""
+
+    def __init__(self, coeff):
+        if len(coeff) != 4:
+            raise ValueError("Exponential function needs exactly 4 coefficients")
+        self.coeff = coeff
+
+    @staticmethod
+    def fit(x, y):
+        x = np.array(list(x))
+        y = np.array(list(y))
+        def func(x, a, b, c, d):
+            return a*np.exp(b*x+c) + d
+        coeff, _ = curve_fit(func, x, y)
+        return Exponential(coeff)
+
+    def __call__(self, x):
+        return self.coeff[0]*np.exp(self.coeff[1]*x+self.coeff[2]) + self.coeff[3]
+
+    def __str__(self):
+        return f"Exponential function with coeff {self.coeff}"
+
+    def _plot_label(self):
+        return f"{self.coeff[0]:.3f}*exp({self.coeff[1]:.3f}*x+{self.coeff[2]:.3f})+{self.coeff[3]:.3f}"
+
 
 # class Exponential(Function): # y = poly(exp(poly(x)))
 # class Logarithm(Function): # y = poly(log_b(poly(x)))
