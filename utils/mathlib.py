@@ -92,7 +92,7 @@ except:
         # there is a faster method for hermitian matrices
         if is_hermitian(A0):
             eigval, eigvec = np.linalg.eig(A0)
-            return eigvec @ np.diag(np.power(2,a)) @ eigvec.conj().T
+            return eigvec @ np.diag(np.power(base, eigval)) @ eigvec.conj().T
         # use series expansion
         return np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=2)
 
