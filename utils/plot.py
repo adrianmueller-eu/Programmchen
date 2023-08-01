@@ -4,6 +4,8 @@ from .mathlib import is_complex, is_symmetric, normalize, int_sqrt
 from .utils import *
 
 def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pltargs):
+    """Uses magic to create pretty plots."""
+
     # make it a bit intelligent
     if type(x) == tuple and len(x) == 2:
         title  = ylabel
@@ -111,6 +113,7 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
 #     return n, bins
 
 def histogram(data, bins=None, xlog=False, density=False):
+    """Returns `(n, bins)`, where `n` is the number of data points in each bin and `bins` is the bin edges."""
     if xlog:
         if not hasattr(bins, '__len__'):
             bins = logbins(data, num=bins)
@@ -119,6 +122,8 @@ def histogram(data, bins=None, xlog=False, density=False):
     return np.histogram(data, bins=bins, density=density)
 
 def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=False, colored=None, cmap="viridis", save_file=None):
+    """Uses magic to create pretty histograms."""
+
     if type(bins) == str:
         if bins == "log":
             xlog = True
@@ -173,6 +178,8 @@ def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=F
     return n, bins
 
 def scatter1d(data, xticks=None, alpha=.5, s=500, marker="|", xlim=None, title="", **pltargs):
+    """Create only one axis on which to plot the data."""
+
     fig = plt.figure(figsize=(10,1))
     ax = fig.gca()
     size = np.array(data).flatten().shape
@@ -191,6 +198,8 @@ def scatter1d(data, xticks=None, alpha=.5, s=500, marker="|", xlim=None, title="
     plt.show()
 
 def colorize_complex(z):
+    """Colorize complex numbers by their angle and magnitude."""
+
     from colorsys import hls_to_rgb
 
     r = np.abs(z)
@@ -205,6 +214,8 @@ def colorize_complex(z):
     return c
 
 def imshow(a, figsize=(8,6), title="", cmap="hot", yticks=None, xticks=None, **pltargs):
+    """Uses magic to create pretty images from arrays."""
+
     a = np.array(a)
     if np.prod(a.shape) == np.max(a.shape):
         a = a.flatten()
@@ -243,6 +254,8 @@ def imshow(a, figsize=(8,6), title="", cmap="hot", yticks=None, xticks=None, **p
     plt.show()
 
 def complex_colorbar(figsize=(2,2)):
+    """Show the color reference plot for complex numbers."""
+
     imag, real = np.mgrid[-1:1:0.01,-1:1:0.01]
     imag = imag[::-1] # convention: turn counter-clockwise
     x = real + 1j*imag
@@ -255,6 +268,7 @@ def complex_colorbar(figsize=(2,2)):
     plt.ylabel("imag")
 
 def bar(heights, log=False):
+    """Uses magic to create pretty bar plots."""
     N = len(heights)
     plt.figure(figsize=(int(np.ceil(N/2)),6))
     plt.bar(range(N), height=heights)
@@ -265,6 +279,7 @@ def bar(heights, log=False):
     plt.show()
 
 def rgb(r,g=1.0,b=1.0,a=1.0, as255=False):
+    """Converts (r,g,b,a) to a hex string."""
     conv = 1 if as255 else 1/255
     if type(r) == str:
         s = r.split("#")[-1]
@@ -279,11 +294,26 @@ def rgb(r,g=1.0,b=1.0,a=1.0, as255=False):
     return "#" + "".join('{0:02X}'.format(int(v/conv)) for v in [r,g,b,a])
 
 def perceived_brightness(r,g,b,a=None): # a is ignored
+    """Returns the perceived brightness of a color given as (r,g,b,a)."""
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 # coloring for pd.DateFrame
 # todo: use package "webcolors" (e.g. name to rgb)
 def pdcolor(df, threshold=None, minv=None, maxv=None, colors=['#ff0000', '#ffffff', '#069900'], tril_if_symmetric=True, bi=False):
+    """Color a pandas DataFrame according to its values.
+    If `minv` and `maxv` are given, they are used instead of the minimum and maximum values.
+    If `tril_if_symmetric` is True, the upper triangle is colored if the matrix is symmetric.
+    If `bi` is True, the first color is ignored.
+
+    Args:
+        df: The DataFrame to color.
+        threshold: If given, the DataFrame is colored based on whether the values are above or below the threshold, using the first and last color of `colors`, respectively.
+        minv: The minimum value to use. If None, the minimum value in the DataFrame is used.
+        maxv: The maximum value to use. If None, the maximum value in the DataFrame is used.
+        colors: A list of colors to use. The first color is used for the lowest values, the last color for the highest values. If `threshold` is given, the first and last color are used for values below and above the threshold, respectively. Else a linear interpolation is used.
+        tril_if_symmetric: If True, only the upper triangle is colored if the matrix is symmetric.
+        bi: If True, the first color is ignored (i.e., in the default settings, uses white for the lowest values instead of red).
+    """
     def blackorwhite(r,g=None,b=None):
         if g is None:
             r,g,b,a = rgb(r)
