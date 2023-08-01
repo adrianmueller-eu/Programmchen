@@ -1,9 +1,13 @@
 import numpy as np
 from numpy.polynomial.polynomial import polyfit, polyval
 from abc import ABC, abstractmethod
+from scipy.optimize import curve_fit
 
 # convenience functions
-def pm(x, y, deg, plot=True):
+def pm(x, y=None, deg=1, plot=True):
+    if y is None:
+        y = x
+        x = np.arange(len(y))
     if deg >= 0:
         poly = Polynomial.fit(x, y, deg)
     else:
@@ -11,12 +15,12 @@ def pm(x, y, deg, plot=True):
     if plot:
         x_ = np.linspace(min(x), max(x), 200)
         ax = poly.plot(x_)
-        ax.scatter(x,y)
+        ax.scatter(x,y, marker=".")
         #plt.show()
     return poly
     #return lambda x0: polyval(np.array(x0), coeff)
 
-def lm(x, y, plot=True):
+def lm(x, y=None, plot=True):
     return pm(x, y, 1, plot)
 
 # expm
