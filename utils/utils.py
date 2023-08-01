@@ -33,3 +33,8 @@ def reversed_keys(d):
 
 def npp(precision=5):
     np.set_printoptions(precision=5, suppress=True)
+
+def mapp(func, *iterables, **kwargs):
+    """map function that uses tq for progress bar"""
+    for i in tq(range(len(iterables[0]))):
+        yield func(*[iterable[i] for iterable in iterables], **kwargs)
