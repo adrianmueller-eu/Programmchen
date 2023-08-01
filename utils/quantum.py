@@ -678,18 +678,19 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
     """
     # generate the coupling shape
     n_total_qubits = np.prod(n_qubits)
+    assert n_total_qubits - int(n_total_qubits) == 0, "n_qubits must be an integer or a tuple of integers"
     if kind == '1d':
-        assert type(n_qubits) == int or len(n_qubits) == 1, f"For kind={kind}, n_qubits must be an integer or tuple of length 1, but is {n_qubits}"
+        assert np.isscalar(n_qubits) or len(n_qubits) == 1, f"For kind={kind}, n_qubits must be an integer or tuple of length 1, but is {n_qubits}"
         # convert to int if tuple (has attr __len__)
         if hasattr(n_qubits, '__len__'):
             n_qubits = n_qubits[0]
         couplings = (n_qubits if circular and n_qubits > 2 else n_qubits-1,)
     elif kind == '2d':
-        if type(n_qubits) == int or len(n_qubits) == 1:
+        if np.isscalar(n_qubits) or len(n_qubits) == 1:
             raise ValueError(f"For kind={kind}, n_qubits must be a tuple of length 2, but is {n_qubits}")
         couplings = (n_total_qubits, n_total_qubits)
     elif kind == '3d':
-        if type(n_qubits) == int or len(n_qubits) == 2:
+        if np.isscalar(n_qubits) or len(n_qubits) == 2:
             raise ValueError(f"For kind={kind}, n_qubits must be a tuple of length 3, but is {n_qubits}")
         couplings = (n_total_qubits, n_total_qubits)
     elif kind == 'pairwise':
@@ -712,16 +713,16 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
 
     if h is not None:
         if n_total_qubits != 2 and hasattr(h, '__len__') and len(h) == 2:
-            h = np.random.uniform(low=h[0], high=h[1], size=n_qubits)
+            h = np.random.uniform(low=h[0], high=h[1], size=n_total_qubits)
         elif not np.isscalar(h):
             h = np.array(h)
-        assert np.isscalar(h) or h.shape == (n_qubits,), f"h must be a scalar, 2-element vector, or vector of length {n_qubits}, but is {h.shape if not np.isscalar(h) else h}"
+        assert np.isscalar(h) or h.shape == (n_total_qubits,), f"h must be a scalar, 2-element vector, or vector of shape {(n_total_qubits,)}, but is {h.shape if not np.isscalar(h) else h}"
     if g is not None:
         if n_total_qubits != 2 and hasattr(g, '__len__') and len(g) == 2:
-            g = np.random.uniform(low=g[0], high=g[1], size=n_qubits)
+            g = np.random.uniform(low=g[0], high=g[1], size=n_total_qubits)
         elif not np.isscalar(g):
             g = np.array(g)
-        assert np.isscalar(g) or g.shape == (n_qubits,), f"g must be a scalar, 2-element vector, or vector of length {n_qubits}, but is {g.shape if not np.isscalar(g) else g}"
+        assert np.isscalar(g) or g.shape == (n_total_qubits,), f"g must be a scalar, 2-element vector, or vector of shape {(n_total_qubits,)}, but is {g.shape if not np.isscalar(g) else g}"
 
     # generate the Hamiltonian
     H_str = ''
