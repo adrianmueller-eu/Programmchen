@@ -141,6 +141,14 @@ def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=F
     else:
         fig, ax0 = plt.subplots(figsize=(10,5))
 
+    # filter nan, -inf, and inf from data
+    data = np.array(data)
+    n_filtered = np.sum(np.isnan(data)) + np.sum(np.isinf(data))
+    if n_filtered > 0:
+        data = data[~np.isnan(data)] # filter nan
+        data = data[~np.isinf(data)] # filter inf and -inf
+        print(f"nan or inf values detected in data: {n_filtered} values {n_filtered/len(data)*100:.3f}% filtered out")
+
     n, bins = histogram(data, bins=bins, xlog=xlog, density=density)
     ax0.hist(bins[:-1], bins, weights=n) # TODO: moving_avg(bins,2) instead of bins[:-1]?
     if xlog:
