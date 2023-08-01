@@ -81,18 +81,31 @@ def series(f, start_value=0, start_index=0, eps=sys.float_info.epsilon, max_iter
 
 try:
     from scipy.linalg import expm as matexp
+    from scipy.linalg import logm as _matlog
+    from scipy.linalg import sqrtm as matsqrt
+    from scipy.linalg import fractional_matrix_power as matpow
+
+    def matlog(A, base=np.e):
+        return _matlog(A) / np.log(base)
 except:
-    def matexp(A0):
+    def matexp(A0, base=np.e):
         # there is a faster method for hermitian matrices
         if is_hermitian(A0):
             eigval, eigvec = np.linalg.eig(A0)
-            return eigvec @ np.diag(np.exp(eigval)) @ eigvec.conj().T
+            return eigvec @ np.diag(np.power(2,a)) @ eigvec.conj().T
         # use series expansion
         return np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=2)
 
-    def matlog(A):
+    def matlog(A, base=np.e):
         evals, evecs = np.linalg.eig(A)
-        return evecs @ np.diag(np.log(evals.astype(complex))) @ evecs.conj().T
+        return evecs @ np.diag(np.log(evals.astype(complex)) / np.log(base)) @ evecs.conj().T
+
+    def matpow(A, n):
+        evals, evecs = np.linalg.eig(A)
+        return evecs @ np.diag(evals.astype(complex)**n) @ evecs.conj().T
+
+    def matsqrt(A, n=2):
+        return matpow(A, 1/n)
 
 def normalize(a, p=2, remove_global_phase=True):
      if is_complex(a):
@@ -326,6 +339,7 @@ def test_mathlib_all():
         _test_rad,
         _test_deg,
         _test_matexp,
+        _test_matlog,
         _test_series,
         _test_series2,
         _test_normalize,
@@ -443,6 +457,12 @@ def _test_matexp():
     a = np.random.rand(5,5) + 1j*np.random.rand(5,5)
     # check if det(matexp(A)) == exp(trace(A))
     assert np.isclose(np.linalg.det(matexp(a)), np.exp(np.trace(a)))
+    return True
+
+def _test_matlog():
+    alpha = np.random.rand()*2*np.pi - np.pi
+    A = np.array([[np.cos(alpha), -np.sin(alpha)],[np.sin(alpha), np.cos(alpha)]])
+    assert np.allclose(matlog(A), alpha*np.array([[0, -1],[1, 0]])), f"Error for alpha = {alpha}! {matlog(A)} != {alpha*np.array([[0, -1],[1, 0]])}"
     return True
 
 def _test_series():
