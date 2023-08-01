@@ -919,7 +919,9 @@ function ln_update() (
     hardLink ~/.config/mpv/input.conf
     hardLink ~/.config/mpv/mpv.conf
 
-    hardLink ~"/Library/Services/idiff.workflow"
+    hardLink ~"/Library/Services/diff.workflow"
+    hardLink ~"/Library/Services/diffw.workflow"
+    hardLink ~"/Library/Services/diff-pdf.workflow"
     hardLink ~"/Library/Services/same?.workflow"
   fi
 )
