@@ -41,6 +41,14 @@ def _generate_poly_label(coeff):
 
 # Functions
 class Function(ABC):
+    """
+    Abstract class for functions. It provides an MSE error function and a plot method.
+    Each descendant has to implement the following methods:
+    - fit(x, y)
+    - __call__(x)
+    - __str__()
+    - _plot_label()
+    """
 
     @staticmethod
     @abstractmethod
@@ -76,6 +84,7 @@ class Function(ABC):
 
 
 class Polynomial(Function):
+    """ y = a_n*x^n + ... + a_1*x + a_0 """
 
     def __init__(self, coeff):
         self.coeff = coeff
@@ -103,6 +112,7 @@ class Polynomial(Function):
         return _generate_poly_label(self.coeff)
 
 class InversePolynomial(Function):
+    """ y = 1/(a_n*x^n + ... + a_1*x + a_0) """
 
     def __init__(self, coeff):
         self.coeff = coeff
