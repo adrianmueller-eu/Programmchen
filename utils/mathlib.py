@@ -266,61 +266,83 @@ def binFrac_i(j, i):
 def binFrac(j, prec=20):
     return "." + "".join([str(binFrac_i(j,i)) for i in range(1,prec+1)])
 
-def binstr_from_float(f, r=None):
+def binstr_from_float(f, r=None, complement=False):
     """
     Convert a float `f` to a binary string with `r` bits after the comma.
     If `r` is None, the number of bits is chosen such that the float is
     represented exactly.
-    If `f` is negative, the positive number modulus `2**k` is returned,
-    where `k` is the smallest integer such that `2**k > -f`.
 
     Parameters
-    ----------
-    f : float
-        The float to convert.
-    r : int, optional
-        The number of bits after the comma. The default is None.
+        f (float): The float to convert.
+        r (int), optional: The number of bits after the comma. The default is None.
+        complement (bool), optional: If True and `f < 0`, count the fraction "backwards" (e.g. -0.125 == '-.111').
 
     Returns
-    -------
-    str
-        The binary string.
+        str: The binary string representing `f`.
     """
-    # special treatment for negative numbers > -1
-    if f < 0 and f > -1:
-        if r is not None and f > -1/2**(r+1):
+    negative = f < 0
+    if negative:
+        f = -f # make it easier to handle the minus sign in the end
+        if r is not None and r > 0 and abs(f) < 1/2**(r+1):
             return '.' + '0'*r
-        f = 1+f
+        if complement:
+            # Translate the fraction to the corresponding complement, e.g. -0.125 => -0.875
+            # alternatively, we could also flip all bits in `frac_part` below and add 1
+            frac = f - int(f)
+            if frac > 0:
+                f = int(f) - frac + 1  # -1 if f was negative
 
-    i = 0 # number of bits after the comma
+    i = 0 # number of bits in the fraction part
     while int(f) != f:
-        if i == r:
+        if r is not None and i >= r:
             f = int(np.round(f))
             break
         f *= 2
         i += 1
-    # if f is negative, find the positive number modulus 2**k,
-    # where k is the smallest integer such that 2**k > -f
-    if f < 0:
-        k = 0
-        while -f > 2**(k-1):
-            k += 1
-        f = 2**k + f
-    as_str = str(bin(int(f))).replace('b', '0')
-    if i == 0:
-        if r is None or r <= 0:
-           return as_str[2:]
-        if as_str[2:] == '0':
-            return '.' + '0'*r
-        return as_str[2:] + '.' + '0'*r
+    f = int(f) # there should be no fractional part left
 
-    before_comma = as_str[2:-i]
-    after_comma = '0'*(i-len(as_str[-i:])) + as_str[-i:]
+    # We use complement only for the fraction, not for the integer part
+    # # If `f` is negative, the positive number modulus `2**k` is returned,
+    # # where `k` is the smallest integer such that `2**k > -f`.
+    # if f < 0:
+    #     k = 0
+    #     while -f > 2**(k-1):
+    #         k += 1
+    #     f = 2**k + f
+
+    # integer part
+    as_str = str(bin(f))[2:] # this adds a leading '-' sign for negative numbers
+    sign = '-' if negative else ''
+    # print(f, i, sign, as_str)
+    if i == 0: # no fraction part
+        if r is None or r <= 0: # ==> i == 0
+            return sign + as_str
+        if as_str == '0':
+            return sign + '.' + '0'*r
+        return sign + as_str + '.' + '0'*r
+    int_part = sign + as_str[:-i]
+
+    # fraction part
+    frac_part = '0'*(i-len(as_str)) + as_str[-i:]
+    # print(int_part, frac_part)
     if r is None:
-       return before_comma + '.' + after_comma
-    return before_comma + '.' + after_comma[:r] + '0'*(r-len(after_comma[:r]))
+       return int_part + '.' + frac_part
+    return int_part + '.' + frac_part[:r] + '0'*(r-len(frac_part[:r]))
 
-def float_from_binstr(s):
+def float_from_binstr(s, complement=False):
+    """ Convert a binary string to a float.
+
+    Parameters
+        s (str): The binary string.
+        complement (bool, optional): If True, interpret the fraction part as the complement of the binary representation. Defaults to False.
+
+    Returns
+        float: The float represented by the binary string.
+    """
+
+    negative = s[0] == '-'
+    if negative:
+        s = s[1:]
     s = s.split('.')
 
     pre = 0
@@ -328,8 +350,14 @@ def float_from_binstr(s):
     if len(s[0]) > 0:
         pre = int(s[0], 2)
     if len(s) > 1 and len(s[1]) > 0:
-        frac = int(s[1], 2) / 2.**len(s[1])
-    return float(pre + frac)
+        if negative and complement:
+            # flip all bits and add 1
+            s[1] = ''.join(['1' if x == '0' else '0' for x in s[1]])
+            frac = int(s[1], 2) + 1
+        else:
+            frac = int(s[1], 2)
+        frac /= 2.**len(s[1])
+    return float(pre + frac) * (-1 if negative else 1)
 
 def binstr_from_int(n, places=0):
     return ("{0:0" + str(places) + "b}").format(n)
@@ -631,17 +659,38 @@ def _test_binFrac():
     return True
 
 def _test_binstr_from_float():
-    assert binstr_from_float(np.pi, r=20) == "11.00100100001111110111"
+    assert binstr_from_float(0) == "0"
+    assert binstr_from_float(10) == "1010"
+    assert binstr_from_float(0.5) == ".1"
     assert binstr_from_float(0.5, r=12) == ".100000000000"
-    assert binstr_from_float(0.5, r=0) == "0"
-    assert binstr_from_float(10, r=-1) == "1010"
+    assert binstr_from_float(np.pi, r=20) == "11.00100100001111110111"
+    assert binstr_from_float(0.5, r=0) == "0"  # https://mathematica.stackexchange.com/questions/2116/why-round-to-even-integers
+    assert binstr_from_float(0.50000001, r=0) == "1"
+    assert binstr_from_float(-3) == "-11"
+    assert binstr_from_float(-1.5, r=3) == "-1.100"
+    assert binstr_from_float(-0.125) == "-.001"
+    assert binstr_from_float(-0.125, complement=True) == "-.111"
+    assert binstr_from_float(-0.875, complement=False) == "-.111"
+    assert binstr_from_float(0, r=3, complement=True) == ".000"
+    assert binstr_from_float(-1.0, r=3, complement=True) == "-1.000"
     return True
 
 def _test_float_from_binstr():
-    assert np.allclose(float_from_binstr('11.00100100001111110111'), np.pi)
-    assert np.allclose(float_from_binstr('.100000000000'), 0.5)
-    assert np.allclose(float_from_binstr('0'), 0)
     assert np.allclose(float_from_binstr('1010'), 10)
+    assert np.allclose(float_from_binstr('0'), 0)
+    assert np.allclose(float_from_binstr('.100000000000'), 0.5)
+    assert np.allclose(float_from_binstr('11.00100100001111110111'), np.pi)
+    assert np.allclose(float_from_binstr('-11'), -3)
+    assert np.allclose(float_from_binstr('-1.100'), -1.5)
+    assert np.allclose(float_from_binstr('-.001'), -0.125)
+    assert np.allclose(float_from_binstr('-.111', complement=True), -0.125)
+    assert np.allclose(float_from_binstr('-.111', complement=False), -0.875)
+
+    # check consistency of binstr_from_float and float_from_binstr
+    assert np.allclose(float_from_binstr(binstr_from_float(0.5, r=2)), 0.5)
+    assert np.allclose(float_from_binstr(binstr_from_float(-np.pi, r=20)), -np.pi, atol=1e-6)
+    assert np.allclose(float_from_binstr(binstr_from_float(-0.375, r=3)), -0.375)
+    assert np.allclose(float_from_binstr(binstr_from_float(-0.375, r=3, complement=True), complement=True), -0.375)
     return True
 
 def _test_binstr_from_int():
