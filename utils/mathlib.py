@@ -415,13 +415,12 @@ def sqrt_brain_compatible(x, correction_term=False, n_max = 20):
        raise ValueError("Are you kidding me")
     if x > n_sq_table[-1]:
        raise ValueError("Use a proper function for this, please.")
-    for i,n2 in enumerate(n_sq_table):
+    for n,n2 in enumerate(n_sq_table):
        if n2 > x:
-           n = i
            if correction_term:
-               return i + (x - n_sq_table[i-1])/(2*i + 1) + 1/(6*(2*i+1))
+               return n + (x - n_sq_table[n-1])/(2*n + 1) + 1/(6*(2*n+1))
            else:
-               return i + (x - n_sq_table[i-1])/(2*i + 1)
+               return n + (x - n_sq_table[n-1])/(2*n + 1)
 
 # Reduction of the halting problem to the equivalence problem, i.e. show that the latter is at least as hard as the former. Give an algorithm `H` and input `x` to decide whether `H(x)` halts. This function returns two functions `f1, f2`. Use your implementation `equiv` solving the equivalence problem to solve the halting problem, e.g. `equiv(*equiv_from_halt(H, x))`.
 def equiv_from_halt(H, x):
