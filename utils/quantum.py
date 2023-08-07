@@ -846,7 +846,7 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
     else:
         raise ValueError(f"Unknown kind {kind}")
 
-    if np.isscalar(J):
+    if np.isscalar(J) and J != 0 and n_qubits > 1:
         H_str = str(J) + '*(' + H_str[:-3] + ') + '
 
     # local longitudinal fields
