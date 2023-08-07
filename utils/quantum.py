@@ -732,14 +732,14 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
             for i in range(n_qubits-1):
                 H_str += 'I'*i + 'ZZ' + 'I'*(n_qubits-i-2) + ' + '
             # last and first qubit
-            if circular:
+            if circular and n_qubits > 2:
                 H_str += 'Z' + 'I'*(n_qubits-2) + 'Z' + ' + '
         else:
             for i in range(n_qubits-1):
                 if J[i] != 0:
                     H_str += str(J[i]) + '*' + 'I'*i + 'ZZ' + 'I'*(n_qubits-i-2) + ' + '
             # last and first qubit
-            if circular and J[n_qubits-1] != 0:
+            if circular and n_qubits > 2 and J[n_qubits-1] != 0:
                 H_str += str(J[n_qubits-1]) + '*' + 'Z' + 'I'*(n_qubits-2) + 'Z' + ' + '
     elif kind == '2d':
         for i in range(n_qubits[0]):
