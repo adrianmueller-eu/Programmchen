@@ -47,7 +47,7 @@ def duh(n, precision=2):
         n (int): The number of bytes
         precision (int): The number of decimals to use
     """
-    for unit in ['B','KB','MB','GB','TB']:
+    for unit in ['B','KB','MB','GB','TB','PB','EB','ZB']:
         if n < 1024.0:
             break
         n /= 1024.0
