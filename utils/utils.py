@@ -38,3 +38,20 @@ def mapp(func, *iterables, **kwargs):
     """map function that uses tq for progress bar"""
     for i in tq(range(len(iterables[0]))):
         yield func(*[iterable[i] for iterable in iterables], **kwargs)
+
+def duh(n, precision=2):
+    """ Takes a number of bytes and returns a human-readable string with the
+    size in bytes, kilobytes, megabytes, or gigabytes.
+
+    Parameters
+        n (int): The number of bytes
+        precision (int): The number of decimals to use
+    """
+    for unit in ['B','KB','MB','GB','TB']:
+        if n < 1024.0:
+            break
+        n /= 1024.0
+    decimals = precision - int(n > 99) - int(n > 9) - int(n > 0)
+    if decimals < 0 or unit == 'B':
+        decimals = 0
+    return f"{n:.{decimals}f} {unit}"
