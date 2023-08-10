@@ -271,24 +271,25 @@ def partial_trace(rho, retain_qubits):
 
     # get qubits to trace out
     trace_out = np.array(sorted(set(range(n)) - set(retain_qubits)))
-    # remove all qubits >= n
+    # ignore all qubits >= n
     trace_out = trace_out[trace_out < n]
 
     # if rho is a state vector
     if len(rho.shape) == 1:
-        st = rho.reshape([2]*n)
-        st = np.tensordot(st, st.conj(), axes=(trace_out,trace_out))
-        return st.reshape(dim_r, dim_r)
+        st  = rho.reshape([2]*n)
+        rho = np.tensordot(st, st.conj(), axes=(trace_out,trace_out))
+    # if trace out all qubits, just return the normal trace
+    elif len(trace_out) == n:
+        return np.trace(rho).reshape(1,1) # dim_r is not necessarily 1 here (if some in `retain_qubits` are >= n)
+    else:
+        assert rho.shape[0] == rho.shape[1], f"Can't trace a non-square matrix {rho.shape}"
 
-    assert rho.shape[0] == rho.shape[1], f"Can't trace a matrix of size {rho.shape}"
+        rho = rho.reshape([2]*(2*n))
+        for qubit in trace_out:
+            rho = np.trace(rho, axis1=qubit, axis2=qubit+n)
+            n -= 1         # one qubit less
+            trace_out -= 1 # rename the axes (only "higher" ones are left)
 
-    if len(trace_out) == n: # trace out all qubits
-        return np.trace(rho).reshape(1,1) # return a 1x1 matrix
-    rho = rho.reshape(np.concatenate(([2]*n, [2]*n), axis=None))
-    for qubit in trace_out:
-        rho = np.trace(rho, axis1=qubit, axis2=qubit+n)
-        n -= 1         # one qubit less
-        trace_out -= 1 # rename the axes (only "higher" ones are left)
     return rho.reshape(dim_r, dim_r)
 
 def state_trace(state, retain_qubits):
