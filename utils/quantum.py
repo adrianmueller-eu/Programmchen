@@ -262,30 +262,34 @@ def reverse_qubit_order(state):
 def partial_trace(rho, retain_qubits):
     """Trace out all qubits not specified in `retain_qubits`."""
     rho = np.array(rho)
+    n = int(np.log2(rho.shape[0])) # number of qubits
+
+    # pre-process retain_qubits
+    if isinstance(retain_qubits, int):
+        retain_qubits = [retain_qubits]
+    dim_r = 2**len(retain_qubits)
+
+    # get qubits to trace out
+    trace_out = np.array(sorted(set(range(n)) - set(retain_qubits)))
+    # remove all qubits >= n
+    trace_out = trace_out[trace_out < n]
+
+    # if rho is a state vector
     if len(rho.shape) == 1:
-        rho = np.outer(rho, rho.conj())
+        st = rho.reshape([2]*n)
+        st = np.tensordot(st, st.conj(), axes=(trace_out,trace_out))
+        return st.reshape(dim_r, dim_r)
+
     assert rho.shape[0] == rho.shape[1], f"Can't trace a matrix of size {rho.shape}"
 
-    n = int(np.log2(rho.shape[0]))
-    if type(retain_qubits) == "int":
-        retain_qubits = [retain_qubits]
-    trace_out = np.array(sorted(set(range(n)) - set(retain_qubits)))
+    if len(trace_out) == n: # trace out all qubits
+        return np.trace(rho).reshape(1,1) # return a 1x1 matrix
+    rho = rho.reshape(np.concatenate(([2]*n, [2]*n), axis=None))
     for qubit in trace_out:
-        rho = _partial_trace(rho, subsystem_dims=[2]*n, subsystem_to_trace_out=qubit)
+        rho = np.trace(rho, axis1=qubit, axis2=qubit+n)
         n -= 1         # one qubit less
         trace_out -= 1 # rename the axes (only "higher" ones are left)
-    return rho
-
-def _partial_trace(rho, subsystem_dims, subsystem_to_trace_out=0):
-    """Traces out `subsystem_to_trace_out`-th qubit from the given density matrix `rho`. Edited version of the one found in https://github.com/cvxpy/cvxpy/issues/563"""
-    dims_ = np.array(subsystem_dims)
-    reshaped_rho = rho.reshape(np.concatenate((dims_, dims_), axis=None))
-    reshaped_rho = np.moveaxis(reshaped_rho, subsystem_to_trace_out, -1)
-    reshaped_rho = np.moveaxis(reshaped_rho, len(dims_)+subsystem_to_trace_out-1, -1)
-    traced_out_rho = np.trace(reshaped_rho, axis1=-2, axis2=-1)
-    dims_untraced = np.delete(dims_, subsystem_to_trace_out)
-    rho_dim = np.prod(dims_untraced)
-    return traced_out_rho.reshape(rho_dim, rho_dim)
+    return rho.reshape(dim_r, dim_r)
 
 def state_trace(state, retain_qubits):
     """This is a pervert version of the partial trace, but for state vectors. I'm not sure about the physical meaning of its output, but it was at times helpful to visualize and interpret subsystems, especially when the density matrix was out of reach (or better: out of memory)."""
@@ -1008,20 +1012,46 @@ def _test_reverse_qubit_order6():
     return True
 
 def _test_partial_trace():
-    rho = np.array([[ 0,  1,  2,  3],
-                [ 4,  5,  6,  7],
-                [ 8,  9, 10, 11],
-                [12, 13, 14, 15]])
+    # known 4x4 matrix
+    rho = np.arange(16).reshape(4,4)
     rhoA_expected = np.array([[ 5, 9], [21, 25]])
-    rhoA_actual   = partial_trace(rho, [0])
+    rhoA_actual   = partial_trace(rho, 0)
     assert np.allclose(rhoA_expected, rhoA_actual), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
 
+    # two separable density matrices
     rhoA = random_density_matrix(2)
-    rhoB = random_density_matrix(2)
+    rhoB = random_density_matrix(3)
     rho = np.kron(rhoA, rhoB)
     rhoA_expected = rhoA
     rhoA_actual   = partial_trace(rho, [0,1])
     assert np.allclose(rhoA_expected, rhoA_actual), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
+
+    # two separable state vectors
+    psiA = random_state(2)
+    psiB = random_state(3)
+    psi = np.kron(psiA, psiB)
+    psiA_expected = np.outer(psiA, psiA.conj())
+    psiA_actual   = partial_trace(psi, [0,1])
+    assert np.allclose(psiA_expected, psiA_actual), f"psi_expected = {psiA_expected}\npsi_actual = {psiA_actual}"
+
+    # total trace
+    st = random_state(3)
+    st_tr = partial_trace(st, [])
+    assert np.allclose(np.array([[1]]), st_tr), f"st_tr = {st_tr} ≠ 1"
+    rho = random_density_matrix(3)
+    rho_tr = partial_trace(rho, [])
+    assert np.allclose(np.array([[1]]), rho_tr), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
+
+    # retain all qubits
+    st = random_state(3)
+    st_tr = partial_trace(st, [0,1,2])
+    st_expected = np.outer(st, st.conj())
+    assert st_expected.shape == st_tr.shape, f"st_expected.shape = {st_expected.shape} ≠ st_tr.shape = {st_tr.shape}"
+    assert np.allclose(st_expected, st_tr), f"st_expected = {st_expected} ≠ st_tr = {st_tr}"
+    rho = random_density_matrix(2)
+    rho_tr = partial_trace(rho, [0,1])
+    assert rho.shape == rho_tr.shape, f"rho.shape = {rho.shape} ≠ rho_tr.shape = {rho_tr.shape}"
+    assert np.allclose(rho, rho_tr), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
 
     return True
 
