@@ -3,7 +3,7 @@ import numpy as np
 from .mathlib import is_complex, is_symmetric, normalize, int_sqrt
 from .utils import *
 
-def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pltargs):
+def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", xlog=False, ylog=False, **pltargs):
     """Uses magic to create pretty plots."""
 
     # make it a bit intelligent
@@ -58,6 +58,10 @@ def plot(x,y=None, fmt="-", figsize=(10,8), xlabel="", ylabel="", title="", **pl
     # plot
     if len(plt.get_fignums()) == 0:
         plt.figure(figsize=figsize)
+    if xlog:
+        plt.xscale('log')
+    if ylog:
+        plt.yscale('log')
     if fmt == ".":
         if y is None:
             y = x
