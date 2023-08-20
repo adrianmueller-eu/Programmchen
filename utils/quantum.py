@@ -3,7 +3,7 @@ import itertools
 from functools import reduce
 import matplotlib.pyplot as plt
 import scipy
-from .mathlib import normalize, matexp, matlog
+from .mathlib import normalize, matexp, matlog, is_psd
 from .plot import colorize_complex
 
 #################
@@ -498,6 +498,11 @@ def von_Neumann_entropy(state):
 def entanglement_entropy(state, subsystem_qubits):
     """Calculate the entanglement entropy of a state vector with respect to the given subsystem."""
     return von_Neumann_entropy(partial_trace(state, subsystem_qubits))
+
+def is_dm(rho):
+    """Check if matrix `rho` is a density matrix."""
+    rho = np.array(rho)
+    return is_psd(rho) and np.allclose(np.trace(rho), 1)
 
 ###################
 ### Hamiltonian ###
