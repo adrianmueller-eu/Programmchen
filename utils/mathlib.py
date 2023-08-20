@@ -197,7 +197,9 @@ def choice(a, size=None, replace=True, p=None):
     else:
         return np.random.choice(a, size=size, replace=replace, p=p)
 
-def random_vec(size, limits=(0,1)):
+def random_vec(size, limits=(0,1), complex=False):
+    if complex:
+        return random_vec(size, limits=limits) + 1j*random_vec(size, limits=limits)
     return np.random.uniform(limits[0], limits[1], size=size)
 
 def random_symmetric(size):
@@ -216,7 +218,7 @@ def random_orthogonal(size):
 def random_hermitian(size):
     if not hasattr(size, '__len__'):
         size = (size, size)
-    a = random_vec(size) + 1j*random_vec(size)
+    a = random_vec(size, complex=True)
     return (a + a.conj().T)/2
 
 def random_unitary(size):
