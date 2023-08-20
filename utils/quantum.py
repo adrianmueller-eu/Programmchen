@@ -1,5 +1,6 @@
 import numpy as np
 import itertools
+from functools import reduce
 import matplotlib.pyplot as plt
 import scipy
 from .mathlib import normalize, matexp, matlog
@@ -502,8 +503,20 @@ def entanglement_entropy(state, subsystem_qubits):
 ### Hamiltonian ###
 ###################
 
-def parse_hamiltonian(hamiltonian, sparse=False):
+matmap_np, matmap_sp = None, None
+
+def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0):
     """Parse a string representation of a Hamiltonian into a matrix representation. The result is guaranteed to be Hermitian.
+
+    Parameters:
+        hamiltonian (str): The Hamiltonian to parse.
+        sparse (bool): Whether to use sparse matrices (csr_matrix) or dense matrices (numpy.array).
+        scaling (float): A constant factor to scale the Hamiltonian by.
+        buffer (dict | bool): A dictionary to store calculated chunks in. If `None` or `True`, it defaults to the global `matmap_np` or `matmap_sp` (depending on `sparse`). If `False`, the buffer is disabled.
+        max_buffer_n (int): The maximum length (number of qubits) for new chunks to store in the buffer (default: 0). If `0`, no new chunks will be stored in the buffer.
+
+    Returns:
+        numpy.ndarray | scipy.sparse.csr_matrix: The matrix representation of the Hamiltonian.
 
     Example:
     >>> parse_hamiltonian('0.5*(XX + YY + ZZ + II)') # SWAP
@@ -519,12 +532,71 @@ def parse_hamiltonian(hamiltonian, sparse=False):
     >>> parse_hamiltonian('0.5*(II + ZI - ZX + IX)') # CNOT
 
     """
-    def s(gate):
-        if gate == "H":
-            gate_matrix = Had
-        else:
-            gate_matrix = globals()[gate]
-        return gate_matrix if not sparse else scipy.sparse.bsr_array(gate_matrix)
+    kron = scipy.sparse.kron if sparse else np.kron
+
+    # Initialize the matrix map
+    global matmap_np, matmap_sp
+    if matmap_np is None or matmap_sp is None:
+        # numpy versions
+        matmap_np = {
+            "H": Had,
+            "X": X,
+            "Y": Y,
+            "Z": Z,
+            "I": I,
+            "II": np.eye(2**2, dtype=complex),
+            "ZZ": np.kron(Z, Z),
+            "IX": np.kron(I, X),
+            "XI": np.kron(X, I),
+            "III": np.eye(2**3, dtype=complex),
+            "IIII": np.eye(2**4, dtype=complex),
+            "IIIII": np.eye(2**5, dtype=complex),
+            "IIIIII": np.eye(2**6, dtype=complex),
+            "IIIIIII": np.eye(2**7, dtype=complex),
+            "IIIIIIII": np.eye(2**8, dtype=complex),
+            "IIIIIIIII": np.eye(2**9, dtype=complex),
+            "IIIIIIIIII": np.eye(2**10, dtype=complex),
+        }
+
+        # sparse versions
+        matmap_sp = {k: scipy.sparse.csr_array(v) for k, v in matmap_np.items()}
+
+    matmap = matmap_sp if sparse else matmap_np
+
+    if buffer is None or buffer is True:
+        buffer = matmap
+
+    def calculate_chunk_matrix(chunk, sparse=False, scaling=1):
+        if buffer is not False:
+            if chunk in buffer:
+                return buffer[chunk] if scaling == 1 else scaling * buffer[chunk]
+            if len(chunk) == 1:
+                return matmap[chunk[0]] if scaling == 1 else scaling * matmap[chunk[0]]
+            # Check if a part of the chunk has already been calculated
+            for i in range(len(chunk)-1, 1, -1):
+                for j in range(len(chunk)-i+1):
+                    subchunk = chunk[j:j+i]
+                    if subchunk in buffer:
+                        # If so, calculate the rest of the chunk recursively
+                        parts = [chunk[:j], subchunk, chunk[j+i:]]
+                        # remove empty chunks
+                        parts = [c for c in parts if c != ""]
+                        # See where to apply the scaling
+                        shortest = min(parts, key=len)
+                        # Calculate each in tomultiply recursively
+                        for i, c in enumerate(parts):
+                            parts[i] = calculate_chunk_matrix(c, sparse=sparse, scaling=scaling if c == shortest else 1)
+                        return reduce(kron, parts)
+
+        # Calculate the chunk matrix gate by gate
+        chunk_matrix = scaling * matmap[chunk[0]]
+        for gate in chunk[1:]:
+            gate = matmap[gate]
+            chunk_matrix = kron(chunk_matrix, gate)
+
+        if buffer is not False and len(chunk) <= max_buffer_n:
+            buffer[chunk] = chunk_matrix
+        return chunk_matrix
 
     # Remove whitespace
     hamiltonian = hamiltonian.replace(" ", "")
@@ -538,9 +610,20 @@ def parse_hamiltonian(hamiltonian, sparse=False):
     part = ""
     parts = []
     depth = 0
-    for c in hamiltonian:
+    current_part_weight = ""
+    for i, c in enumerate(hamiltonian):
         if c == "(":
             depth += 1
+            # search backwards for the weight
+            weight = ""
+            for j in range(i-1, -1, -1):
+                if hamiltonian[j] in ["+", "-"]:
+                    weight += hamiltonian[j]
+                    break
+                weight += hamiltonian[j]
+            weight = weight[::-1]
+            if weight != "":
+                current_part_weight = weight
         elif c == ")":
             depth -= 1
         if depth > 0:
@@ -552,14 +635,21 @@ def parse_hamiltonian(hamiltonian, sparse=False):
                 assert complex(part).imag == 0, "Complex coefficients lead to non-hermitian matrices"
             except ValueError:
                 pass
-            parts.append(part)
+            parts.append((current_part_weight, part))
             part = ""
+            current_part_weight = ""
 
     # Replace parts in parentheses with a placeholder
-    for i, part in enumerate(parts):
-        hamiltonian = hamiltonian.replace(part, f"part{i}", 1)
+    for i, (weight, part) in enumerate(parts):
+        hamiltonian = hamiltonian.replace(weight+part, f"part{i}", 1)
+        if weight in ["", "+", "-"]:
+            weight += "1"
+        if weight[-1] == "*":
+            weight = weight[:-1]
+        if weight[-1] == "*":
+            weight = weight[:-1]
         # Calculate the part recursively
-        parts[i] = parse_hamiltonian(part[1:-1], sparse=sparse)
+        parts[i] = parse_hamiltonian(part[1:-1], sparse=sparse, scaling=float(weight), buffer=buffer, max_buffer_n=max_buffer_n)
 
     # Parse the rest of the Hamiltonian
     chunks = hamiltonian.split("+")
@@ -578,9 +668,12 @@ def parse_hamiltonian(hamiltonian, sparse=False):
             n = len(first_chunk)
 
     if sparse:
-        H = scipy.sparse.bsr_array((2**n, 2**n), dtype=complex)
+        H = scipy.sparse.csr_array((2**n, 2**n), dtype=complex)
     else:
+        if n > 10:
+            raise ValueError(f"Using a dense matrix for a {n}-qubit Hamiltonian is not recommended. Use sparse=True.")
         H = np.zeros((2**n, 2**n), dtype=complex)
+
     for chunk in chunks:
 
         # print(chunk, hamiltonian)
@@ -589,24 +682,22 @@ def parse_hamiltonian(hamiltonian, sparse=False):
             continue
         # Parse the weight of the chunk
         try:
-            if "*" in chunk:
-                weight = complex(chunk.split("*")[0])
+            if len(chunk) == n:
+                weight = 1
+            elif "*" in chunk:
+                weight = float(chunk.split("*")[0])
                 chunk = chunk.split("*")[1]
-            elif "part" in chunk and chunk[0] != "p":
-                weight = complex(chunk.split("part")[0])
-                chunk = "part" + chunk.split("part")[1]
+            elif "part" in chunk:
+                weight = 1
+            elif len(chunk) == n+1 and chunk[0] in ["-", "+"]:
+                weight = float(chunk[0] + "1")
+                chunk = chunk[1:]
             else:
-                weight = complex(chunk)
-                chunk_matrix = np.eye(2**n)
+                weight = float(chunk)
+                chunk_matrix = weight * np.eye(2**n, dtype=complex)
         except ValueError:
-            if chunk[0] == "-":
-                weight = -1
-                chunk = chunk[1:]
-            elif chunk[0] == "+":
-                weight = 1
-                chunk = chunk[1:]
-            else:
-                weight = 1
+                raise ValueError(f"Invalid chunk for size {n}: {chunk}")
+
         # If the chunk is a part, add it to the Hamiltonian
         if chunk_matrix is not None:
             pass
@@ -616,18 +707,16 @@ def parse_hamiltonian(hamiltonian, sparse=False):
             if len(chunk) != n:
                 raise ValueError(f"Gate count must be {n} but was {len(chunk)} for chunk \"{chunk}\"")
 
-            # Get the matrix representation of the chunk
-            chunk_matrix = s(chunk[0])
-            for gate in chunk[1:]:
-                if sparse:
-                    chunk_matrix = scipy.sparse.kron(chunk_matrix, s(gate))
-                else:
-                    chunk_matrix = np.kron(chunk_matrix, s(gate))
+            chunk_matrix = calculate_chunk_matrix(chunk, sparse=sparse, scaling = scaling * weight)
 
         # Add the chunk to the Hamiltonian
-        # print("chunk", chunk, hamiltonian, parts)
-        # print(type(H), "+=", weight, type(chunk_matrix))
-        H += weight * chunk_matrix
+        # print("chunk", chunk, parts, scaling)
+        # print(hamiltonian, "+=", weight, chunk)
+        # print(type(H), H.dtype, type(chunk_matrix), chunk_matrix.dtype)
+        if len(chunks) == 1:
+            H = chunk_matrix
+        else:
+            H += chunk_matrix
 
     if sparse:
         assert np.allclose(H.data, H.conj().T.data), f"The given Hamiltonian {hamiltonian} is not Hermitian: {H.data}"
