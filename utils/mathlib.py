@@ -227,6 +227,12 @@ def random_unitary(size):
     a = random_hermitian(size)
     return matexp(1j*a)
 
+def random_psd(size):
+    if not hasattr(size, '__len__'):
+        size = (size, size)
+    a = random_vec(size, complex=True)
+    return a @ a.conj().T
+
 ### Integers & Primes
 
 def prime_factors(n):
@@ -460,6 +466,7 @@ def test_mathlib_all():
         _test_is_unitary,
         _test_random_unitary,
         _test_is_psd,
+        _test_random_psd,
         _test_rad,
         _test_deg,
         _test_matexp,
@@ -573,6 +580,11 @@ def _test_is_psd():
     # sum(p) can't be larger than 5 here, so make the trace negative to guarantee negative eigenvalues
     b = a - 5
     assert not is_psd(b)
+    return True
+
+def _test_random_psd():
+    a = random_psd(5)
+    assert is_psd(a)
     return True
 
 def _test_rad():
