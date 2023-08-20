@@ -559,13 +559,19 @@ def _test_random_unitary():
     return True
 
 def _test_is_psd():
+    # A @ A^\dagger => PSD
+    a = random_vec((5,5), complex=True)
+    a = a @ a.conj().T
+    assert is_psd(a)
+
+    # unitarily diagonalizable (= normal) + positive eigenvalues <=> PSD
     U = random_unitary(5)
     p = np.random.rand(5)
     a = U @ np.diag(p) @ U.conj().T
     assert is_psd(a)
 
-    p -= 1
-    b = U @ np.diag(p) @ U.conj().T
+    # sum(p) can't be larger than 5 here, so make the trace negative to guarantee negative eigenvalues
+    b = a - 5
     assert not is_psd(b)
     return True
 
