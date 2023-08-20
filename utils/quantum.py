@@ -823,6 +823,13 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
         J = np.array(J)
         if J.shape == (2,):
             J = np.random.uniform(J[0], J[1], couplings)
+        if kind == '1d' and J.shape == (n_qubits, n_qubits):
+            # get the offset k=1 diagonal (n_qubits-1 elements)
+            idxs = np.where(np.eye(n_qubits, k=1))
+            if circular:
+                # add the edge element
+                idxs = (np.append(idxs[0], 0), np.append(idxs[1], n_qubits-1))
+            J = J[idxs]
         assert J.shape == couplings, f"For kind={kind}, J must be a scalar, 2-element vector, or matrix of shape {couplings}, but is {J.shape}"
     elif isinstance(J, dict) and kind != 'full':
         raise ValueError(f"For kind={kind}, J must not be a dict!")
