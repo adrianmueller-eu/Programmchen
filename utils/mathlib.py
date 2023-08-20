@@ -179,9 +179,9 @@ def su(n, include_identity=False):
 def SU(n):
     """ Special unitary group. Returns n^2-1 functions that take an angle and return the corresponding complex rotation matrix """
     generators = su(n)
-    def rotmat(i, phi):
-        return matexp(-1j*phi/2*generators[i])
-    return [lambda phi: rotmat(i, phi) for i in range(len(generators))]
+    def rotmat(G):
+        return lambda phi: matexp(-1j*phi/2*G)
+    return [rotmat(G) for G in generators]
 
 ### Random
 
@@ -467,6 +467,7 @@ def test_mathlib_all():
         _test_normalize,
         _test_softmax,
         _test_su,
+        _test_SU,
         _test_prime_factors,
         _test_closest_prime_factors_to,
         _test_int_sqrt,
@@ -638,6 +639,26 @@ def _test_su():
     # check if all generators are orthogonal
     for i, (A,B) in enumerate(combinations(sun,2)):
         assert np.allclose(np.trace(A.conj().T @ B), 0), f"Pair {i} is not orthogonal!"
+
+    return True
+
+def _test_SU():
+    n = 4
+    SUn = SU(n)
+
+    # check the number of generators
+    n_expected = n**2-1
+    assert len(SUn) == n_expected, f"Number of generators is {len(SUn)}, but should be {n_expected}!"
+
+    # check if all generators are unitary
+    for i, A in enumerate(SUn):
+        random_angle = np.random.randn()
+        assert is_unitary(A(random_angle)), f"Generator {i} is not unitary! ({random_angle})"
+
+    # check if no two generators are the same
+    for i, (A,B) in enumerate(combinations(SUn,2)):
+        random_angle = np.random.randn()
+        assert not np.allclose(A(random_angle), B(random_angle)), f"Pair {i} is not different! ({random_angle})"
 
     return True
 
