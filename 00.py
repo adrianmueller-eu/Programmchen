@@ -38,8 +38,9 @@ except:
 # np.set_printoptions(precision=3, suppress=True) # suppress == no scientific notation
 # plt.style.use('ggplot') # nicer plots?
 if "COLUMNS" in os.environ:
-    cols = os.environ["COLUMNS"]
-    np.set_printoptions(linewidth=int(cols))
+    cols = int(os.environ["COLUMNS"])
+    if cols != 0:
+        np.set_printoptions(linewidth=cols)
 
 def bins(data):
     return int(np.ceil(np.sqrt(len(data))))
