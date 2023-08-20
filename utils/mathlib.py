@@ -144,8 +144,9 @@ def SO(n):
         return a
     return [lambda phi: rotmat(i, j, phi) for i,j in combinations(range(n), 2)]
 
-def su(n):
-    """ The Lie algebra associated with the Lie group SU(n). Returns the n^2-1 generators (traceless Hermitian matrices) of the group. """
+def su(n, include_identity=False):
+    """ The Lie algebra associated with the Lie group SU(n). Returns the n^2-1 generators (traceless Hermitian matrices) of the group. Use `include_identity = True` to return a complete orthogonal basis of hermitian `n x n` matrices. """
+
     basis = []
     # Generate the off-diagonal matrices
     for i in range(n):
@@ -169,6 +170,9 @@ def su(n):
         if i > 1:
             m = np.sqrt(2/(i*(i+1))) * m
         basis.append(m)
+
+    if include_identity:
+        basis.append(np.eye(n))
 
     return basis
 
