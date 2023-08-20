@@ -484,6 +484,23 @@ def state(specification):
         state[int(key, 2)] = specification[key]
     return normalize(state)
 
+def op(specification1, specification2=None):
+    if type(specification1) == str:
+        s1 = state(specification1)
+    elif hasattr(specification1, '__len__'):
+        s1 = np.array(specification1)
+    else:
+        raise ValueError(f"Unknown specification: {specification1}")
+    if specification2 is None:
+        s2 = s1
+    elif type(specification2) == str:
+        s2 = state(specification2)
+    elif hasattr(specification2, '__len__'):
+        s2 = np.array(specification2)
+    else:
+        raise ValueError(f"Unknown specification: {specification2}")
+    return np.outer(s1, s2.conj())
+
 def probs(state):
     """Calculate the probabilities of measuring a state vector in the standard basis."""
     return np.abs(state)**2
