@@ -325,6 +325,12 @@ def pdcolor(df, threshold=None, minv=None, maxv=None, colors=('#ff0000', '#fffff
         colors: A list of colors to use. The first color is used for the lowest values, the last color for the highest values. If `threshold` is given, the first and last color are used for values below and above the threshold, respectively. Else a linear interpolation is used.
         tril_if_symmetric: If True, only the upper triangle is colored if the matrix is symmetric.
         bi: If True, the first color is ignored (i.e., in the default settings, uses white for the lowest values instead of red).
+
+    Returns:
+        A styled DataFrame.
+
+    Example: pdcolor(pd.DataFrame(np.random.rand(10,10)))
+
     """
     def blackorwhite(r,g=None,b=None):
         if g is None:
@@ -352,7 +358,9 @@ def pdcolor(df, threshold=None, minv=None, maxv=None, colors=('#ff0000', '#fffff
     else:
         if len(colors) < 2:
             raise ValueError("Please give at least two colors!")
-        if minv is None and maxv is None and len(df.columns) == len(df.index) and (df.columns == df.index).all(): # corr matrix!
+        if minv is None and maxv is None \
+                    and len(df.columns) == len(df.index) and (df.columns == df.index).all() \
+                    and df.max().max() <= 1 and df.min().min() >= -1: # corr matrix!
             maxv = 1
             minv = -1
         if not maxv:
