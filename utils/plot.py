@@ -311,8 +311,8 @@ def perceived_brightness(r,g,b,a=None): # a is ignored
 
 # coloring for pd.DateFrame
 # todo: use package "webcolors" (e.g. name to rgb)
-def pdcolor(df, threshold=None, minv=None, maxv=None, colors=['#ff0000', '#ffffff', '#069900'], tril_if_symmetric=True, bi=False):
-    """Color a pandas DataFrame according to its values.
+def pdcolor(df, threshold=None, minv=None, maxv=None, colors=('#ff0000', '#ffffff', '#069900'), tril_if_symmetric=True, bi=False):
+    """Color a pandas DataFrame according to its values. Only works for Jupyter notebooks.
     If `minv` and `maxv` are given, they are used instead of the minimum and maximum values.
     If `tril_if_symmetric` is True, the upper triangle is colored if the matrix is symmetric.
     If `bi` is True, the first color is ignored.
