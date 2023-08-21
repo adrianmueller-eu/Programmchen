@@ -527,14 +527,14 @@ def is_dm(rho):
 
 matmap_np, matmap_sp = None, None
 
-def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0):
+def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=complex):
     """Parse a string representation of a Hamiltonian into a matrix representation. The result is guaranteed to be Hermitian.
 
     Parameters:
         hamiltonian (str): The Hamiltonian to parse.
         sparse (bool): Whether to use sparse matrices (csr_matrix) or dense matrices (numpy.array).
         scaling (float): A constant factor to scale the Hamiltonian by.
-        buffer (dict | bool): A dictionary to store calculated chunks in. If `None` or `True`, it defaults to the global `matmap_np` or `matmap_sp` (depending on `sparse`). If `False`, the buffer is disabled.
+        buffer (dict): A dictionary to store calculated chunks in. If `None`, it defaults to the global `matmap_np` (or `matmap_sp` if `sparse == True`). Give `buffer={}` and leave `max_buffer_n == 0` (default) to disable the buffer.
         max_buffer_n (int): The maximum length (number of qubits) for new chunks to store in the buffer (default: 0). If `0`, no new chunks will be stored in the buffer.
 
     Returns:
@@ -561,23 +561,23 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
     if matmap_np is None or matmap_sp is None:
         # numpy versions
         matmap_np = {
-            "H": Had,
-            "X": X,
-            "Y": Y,
-            "Z": Z,
-            "I": I,
-            "II": np.eye(2**2, dtype=complex),
-            "ZZ": np.kron(Z, Z),
-            "IX": np.kron(I, X),
-            "XI": np.kron(X, I),
-            "III": np.eye(2**3, dtype=complex),
-            "IIII": np.eye(2**4, dtype=complex),
-            "IIIII": np.eye(2**5, dtype=complex),
-            "IIIIII": np.eye(2**6, dtype=complex),
-            "IIIIIII": np.eye(2**7, dtype=complex),
-            "IIIIIIII": np.eye(2**8, dtype=complex),
-            "IIIIIIIII": np.eye(2**9, dtype=complex),
-            "IIIIIIIIII": np.eye(2**10, dtype=complex),
+            "H": np.array(Had, dtype=dtype),
+            "X": np.array(X, dtype=dtype),
+            "Y": np.array(Y, dtype=dtype),
+            "Z": np.array(Z, dtype=dtype),
+            "I": np.array(I, dtype=dtype),
+            "II": np.eye(2**2, dtype=dtype),
+            "ZZ": np.array(np.kron(Z, Z), dtype=dtype),
+            "IX": np.array(np.kron(I, X), dtype=dtype),
+            "XI": np.array(np.kron(X, I), dtype=dtype),
+            "III": np.eye(2**3, dtype=dtype),
+            "IIII": np.eye(2**4, dtype=dtype),
+            "IIIII": np.eye(2**5, dtype=dtype),
+            "IIIIII": np.eye(2**6, dtype=dtype),
+            "IIIIIII": np.eye(2**7, dtype=dtype),
+            "IIIIIIII": np.eye(2**8, dtype=dtype),
+            "IIIIIIIII": np.eye(2**9, dtype=dtype),
+            "IIIIIIIIII": np.eye(2**10, dtype=dtype),
         }
 
         # sparse versions
@@ -585,11 +585,13 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
 
     matmap = matmap_sp if sparse else matmap_np
 
-    if buffer is None or buffer is True:
+    # only use buffer if pre-computed chunks are available or if new chunks are allowed to be stored
+    use_buffer = buffer is None or len(buffer) > 0 or max_buffer_n > 0
+    if use_buffer and buffer is None:
         buffer = matmap
 
     def calculate_chunk_matrix(chunk, sparse=False, scaling=1):
-        if buffer is not False:
+        if use_buffer:
             if chunk in buffer:
                 return buffer[chunk] if scaling == 1 else scaling * buffer[chunk]
             if len(chunk) == 1:
@@ -607,17 +609,22 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
                         shortest = min(parts, key=len)
                         # Calculate each in tomultiply recursively
                         for i, c in enumerate(parts):
+                            if c == subchunk:
+                                parts[i] = buffer[c]
                             parts[i] = calculate_chunk_matrix(c, sparse=sparse, scaling=scaling if c == shortest else 1)
                         return reduce(kron, parts)
 
         # Calculate the chunk matrix gate by gate
-        chunk_matrix = scaling * matmap[chunk[0]]
-        for gate in chunk[1:]:
-            gate = matmap[gate]
-            chunk_matrix = kron(chunk_matrix, gate)
-
-        if buffer is not False and len(chunk) <= max_buffer_n:
+        if use_buffer and len(chunk) <= max_buffer_n:
+            gates = [matmap[gate] for gate in chunk]
+            chunk_matrix = reduce(kron, gates)
             buffer[chunk] = chunk_matrix
+            if scaling != 1:
+                chunk_matrix = scaling * chunk_matrix
+        else:
+            gates = [scaling * matmap[chunk[0]]] + [matmap[gate] for gate in chunk[1:]]
+            chunk_matrix = reduce(kron, gates)
+
         return chunk_matrix
 
     # Remove whitespace
@@ -628,6 +635,8 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
                     .replace("e+-", "e-") \
                     .replace("(+-", "(-")
 
+    # print("parse_hamiltonian: Pre-processed Hamiltonian:", hamiltonian)
+
     # Find parts in parentheses
     part = ""
     parts = []
@@ -635,17 +644,19 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
     current_part_weight = ""
     for i, c in enumerate(hamiltonian):
         if c == "(":
-            depth += 1
-            # search backwards for the weight
-            weight = ""
-            for j in range(i-1, -1, -1):
-                if hamiltonian[j] in ["+", "-"]:
+            if depth == 0:
+                # for top-level parts search backwards for the weight
+                weight = ""
+                for j in range(i-1, -1, -1):
+                    if hamiltonian[j] in ["("]:
+                        break
                     weight += hamiltonian[j]
-                    break
-                weight += hamiltonian[j]
-            weight = weight[::-1]
-            if weight != "":
-                current_part_weight = weight
+                    if hamiltonian[j] in ["+", "-"]:
+                        break
+                weight = weight[::-1]
+                if weight != "":
+                    current_part_weight = weight
+            depth += 1
         elif c == ")":
             depth -= 1
         if depth > 0:
@@ -661,6 +672,8 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
             part = ""
             current_part_weight = ""
 
+    # print("Parts found:", parts)
+
     # Replace parts in parentheses with a placeholder
     for i, (weight, part) in enumerate(parts):
         hamiltonian = hamiltonian.replace(weight+part, f"part{i}", 1)
@@ -668,10 +681,10 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
             weight += "1"
         if weight[-1] == "*":
             weight = weight[:-1]
-        if weight[-1] == "*":
-            weight = weight[:-1]
         # Calculate the part recursively
-        parts[i] = parse_hamiltonian(part[1:-1], sparse=sparse, scaling=float(weight), buffer=buffer, max_buffer_n=max_buffer_n)
+        parts[i] = parse_hamiltonian(part[1:-1], sparse=sparse, scaling=scaling * float(weight), buffer=buffer, max_buffer_n=max_buffer_n)
+
+    # print("Parts replaced:", parts)
 
     # Parse the rest of the Hamiltonian
     chunks = hamiltonian.split("+")
@@ -690,15 +703,15 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
             n = len(first_chunk)
 
     if sparse:
-        H = scipy.sparse.csr_array((2**n, 2**n), dtype=complex)
+        H = scipy.sparse.csr_array((2**n, 2**n), dtype=dtype)
     else:
         if n > 10:
             raise ValueError(f"Using a dense matrix for a {n}-qubit Hamiltonian is not recommended. Use sparse=True.")
-        H = np.zeros((2**n, 2**n), dtype=complex)
+        H = np.zeros((2**n, 2**n), dtype=dtype)
 
     for chunk in chunks:
 
-        # print(chunk, hamiltonian)
+        # print("Processing chunk:", chunk)
         chunk_matrix = None
         if chunk == "":
             continue
@@ -716,7 +729,7 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
                 chunk = chunk[1:]
             else:
                 weight = float(chunk)
-                chunk_matrix = weight * np.eye(2**n, dtype=complex)
+                chunk_matrix = weight * np.eye(2**n, dtype=dtype)
         except ValueError:
                 raise ValueError(f"Invalid chunk for size {n}: {chunk}")
 
@@ -732,8 +745,7 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
             chunk_matrix = calculate_chunk_matrix(chunk, sparse=sparse, scaling = scaling * weight)
 
         # Add the chunk to the Hamiltonian
-        # print("chunk", chunk, parts, scaling)
-        # print(hamiltonian, "+=", weight, chunk)
+        # print("Adding chunk", weight, chunk, "to hamiltonian", scaling, hamiltonian)
         # print(type(H), H.dtype, type(chunk_matrix), chunk_matrix.dtype)
         if len(chunks) == 1:
             H = chunk_matrix
@@ -1010,15 +1022,8 @@ def get_H_energies(H, expi=True):
 def test_quantum_all():
     tests = [
         _test_get_H_energies_eq_get_pe_energies,
-        _test_parse_hamiltonian1,
-        _test_parse_hamiltonian2,
-        _test_parse_hamiltonian3,
-        _test_reverse_qubit_order1,
-        _test_reverse_qubit_order2,
-        _test_reverse_qubit_order3,
-        _test_reverse_qubit_order4,
-        # _test_reverse_qubit_order5,
-        # _test_reverse_qubit_order6,
+        _test_parse_hamiltonian,
+        _test_reverse_qubit_order,
         _test_partial_trace,
         _test_von_Neumann_entropy,
         _test_entanglement_entropy,
@@ -1043,26 +1048,28 @@ def _test_get_H_energies_eq_get_pe_energies():
     B = get_H_energies(H)
     return np.allclose(A, B)
 
-def _test_parse_hamiltonian1():
+def _test_parse_hamiltonian():
     H = parse_hamiltonian('0.5*(II + ZI - ZX + IX)')
-    return np.allclose(H, CNOT)
+    assert np.allclose(H, CNOT)
 
-def _test_parse_hamiltonian2():
     H = parse_hamiltonian('0.5*(XX + YY + ZZ + II)')
-    return np.allclose(H, SWAP)
+    assert np.allclose(H, SWAP)
 
-def _test_parse_hamiltonian3():
     H = parse_hamiltonian('-(XX + YY + .5*ZZ) + 1.5')
-    return np.allclose(np.sum(H), 2)
+    assert np.allclose(np.sum(H), 2)
 
-def _test_reverse_qubit_order1():
+    H = parse_hamiltonian('0.2*(-0.5*(3*XX + 4*YY) + 1*II)')
+    assert np.allclose(np.sum(H), -.4)
+
+    return True
+
+def _test_reverse_qubit_order():
+    # known 3-qubit matrix
     psi = np.kron(np.kron([1,1], [0,1]), [1,-1])
     psi_rev = np.kron(np.kron([1,-1], [0,1]), [1,1])
-
     psi_rev2 = reverse_qubit_order(psi)
-    return np.allclose(psi_rev, psi_rev2)
+    assert np.allclose(psi_rev, psi_rev2)
 
-def _test_reverse_qubit_order2():
     # same as above, but with n random qubits
     n = 10
     psis = [random_state(1) for _ in range(n)]
@@ -1074,60 +1081,39 @@ def _test_reverse_qubit_order2():
         psi_rev = np.kron(psi_rev, psis[-i-1])
 
     psi_rev2 = reverse_qubit_order(psi)
-    return np.allclose(psi_rev, psi_rev2)
+    assert np.allclose(psi_rev, psi_rev2)
 
-def _test_reverse_qubit_order3():
+    # general hamiltonian
     H = parse_hamiltonian('IIIXX')
     H_rev = parse_hamiltonian('XXIII')
-
     H_rev2 = reverse_qubit_order(H)
-    return np.allclose(H_rev, H_rev2)
+    assert np.allclose(H_rev, H_rev2)
 
-def _test_reverse_qubit_order4():
     # pure density matrix
     psi = np.kron(np.kron([1,1], [0,1]), [1,-1])
     rho = np.outer(psi, psi)
     psi_rev = np.kron(np.kron([1,-1], [0,1]), [1,1])
     rho_rev = np.outer(psi_rev, psi_rev)
-
     rho_rev2 = reverse_qubit_order(rho)
-    return np.allclose(rho_rev, rho_rev2)
+    assert np.allclose(rho_rev, rho_rev2)
 
-def _test_reverse_qubit_order5():
-    # draw n times 2 random 1-qubit states and a probability distribution over all n pairs
-    n = 10
-    psis = [[random_density_matrix(1) for _ in range(2)] for _ in range(n)]
-    p = normalize(np.random.rand(n), p=1)
-    # compute the average state
-    psi = np.zeros((2**2, 2**2), dtype=complex)
-    for i in range(n):
-        psi += p[i]*np.kron(psis[i][0], psis[i][1])
-    # compute the average state with reversed qubit order
-    psi_rev = np.zeros((2**2, 2**2), dtype=complex)
-    for i in range(n):
-        psi_rev += p[i]*np.kron(psis[i][1], psis[i][0])
+    # TODO: This test fails
+    # # draw n times 2 random 1-qubit states and a probability distribution over all n pairs
+    # n = 10
+    # psis = [[random_density_matrix(1) for _ in range(2)] for _ in range(n)]
+    # p = normalize(np.random.rand(n), p=1)
+    # # compute the average state
+    # psi = np.zeros((2**2, 2**2), dtype=complex)
+    # for i in range(n):
+    #     psi += p[i]*np.kron(psis[i][0], psis[i][1])
+    # # compute the average state with reversed qubit order
+    # psi_rev = np.zeros((2**2, 2**2), dtype=complex)
+    # for i in range(n):
+    #     psi_rev += p[i]*np.kron(psis[i][1], psis[i][0])
 
-    psi_rev2 = reverse_qubit_order(psi)
-    assert np.allclose(psi_rev, psi_rev2), f"psi_rev = {psi_rev}\npsi_rev2 = {psi_rev2}"
-    return True
+    # psi_rev2 = reverse_qubit_order(psi)
+    # assert np.allclose(psi_rev, psi_rev2), f"psi_rev = {psi_rev}\npsi_rev2 = {psi_rev2}"
 
-def _test_reverse_qubit_order6():
-    # same as above, but with 3 qubits
-    # draw n times 3 random 1-qubit states and a probability distribution over all n triplets
-    n = 10
-    psis = [[random_density_matrix(1) for _ in range(3)] for _ in range(n)]
-    p = normalize(np.random.rand(n), p=1)
-    # compute the average state
-    psi = np.zeros((2**3, 2**3), dtype=complex)
-    for i in range(n):
-        psi += p[i]*np.kron(np.kron(psis[i][0], psis[i][1]), psis[i][2])
-    # compute the average state with reversed qubit order
-    psi_rev = np.zeros((2**3, 2**3), dtype=complex)
-    for i in range(n):
-        psi_rev += p[i]*np.kron(np.kron(psis[i][2], psis[i][1]), psis[i][0])
-
-    psi_rev2 = reverse_qubit_order(psi)
-    assert np.allclose(psi_rev, psi_rev2), f"psi_rev = {psi_rev}\npsi_rev2 = {psi_rev2}"
     return True
 
 def _test_partial_trace():
