@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from math import factorial, sqrt
 from itertools import combinations, chain
+import scipy.sparse as sp
 
 ### Tests
 
@@ -144,26 +145,41 @@ def SO(n):
         return a
     return [lambda phi: rotmat(i, j, phi) for i,j in combinations(range(n), 2)]
 
-def su(n, include_identity=False):
-    """ The Lie algebra associated with the Lie group SU(n). Returns the n^2-1 generators (traceless Hermitian matrices) of the group. Use `include_identity = True` to return a complete orthogonal basis of hermitian `n x n` matrices. """
+def su(n, include_identity=False, sparse=False):
+    """ The Lie algebra associated with the Lie group SU(n). Returns the n^2-1 generators (traceless Hermitian matrices) of the group. Use `include_identity = True` to return a complete orthogonal basis of hermitian `n x n` matrices.
+
+    Parameters
+        n (int): The dimension of the matrices.
+        include_identity (bool, optional): If True, include the identity matrix in the basis (default: False).
+        sparse (bool, optional): If True, return a sparse representation of the matrices (default: False).
+
+    Returns
+        list[ np.ndarray | scipy.sparse.csr_array ]: A list of `n^2-1` matrices that form a basis of the Lie algebra.
+    """
+    if sparse:
+        base = sp.lil_array((n,n), dtype=complex)
+    else:
+        if n > 100:
+            print(f"Warning: For `n = {n} > 100`, it is recommended to use `sparse=True` to save memory.")
+        base = np.zeros((n,n), dtype=complex)
 
     basis = []
     # Generate the off-diagonal matrices
     for i in range(n):
         for j in range(i+1, n):
-            m = np.zeros((n, n), dtype=complex)
+            m = base.copy()
             m[i,j] = 1
             m[j,i] = 1
             basis.append(m)
 
-            m = np.zeros((n, n), dtype=complex)
+            m = base.copy()
             m[i, j] = -1j
             m[j, i] = 1j
             basis.append(m)
 
     # Generate the diagonal matrices
     for i in range(1,n):
-        m = np.zeros((n, n), dtype=complex)
+        m = base.copy()
         for j in range(i):
             m[j,j] = 1
         m[i,i] = -i
@@ -172,8 +188,14 @@ def su(n, include_identity=False):
         basis.append(m)
 
     if include_identity:
-        basis.append(np.eye(n))
+        identity = base.copy()
+        for i in range(n):
+            identity[i,i] = 1
+        basis.append(identity)
 
+    if sparse:
+        # convert to csr format for faster arithmetic operations
+        return [sp.csr_matrix(m) for m in basis]
     return basis
 
 def SU(n):
@@ -667,6 +689,13 @@ def _test_su():
     # check if all generators have matrix norm sqrt(2)
     for i, A in enumerate(sun):
         assert np.isclose(np.linalg.norm(A), sqrt(2)), f"Generator {i} does not have norm 2!"
+
+    # check sparse representation
+    sun_sp = su(n, sparse=True)
+
+    # check the generators are the same
+    for i, (A,B) in enumerate(zip(sun, sun_sp)):
+        assert np.allclose(A, B.todense()), f"Pair {i} is not the same!"
 
     return True
 

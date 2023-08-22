@@ -2,7 +2,7 @@ import numpy as np
 from itertools import combinations, product
 from functools import reduce
 import matplotlib.pyplot as plt
-import scipy
+import scipy.sparse as sp
 from .mathlib import normalize, matexp, matlog, is_psd, is_hermitian
 from .plot import colorize_complex
 
@@ -554,7 +554,7 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
     >>> parse_hamiltonian('0.5*(II + ZI - ZX + IX)') # CNOT
 
     """
-    kron = scipy.sparse.kron if sparse else np.kron
+    kron = sp.kron if sparse else np.kron
 
     # Initialize the matrix map
     global matmap_np, matmap_sp
@@ -581,7 +581,7 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
         }
 
         # sparse versions
-        matmap_sp = {k: scipy.sparse.csr_array(v) for k, v in matmap_np.items()}
+        matmap_sp = {k: sp.csr_array(v) for k, v in matmap_np.items()}
 
     matmap = matmap_sp if sparse else matmap_np
 
@@ -703,7 +703,7 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
             n = len(first_chunk)
 
     if sparse:
-        H = scipy.sparse.csr_array((2**n, 2**n), dtype=dtype)
+        H = sp.csr_array((2**n, 2**n), dtype=dtype)
     else:
         if n > 10:
             raise ValueError(f"Using a dense matrix for a {n}-qubit Hamiltonian is not recommended. Use sparse=True.")
@@ -1029,8 +1029,8 @@ def pauli_basis(n, kind='np'):
     if kind == 'np':
         return [reduce(np.kron, i) for i in product([I,X,Y,Z], repeat=n)]
     elif kind == 'sp':
-        basis = [scipy.sparse.csr_matrix(b) for b in [I,X,Y,Z]]
-        return [reduce(scipy.sparse.kron, i) for i in product(basis, repeat=n)]
+        basis = [sp.csr_array(b) for b in [I,X,Y,Z]]
+        return [reduce(sp.kron, i) for i in product(basis, repeat=n)]
     elif kind == 'str':
         return [''.join(i) for i in product(['I', 'X', 'Y', 'Z'], repeat=n)]
     else:
@@ -1319,6 +1319,6 @@ def _test_pauli_basis():
 
     # check if all generators are the same
     for i, (A,B) in enumerate(zip(pauli_n, pauli_n_sp)):
-        assert np.allclose(A, B.toarray()), f"Generator {i} is not the same!"
+        assert np.allclose(A, B.todense()), f"Generator {i} is not the same!"
 
     return True
