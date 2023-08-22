@@ -682,7 +682,7 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
         if weight[-1] == "*":
             weight = weight[:-1]
         # Calculate the part recursively
-        parts[i] = parse_hamiltonian(part[1:-1], sparse=sparse, scaling=scaling * float(weight), buffer=buffer, max_buffer_n=max_buffer_n)
+        parts[i] = parse_hamiltonian(part[1:-1], sparse=sparse, scaling=scaling * float(weight), buffer=buffer, max_buffer_n=max_buffer_n, dtype=dtype)
 
     # print("Parts replaced:", parts)
 
