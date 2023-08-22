@@ -1,9 +1,9 @@
 import numpy as np
-import itertools
+from itertools import combinations, product
 from functools import reduce
 import matplotlib.pyplot as plt
 import scipy
-from .mathlib import normalize, matexp, matlog, is_psd
+from .mathlib import normalize, matexp, matlog, is_psd, is_hermitian
 from .plot import colorize_complex
 
 #################
@@ -971,7 +971,7 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
             if n_qubits > 20:
                 raise ValueError("Printing out all interactions for n_qubits > 20 is not recommended. Please use a dict instead.")
             for i in range(2, n_qubits+1):
-                for membership in itertools.combinations(range(n_qubits), i):
+                for membership in combinations(range(n_qubits), i):
                     H_str += ''.join(['Z' if j in membership else 'I' for j in range(n_qubits)]) + ' + '
         else: # J is a dict of tuples of qubit indices to interaction strengths
             for membership, strength in J.items():
@@ -1014,6 +1014,27 @@ def get_H_energies(H, expi=True):
         energies = np.sort(energies)
     return energies
 
+def pauli_basis(n, kind='np'):
+    """ Generate the pauli basis of hermitian 2**n x 2**n matrices. This basis is orthonormal and, except for the identity, traceless.
+
+    E.g. for n = 2, the basis is [II, IX, IY, IZ, XI, XX, XY, XZ, YI, YX, YY, YZ, ZI, ZX, ZY, ZZ]
+
+    Parameters
+        n (int): Number of qubits
+        kind (str): 'np' for numpy arrays (default), 'sp' for scipy sparse matrices, or 'str' for strings
+
+    Returns
+        list[ np.ndarray | scipy.sparse.csr_matrix | str ]: The pauli basis
+    """
+    if kind == 'np':
+        return [reduce(np.kron, i) for i in product([I,X,Y,Z], repeat=n)]
+    elif kind == 'sp':
+        basis = [scipy.sparse.csr_matrix(b) for b in [I,X,Y,Z]]
+        return [reduce(scipy.sparse.kron, i) for i in product(basis, repeat=n)]
+    elif kind == 'str':
+        return [''.join(i) for i in product(['I', 'X', 'Y', 'Z'], repeat=n)]
+    else:
+        raise ValueError(f"Unknown kind: {kind}")
 
 #############
 ### Tests ###
@@ -1027,7 +1048,8 @@ def test_quantum_all():
         _test_partial_trace,
         _test_von_Neumann_entropy,
         _test_entanglement_entropy,
-        _test_ising_model
+        _test_ising_model,
+        _test_pauli_basis
     ]
 
     for test in tests:
@@ -1254,3 +1276,49 @@ def _test_ising_model():
 
     return True
 
+def _test_pauli_basis():
+    n = 3
+    pauli_n = pauli_basis(n)
+
+    # check the number of generators
+    n_expected = 2**(2*n)
+    assert len(pauli_n) == n_expected, f"Number of generators is {len(pauli_n)}, but should be {n_expected}!"
+
+    # check if no two generators are the same
+    for i, (A,B) in enumerate(combinations(pauli_n,2)):
+        assert not np.allclose(A, B), f"Pair {i} is not different!"
+
+    # check if all generators except of the identity are traceless
+    assert np.allclose(pauli_n[0], np.eye(2**n)), "First generator is not the identity!"
+    for i, A in enumerate(pauli_n[1:]):
+        assert np.isclose(np.trace(A), 0), f"Generator {i} is not traceless!"
+
+    # check if all generators are Hermitian
+    for i, A in enumerate(pauli_n):
+        assert is_hermitian(A), f"Generator {i} is not Hermitian!"
+
+    # check if all generators are orthogonal
+    for i, (A,B) in enumerate(combinations(pauli_n,2)):
+        assert np.allclose(np.trace(A.conj().T @ B), 0), f"Pair {i} is not orthogonal!"
+
+    # check if all generators have matrix norm sqrt(2**n)
+    for i, A in enumerate(pauli_n):
+        assert np.isclose(np.linalg.norm(A), np.sqrt(2**n)), f"Generator {i} does not have norm 2!"
+
+    # check string representation
+    pauli_n_str = pauli_basis(n, kind='str')
+    assert len(pauli_n) == len(pauli_n_str), "Number of generators is not the same!"
+
+    # check if all generators are the same
+    for i, (A,B) in enumerate(zip(pauli_n, pauli_n_str)):
+        assert np.allclose(A, parse_hamiltonian(B)), f"Generator {i} is not the same!"
+
+    # check sparse representation
+    pauli_n_sp = pauli_basis(n, kind='sp')
+    assert len(pauli_n) == len(pauli_n_sp), "Number of generators is not the same!"
+
+    # check if all generators are the same
+    for i, (A,B) in enumerate(zip(pauli_n, pauli_n_sp)):
+        assert np.allclose(A, B.toarray()), f"Generator {i} is not the same!"
+
+    return True

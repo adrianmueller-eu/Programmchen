@@ -648,6 +648,10 @@ def _test_su():
     n_expected = n**2-1
     assert len(sun) == n_expected, f"Number of generators is {len(sun)}, but should be {n_expected}!"
 
+    # check if no two generators are the same
+    for i, (A,B) in enumerate(combinations(sun,2)):
+        assert not np.allclose(A, B), f"Pair {i} is not different!"
+
     # check if all generators are traceless
     for i, A in enumerate(sun):
         assert np.isclose(np.trace(A), 0), f"Generator {i} is not traceless!"
@@ -659,6 +663,10 @@ def _test_su():
     # check if all generators are orthogonal
     for i, (A,B) in enumerate(combinations(sun,2)):
         assert np.allclose(np.trace(A.conj().T @ B), 0), f"Pair {i} is not orthogonal!"
+
+    # check if all generators have matrix norm sqrt(2)
+    for i, A in enumerate(sun):
+        assert np.isclose(np.linalg.norm(A), sqrt(2)), f"Generator {i} does not have norm 2!"
 
     return True
 
