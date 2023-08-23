@@ -145,13 +145,14 @@ def SO(n):
         return a
     return [lambda phi: rotmat(i, j, phi) for i,j in combinations(range(n), 2)]
 
-def su(n, include_identity=False, sparse=False):
+def su(n, include_identity=False, sparse=False, normalize=False):
     """ The Lie algebra associated with the Lie group SU(n). Returns the n^2-1 generators (traceless Hermitian matrices) of the group. Use `include_identity = True` to return a complete orthogonal basis of hermitian `n x n` matrices.
 
     Parameters
         n (int): The dimension of the matrices.
         include_identity (bool, optional): If True, include the identity matrix in the basis (default: False).
         sparse (bool, optional): If True, return a sparse representation of the matrices (default: False).
+        normalize (bool, optional): If True, normalize the matrices to have norm 1 (default: False).
 
     Returns
         list[ np.ndarray | scipy.sparse.csr_array ]: A list of `n^2-1` matrices that form a basis of the Lie algebra.
@@ -191,8 +192,14 @@ def su(n, include_identity=False, sparse=False):
         identity = base.copy()
         for i in range(n):
             identity[i,i] = 1
+        if normalize:
+            # factor 2 to get norm sqrt(2), too
+            identity = np.sqrt(2/n) * identity
         basis.append(identity)
 
+    if normalize:
+        # su have norm sqrt(2) by default
+        basis = [m/np.sqrt(2) for m in basis]
     if sparse:
         # convert to csr format for faster arithmetic operations
         return [sp.csr_matrix(m) for m in basis]
@@ -663,7 +670,7 @@ def _test_softmax():
     return True
 
 def _test_su():
-    n = 5
+    n = np.random.randint(2**1, 2**3)
     sun = su(n)
 
     # check the number of generators
@@ -686,9 +693,10 @@ def _test_su():
     for i, (A,B) in enumerate(combinations(sun,2)):
         assert np.allclose(np.trace(A.conj().T @ B), 0), f"Pair {i} is not orthogonal!"
 
-    # check if all generators have matrix norm sqrt(2)
-    for i, A in enumerate(sun):
-        assert np.isclose(np.linalg.norm(A), sqrt(2)), f"Generator {i} does not have norm 2!"
+    # check normalization
+    su_n_norm = su(n, normalize=True)
+    for i, A in enumerate(su_n_norm):
+        assert np.isclose(np.linalg.norm(A), 1), f"Generator {i} does not have norm 1!"
 
     # check sparse representation
     sun_sp = su(n, sparse=True)

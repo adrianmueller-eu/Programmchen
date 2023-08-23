@@ -1014,7 +1014,7 @@ def get_H_energies(H, expi=True):
         energies = np.sort(energies)
     return energies
 
-def pauli_basis(n, kind='np'):
+def pauli_basis(n, kind='np', normalize=False):
     """ Generate the pauli basis of hermitian 2**n x 2**n matrices. This basis is orthonormal and, except for the identity, traceless.
 
     E.g. for n = 2, the basis is [II, IX, IY, IZ, XI, XX, XY, XZ, YI, YX, YY, YZ, ZI, ZX, ZY, ZZ]
@@ -1022,17 +1022,30 @@ def pauli_basis(n, kind='np'):
     Parameters
         n (int): Number of qubits
         kind (str): 'np' for numpy arrays (default), 'sp' for scipy sparse matrices, or 'str' for strings
+        normalize (bool): Whether to normalize the basis elements (default False)
 
     Returns
         list[ np.ndarray | scipy.sparse.csr_matrix | str ]: The pauli basis
     """
+    def reduce_norm(f, l, normalize):
+        if normalize:
+            # apply norm np.sqrt(2**n) to the first element, and reduce the rest
+            first = l[0]/np.sqrt(2**n)
+            if len(l) == 1:
+                return first
+            rest = reduce(f, l[1:])
+            return f(first, rest)
+        else:
+            return reduce(f, l)
+
     if kind == 'np':
-        return [reduce(np.kron, i) for i in product([I,X,Y,Z], repeat=n)]
+        return [reduce_norm(np.kron, i, normalize) for i in product([I,X,Y,Z], repeat=n)]
     elif kind == 'sp':
         basis = [sp.csr_array(b) for b in [I,X,Y,Z]]
-        return [reduce(sp.kron, i) for i in product(basis, repeat=n)]
+        return [reduce_norm(sp.kron, i, normalize) for i in product(basis, repeat=n)]
     elif kind == 'str':
-        return [''.join(i) for i in product(['I', 'X', 'Y', 'Z'], repeat=n)]
+        norm_str = f"{1/np.sqrt(2**n)}*" if normalize else ""
+        return [norm_str + ''.join(i) for i in product(['I', 'X', 'Y', 'Z'], repeat=n)]
     else:
         raise ValueError(f"Unknown kind: {kind}")
 
@@ -1277,7 +1290,7 @@ def _test_ising_model():
     return True
 
 def _test_pauli_basis():
-    n = 3
+    n = np.random.randint(1,4)
     pauli_n = pauli_basis(n)
 
     # check the number of generators
@@ -1301,9 +1314,10 @@ def _test_pauli_basis():
     for i, (A,B) in enumerate(combinations(pauli_n,2)):
         assert np.allclose(np.trace(A.conj().T @ B), 0), f"Pair {i} is not orthogonal!"
 
-    # check if all generators have matrix norm sqrt(2**n)
-    for i, A in enumerate(pauli_n):
-        assert np.isclose(np.linalg.norm(A), np.sqrt(2**n)), f"Generator {i} does not have norm 2!"
+    # check normalization
+    pauli_n_norm = pauli_basis(n, kind='np', normalize=True)
+    for i, A in enumerate(pauli_n_norm):
+        assert np.isclose(np.linalg.norm(A), 1), f"Generator {i} does not have norm 1!"
 
     # check string representation
     pauli_n_str = pauli_basis(n, kind='str')
