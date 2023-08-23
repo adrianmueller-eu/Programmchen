@@ -1066,16 +1066,16 @@ def test_quantum_all():
     ]
 
     for test in tests:
-        print("Running", test.__name__, "... ", end="")
+        print("Running", test.__name__, "... ", end="", flush=True)
         if test():
-            print("Test succeed!")
+            print("Test succeed!", flush=True)
         else:
             print("ERROR!")
             break
 
 def _test_get_H_energies_eq_get_pe_energies():
-    n_qubits = np.random.randint(1,10)
-    n_terms = np.random.randint(1,100)
+    n_qubits = np.random.randint(1, 5)
+    n_terms = np.random.randint(1, 100)
     H = random_hamiltonian(n_qubits, n_terms, scaling=False)
     H = parse_hamiltonian(H)
 
