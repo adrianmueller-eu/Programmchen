@@ -1,10 +1,13 @@
+import psutil
 import numpy as np
 from itertools import combinations, product
 from functools import reduce
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
-from .mathlib import normalize, matexp, matlog, is_psd, is_hermitian
+from .mathlib import *
 from .plot import colorize_complex
+from .utils import duh
+import netket as nk
 
 #################
 ### Unitaries ###
@@ -386,11 +389,10 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
         showqubits = range(n)
 
     if showrho:
-        import psutil
-        memory_requirement = (4*len(state))**2
+        memory_requirement = (len(state))**2 * 16
         #print(memory_requirement / 1024**2, "MB") # rho.nbytes
         if memory_requirement > psutil.virtual_memory().available:
-            raise ValueError(f"Too high memory requirement (%.1f GB) to calulate the density matrix!" % (memory_requirement / 1024**3))
+            raise ValueError(f"Too much memory required ({duh(memory_requirement)}) to calulate the density matrix!")
         rho = np.outer(state, state.conj())
         rho = partial_trace(rho, retain_qubits=showqubits)
     state, probs = state_trace(state, showqubits)
