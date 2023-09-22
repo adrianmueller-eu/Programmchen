@@ -665,6 +665,7 @@ def test_mathlib_all():
         _test_deg,
         _test_matexp,
         _test_matlog,
+        _test_roots,
         _test_series,
         _test_sequence,
         _test_normalize,
@@ -803,6 +804,16 @@ def _test_matlog():
     assert np.allclose(matlog(A), alpha*np.array([[0, -1],[1, 0]])), f"Error for alpha = {alpha}! {matlog(A)} != {alpha*np.array([[0, -1],[1, 0]])}"
     return True
 
+def _test_roots():
+    # Test cases
+    assert np.allclose(roots([1,0,-1]), (1.0, -1.0))
+    assert np.allclose(roots([1,0,1]), (1j, -1j))
+    assert np.allclose(roots([1, -2, -11, 12]), [-3, 1, 4])
+    assert np.allclose(roots([1, -7, 5, 31, -30]), [-2, 1, 3, 5])
+
+    for degree in range(2, 6):
+        coeffs = np.random.uniform(-10, 10, degree) + 1j*np.random.uniform(-10, 10, degree)
+        assert np.allclose(np.polyval(coeffs, roots(coeffs)), 0), f"{coeffs}: {roots(coeffs)}"
     return True
 
 def _test_series():
