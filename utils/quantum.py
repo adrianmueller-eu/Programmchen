@@ -527,7 +527,7 @@ def is_dm(rho):
 
 matmap_np, matmap_sp = None, None
 
-def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=complex):
+def ph(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=complex):
     """Parse a string representation of a Hamiltonian into a matrix representation. The result is guaranteed to be Hermitian.
 
     Parameters:
@@ -541,17 +541,17 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
         numpy.ndarray | scipy.sparse.csr_matrix: The matrix representation of the Hamiltonian.
 
     Example:
-    >>> parse_hamiltonian('0.5*(XX + YY + ZZ + II)') # SWAP
+    >>> ph('0.5*(XX + YY + ZZ + II)') # SWAP
     array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]
            [ 0.+0.j  1.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]])
-    >>> parse_hamiltonian('-(XX + YY + .5*ZZ) + 1.5')
+    >>> ph('-(XX + YY + .5*ZZ) + 1.5')
     array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  2.+0.j -2.+0.j  0.+0.j]
            [ 0.+0.j -2.+0.j  2.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]])
-    >>> parse_hamiltonian('0.5*(II + ZI - ZX + IX)') # CNOT
+    >>> ph('0.5*(II + ZI - ZX + IX)') # CNOT
 
     """
     kron = sp.kron if sparse else np.kron
@@ -614,11 +614,20 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
                         parts = [c for c in parts if c != ""]
                         # See where to apply the scaling
                         shortest = min(parts, key=len)
-                        # Calculate each in tomultiply recursively
+                        # Calculate each part recursively
                         for i, c in enumerate(parts):
                             if c == subchunk:
-                                parts[i] = buffer[c]
-                            parts[i] = calculate_chunk_matrix(c, sparse=sparse, scaling=scaling if c == shortest else 1)
+                                if c == shortest:
+                                    parts[i] = scaling * buffer[c]
+                                    shortest = ""
+                                else:
+                                    parts[i] = buffer[c]
+                            else:
+                                if c == shortest:
+                                    parts[i] = calculate_chunk_matrix(c, sparse=sparse, scaling=scaling)
+                                    shortest = ""
+                                else:
+                                    parts[i] = calculate_chunk_matrix(c, sparse=sparse, scaling=1)
                         return reduce(kron, parts)
 
         # Calculate the chunk matrix gate by gate
@@ -642,7 +651,7 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
                     .replace("e+-", "e-") \
                     .replace("(+-", "(-")
 
-    # print("parse_hamiltonian: Pre-processed Hamiltonian:", hamiltonian)
+    # print("ph: Pre-processed Hamiltonian:", hamiltonian)
 
     # Find parts in parentheses
     part = ""
@@ -666,30 +675,27 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
             depth += 1
         elif c == ")":
             depth -= 1
-        if depth > 0:
+            if depth == 0:
+                part += c
+                parts.append((current_part_weight, part))
+                part = ""
+                current_part_weight = ""
+        if depth > 0: 
             part += c
-        if depth == 0 and c == ")":
-            part += c
-            # reject parts with complex numbers
-            try:
-                assert complex(part).imag == 0, "Complex coefficients lead to non-hermitian matrices"
-            except ValueError:
-                pass
-            parts.append((current_part_weight, part))
-            part = ""
-            current_part_weight = ""
 
     # print("Parts found:", parts)
 
     # Replace parts in parentheses with a placeholder
     for i, (weight, part) in enumerate(parts):
-        hamiltonian = hamiltonian.replace(weight+part, f"part{i}", 1)
+        hamiltonian = hamiltonian.replace(weight+part, f"+part{i}", 1)
+        # remove * at the end of the weight
+        if weight != "" and weight[-1] == "*":
+            weight = weight[:-1]
         if weight in ["", "+", "-"]:
             weight += "1"
-        if weight[-1] == "*":
-            weight = weight[:-1]
         # Calculate the part recursively
-        parts[i] = parse_hamiltonian(part[1:-1], sparse=sparse, scaling=scaling * float(weight), buffer=buffer, max_buffer_n=max_buffer_n, dtype=dtype)
+        part = part[1:-1] # remove parentheses
+        parts[i] = ph(part, sparse=sparse, scaling=float(weight), buffer=buffer, max_buffer_n=max_buffer_n, dtype=dtype)
 
     # print("Parts replaced:", parts)
 
@@ -700,59 +706,74 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
     # If parts are present, use them to determine the number of qubits
     if parts:
         n = int(np.log2(parts[0].shape[0]))
-    else: # Use the first chunk to determine the number of qubits
-        first_chunk = chunks[0]
-        if first_chunk[0] in ["-", "+"]:
-            first_chunk = first_chunk[1:]
-        try:
-            n = len(first_chunk.split("*")[1])
-        except IndexError:
-            n = len(first_chunk)
+    else: # Use chunks to determine the number of qubits
+        n = 0
+        for c in chunks:
+            if c[0] in ["-", "+"]:
+                c = c[1:]
+            if "*" in c:
+                c = c.split("*")[1]
+            if c.startswith("part"):
+                continue
+            try:
+                float(c)
+                continue
+            except ValueError:
+                n = len(c)
+                break
+        if n == 0:
+            print("Warning: Hamiltonian is a scalar!")
+
+    if not sparse and n > 10:
+        # check if we would blow up the memory
+        mem_required = 2**(2*n) * np.array(1, dtype=dtype).nbytes
+        mem_available = psutil.virtual_memory().available
+        if mem_required > mem_available:
+            raise MemoryError(f"This would blow up you memory ({duh(mem_required)} required)! Try using `sparse=True`.")
 
     if sparse:
         H = sp.csr_array((2**n, 2**n), dtype=dtype)
     else:
         if n > 10:
-            raise ValueError(f"Using a dense matrix for a {n}-qubit Hamiltonian is not recommended. Use sparse=True.")
+            print(f"Warning: Using a dense matrix for a {n}-qubit Hamiltonian is not recommended. Use sparse=True.")
         H = np.zeros((2**n, 2**n), dtype=dtype)
 
     for chunk in chunks:
-
         # print("Processing chunk:", chunk)
-        chunk_matrix = None
         if chunk == "":
             continue
+        chunk_matrix = None
         # Parse the weight of the chunk
-        try:
-            if len(chunk) == n:
-                weight = 1
-            elif "*" in chunk:
-                weight = float(chunk.split("*")[0])
-                chunk = chunk.split("*")[1]
-            elif "part" in chunk:
-                weight = 1
-            elif len(chunk) == n+1 and chunk[0] in ["-", "+"]:
-                weight = float(chunk[0] + "1")
-                chunk = chunk[1:]
-            else:
-                weight = float(chunk)
-                chunk_matrix = weight * np.eye(2**n, dtype=dtype)
-        except ValueError:
-                raise ValueError(f"Invalid chunk for size {n}: {chunk}")
-
-        # If the chunk is a part, add it to the Hamiltonian
-        if chunk_matrix is not None:
-            pass
-        elif chunk.startswith("part"):
+        if chunk.startswith("part"):
+            weight = 1  # parts already include their weight
             chunk_matrix = parts[int(chunk.split("part")[1])]
+        elif "*" in chunk:
+            weight = float(chunk.split("*")[0])
+            chunk = chunk.split("*")[1]
+        elif len(chunk) == n+1 and chunk[0] in ["-", "+"] and n >= 1 and chunk[1] in matmap:
+            weight = float(chunk[0] + "1")
+            chunk = chunk[1:]
+        elif (chunk[0] in ["-", "+", "."] or chunk[0].isdigit()) and all([c not in matmap for c in chunk[1:]]):
+            if len(chunk) == 1 and chunk[0] in ["-", "."]:
+                chunk = 0
+            weight = complex(chunk)
+            if np.iscomplex(weight):
+                raise ValueError("Complex scalars would make the Hamiltonian non-Hermitian!")
+            weight = weight.real
+            # weight = np.array(weight, dtype=dtype)  # only relevant for int dtype
+            chunk_matrix = np.eye(2**n, dtype=dtype)
+        elif len(chunk) != n:
+            raise ValueError(f"Gate count must be {n} but was {len(chunk)} for chunk \"{chunk}\"")
         else:
-            if len(chunk) != n:
-                raise ValueError(f"Gate count must be {n} but was {len(chunk)} for chunk \"{chunk}\"")
+            weight = 1
 
-            chunk_matrix = calculate_chunk_matrix(chunk, sparse=sparse, scaling = scaling * weight)
+        if chunk_matrix is None:
+            chunk_matrix = calculate_chunk_matrix(chunk, sparse=sparse, scaling=scaling * weight)
+        elif scaling * weight != 1:
+            chunk_matrix = scaling * weight * chunk_matrix
 
         # Add the chunk to the Hamiltonian
-        # print("Adding chunk", weight, chunk, "to hamiltonian", scaling, hamiltonian)
+        # print("Adding chunk", weight, chunk, "for hamiltonian", scaling, hamiltonian)
         # print(type(H), H.dtype, type(chunk_matrix), chunk_matrix.dtype)
         if len(chunks) == 1:
             H = chunk_matrix
@@ -1013,7 +1034,7 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
 def get_H_energies(H, expi=True):
     """Returns the energies of the given hamiltonian `H`. For `expi=True` (default) it gives the same result as `get_pe_energies(exp_i(H))` (up to sorting) and for `expi=False` it returns the eigenvalues of `H`."""
     if type(H) == str:
-        H = parse_hamiltonian(H)
+        H = ph(H)
     energies = np.linalg.eigvalsh(H)
     if expi:
         energies = (energies % (2*np.pi))/(2*np.pi)
@@ -1063,7 +1084,7 @@ def pauli_basis(n, kind='np', normalize=False):
 def test_quantum_all():
     tests = [
         _test_get_H_energies_eq_get_pe_energies,
-        _test_parse_hamiltonian,
+        _test_ph,
         _test_reverse_qubit_order,
         _test_partial_trace,
         _test_von_Neumann_entropy,
@@ -1090,18 +1111,31 @@ def _test_get_H_energies_eq_get_pe_energies():
     B = get_H_energies(H)
     return np.allclose(A, B)
 
-def _test_parse_hamiltonian():
-    H = parse_hamiltonian('0.5*(II + ZI - ZX + IX)')
+def _test_ph():
+    H = ph('0.5*(II + ZI - ZX + IX)')
     assert np.allclose(H, CNOT)
 
-    H = parse_hamiltonian('0.5*(XX + YY + ZZ + II)')
+    H = ph('0.5*(XX + YY + ZZ + II)')
     assert np.allclose(H, SWAP)
 
-    H = parse_hamiltonian('-(XX + YY + .5*ZZ) + 1.5')
+    H = ph('-(XX + YY + .5*ZZ) + 1.5')
     assert np.allclose(np.sum(H), 2)
 
-    H = parse_hamiltonian('0.2*(-0.5*(3*XX + 4*YY) + 1*II)')
+    H = ph('0.2*(-0.5*(3*XX + 4*YY) + 1*II)')
     assert np.allclose(np.sum(H), -.4)
+
+    H = ph('X + 2*(I+Z)')
+    assert np.allclose(H, X + 2*(I+Z))
+
+    H = ph('1*(ZZI + IZZ) + 1*(ZII + IZI + IIZ)')
+    assert np.allclose(np.sum(np.abs(H)), 14)
+
+    H = ph('-.25*(ZZI + IZZ) + 1.5')
+    assert np.allclose(np.sum(np.abs(H)), 12)
+
+    H = ph('1.2*IZZI')
+    IZZI = np.kron(np.kron(I, Z), np.kron(Z, I))
+    assert np.allclose(H, 1.2*IZZI)
 
     return True
 
@@ -1126,10 +1160,15 @@ def _test_reverse_qubit_order():
     assert np.allclose(psi_rev, psi_rev2)
 
     # general hamiltonian
-    H = parse_hamiltonian('IIIXX')
-    H_rev = parse_hamiltonian('XXIII')
+    H = ph('IIIXX')
+    H_rev = ph('XXIII')
     H_rev2 = reverse_qubit_order(H)
     assert np.allclose(H_rev, H_rev2)
+
+    # TODO: this fails, too
+    # H = ph('XI + YI')
+    # H_rev = ph('IX + IY')
+    # assert np.allclose(reverse_qubit_order(H), H_rev)
 
     # pure density matrix
     psi = np.kron(np.kron([1,1], [0,1]), [1,-1])
@@ -1332,7 +1371,7 @@ def _test_pauli_basis():
 
     # check if all generators are the same
     for i, (A,B) in enumerate(zip(pauli_n, pauli_n_str)):
-        assert np.allclose(A, parse_hamiltonian(B)), f"Generator {i} is not the same!"
+        assert np.allclose(A, ph(B)), f"Generator {i} is not the same!"
 
     # check sparse representation
     pauli_n_sp = pauli_basis(n, kind='sp')
