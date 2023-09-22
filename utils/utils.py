@@ -104,3 +104,15 @@ def allclose_set(a, b):
                 matched_b_indices.append(i)
                 break
     return len(matched_b_indices) == len(a)
+
+def tqt(iterable, **kwargs):
+    if not isinstance(iterable, Iterable):
+        raise TypeError(f"tqt expected an iterable, not {type(iterable)}")
+    if len(iterable) == 0:
+        raise ValueError("tqt expected a non-empty iterable")
+
+    from tqdm.contrib import telegram
+
+    token = os.environ['TELEGRAM_BOT_TOKEN']
+    chat_id = os.environ['TELEGRAM_CHAT_ID']
+    return telegram.tqdm(iterable, token=token, chat_id=chat_id, **kwargs)
