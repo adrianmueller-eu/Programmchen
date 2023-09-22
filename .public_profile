@@ -1317,14 +1317,19 @@ function isprime() {
   fi
 }
 
-function pf() {
+function pf() (
   #python -c "from utils import prime_factors; print(prime_factors($1))"
   n=$1
-  i=2
   factors=()
+  # remove any factors of 2 first
+  while (( n % 2 == 0 )); do
+    factors+=(2)
+    n=$((n / 2))
+  done
+  i=3
   while (( i * i <= n )); do
     if (( n % i )); then
-      ((i++))
+      i=$((i + 2))
     else
       n=$((n / i))
       factors+=($i)
@@ -1334,7 +1339,7 @@ function pf() {
     factors+=($n)
   fi
   echo ${factors[@]}
-}
+)
 
 function sec2time() (
     local sec=$1 min=0 hour=0 day=0
