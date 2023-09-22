@@ -320,7 +320,8 @@ def SU(n):
     """ Special unitary group. Returns n^2-1 functions that take an angle and return the corresponding complex rotation matrix """
     generators = su(n)
     def rotmat(G):
-        return lambda phi: matexp(-1j*phi/2*G)
+        D, U = np.linalg.eigh(G)
+        return lambda phi: U @ np.diag(np.exp(-1j*phi/2*D)) @ U.conj().T
     return [rotmat(G) for G in generators]
 
 ### Random
