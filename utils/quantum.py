@@ -569,21 +569,22 @@ def unket(state, as_dict=False):
     return "+".join(res)
 
 def op(specification1, specification2=None):
-    if type(specification1) == str:
-        s1 = state(specification1)
-    elif hasattr(specification1, '__len__'):
-        s1 = np.array(specification1)
-    else:
-        raise ValueError(f"Unknown specification: {specification1}")
-    if specification2 is None:
-        s2 = s1
-    elif type(specification2) == str:
-        s2 = state(specification2)
-    elif hasattr(specification2, '__len__'):
-        s2 = np.array(specification2)
-    else:
-        raise ValueError(f"Unknown specification: {specification2}")
+    # If it's already a matrix, ensure it's a density matrix and return it
+    if type(specification1) != str:
+        specification1 = np.array(specification1, copy=False)
+        if len(specification1.shape) > 1:
+            sp1_trace = np.trace(specification1)
+            # trace normalize it if it's not already
+            if not np.allclose(sp1_trace, 1):
+                specification1 = specification1 / sp1_trace
+            assert is_dm(specification1), f"The given matrix is not a density matrix!"
+            return specification1
+    s1 = ket(specification1)
+    s2 = s1 if specification2 is None else ket(specification2)
     return np.outer(s1, s2.conj())
+
+def dm(specification1, specification2=None):
+    return op(specification1, specification2)
 
 def probs(state):
     """Calculate the probabilities of measuring a state vector in the standard basis."""
