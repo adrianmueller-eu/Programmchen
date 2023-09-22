@@ -543,23 +543,72 @@ def Fibonacci(n):
     Psi = 1 - Phi
     return int(np.round((Phi**n - Psi**n)/(Phi - Psi))) # /np.sqrt(5)
 
-def calc_pi(N=3):
+def calc_pi1(prec=100):
+    """ Calculate pi using the Gauss-Legendre algorithm. """
     from decimal import Decimal, getcontext
-    getcontext().prec = 14*N
+    getcontext().prec = prec # int(np.e*2**N-2)
+    N = int(np.log2(prec + 2))
+    a = Decimal(1)
+    b = Decimal(1)/Decimal(2).sqrt()
+    t = Decimal(1)/Decimal(4)
+    p = Decimal(1)
+    for n in range(N):
+        a_next = (a+b)/2
+        b_next = (a*b).sqrt()
+        t_next = t - p*(a-a_next)**2
+        p_next = 2*p
+        a = a_next
+        b = b_next
+        t = t_next
+        p = p_next
+    return (a+b)**2/(4*t)
+
+def calc_pi2(prec=100):
+    """ Calculate pi using the Chudnovsky algorithm. """
+    from decimal import Decimal, getcontext
+    getcontext().prec = prec  # int(14*N)
+    N = int(prec/14)
     r = Decimal(0)
     for n in range(N):
         r_i = Decimal(factorial(6*n)*(13591409+545140134*n))/Decimal(factorial(3*n)*(factorial(n)*(-640320)**n)**3)
         r += r_i
     return Decimal(4270934400)/(Decimal(10005).sqrt()*r)
 
-def calc_pi2(N=5):
+def calc_pi3(prec=100):
+    """ Calculate pi using the Ramanujan algorithm. """
     from decimal import Decimal, getcontext
-    getcontext().prec = 8*N
+    getcontext().prec = prec  # int(8*N)
+    N = int(prec/7)
     r = Decimal(0)
     for n in range(N):
         r_i = Decimal(factorial(4*n)*(1103+26390*n))/Decimal((factorial(n)*396**n)**4)
         r += r_i
     return Decimal(9801)/(Decimal(8).sqrt()*r)
+
+def calc_pi4(prec=100):
+    """ Calculate pi using the Bailey-Borwein-Plouffe algorithm. """
+    # return BBP_formula(1, 16, 8, [4, 0, 0, -2, -1, -1])
+    from decimal import Decimal, getcontext
+    getcontext().prec = prec  # int(1.25*N+2.5)
+    N = int((prec-2.5)/1.2)
+    r = Decimal(0)
+    for n in range(N):
+        r_i = Decimal(1)/Decimal(16**n)*(Decimal(4)/(8*n+1)-Decimal(2)/(8*n+4)-Decimal(1)/(8*n+5)-Decimal(1)/(8*n+6))
+        r += r_i
+    return r
+
+def BBP_formula(s, b, m, a, N=100, verbose=False):
+    """ Calculate the sum of the series $sum_{k=0}^N 1/(b^k) (sum_{j=1}^m a_j/(mk+j)^s)$.
+    This is a general form to calculate irrational numbers, e.g.
+    - `np.pi == BBP_formula(1, 16, 8, [4, 0, 0, -2, -1, -1])`
+    - `np.log(a) - np.log(a-1) == 1/2*BBP_formula(1, a, 1, [1])`
+
+    See also https://en.wikipedia.org/wiki/Bailey–Borwein–Plouffe_formula
+    """
+    def P(k, _):
+        return 1/(b**k)*sum([a[j]/(m*k+j+1)**s for j in range(len(a))])
+
+    return series(P, start_value=0, start_index=-1, max_iter=N+1, verbose=verbose)
 
 def sqrt_brain_compatible(x, correction_term=False, n_max = 20):
     """ Nice way to calculate approximate square roots in the head:
@@ -963,7 +1012,10 @@ def _test_Fibonacci():
     return True
 
 def _test_calc_pi():
-    pi_str = "3.1415926535897932384626433832795028841971"
-    assert str(calc_pi(3))[:42] == pi_str
-    assert str(calc_pi2(6))[:42] == pi_str
+    assert np.allclose(float(calc_pi1()), np.pi)
+    assert np.allclose(float(calc_pi2()), np.pi)
+    assert np.allclose(float(calc_pi3()), np.pi)
+    assert np.allclose(float(calc_pi4()), np.pi)
+    assert np.allclose(BBP_formula(1, 16, 8, [4, 0, 0, -2, -1, -1]), np.pi)
+    assert np.allclose(1/2*BBP_formula(1, 2, 1, [1]), np.log(2))
     return True
