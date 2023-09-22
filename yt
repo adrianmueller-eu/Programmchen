@@ -137,14 +137,6 @@ while [[ -n $1 ]]; do
   shift
 done
 
-if [[ -n $USE_CACHED ]]; then
-  [[ -z $site ]] && die "Please specify a channel, user, or playlist id with option \e[1m--cached\e[0m. See \e[1m-h\e[0m for more help."
-  [[ -z $JSON_FILE ]] && die "No caches available for websites."
-  [[ ! -f $JSON_FILE ]] && die "Cache is not created yet. Please update first using option --update."
-  FILE=$JSON_FILE
-  site=
-fi
-
 function parseResults0() {
   local json_file
   if [[ -z "$FILE" || "$FILE" != *.json ]]; then
@@ -472,7 +464,25 @@ if [[ "$site" = ${youtube}* ]]; then
   fi
 
   # echo "$site"
-  if [[ "$site" = */videos || "$site" = *playlist* ]]; then
+  if [[ -n $USE_CACHED ]]; then
+    [[ -z $JSON_FILE ]] && die "No caches available for websites."
+    [[ ! -f $JSON_FILE ]] && die "Cache is not created yet. Please update first using option --update."
+
+    FILE=$JSON_FILE
+    site=
+    results=$(cat "$FILE")
+    parseResults "$results" "$query"
+    setupOutputsVariable
+    filterLinks
+
+    if [[ ! -t 1 ]]; then # not interactive
+      printf "%s" "$OUTPUTS"
+      exit 0
+    fi
+
+    printf "%s" "$OUTPUTS"
+    askForChoose
+  elif [[ "$site" = */videos || "$site" = *playlist* ]]; then
     fetchVideos "$site" "$query"
     setupOutputsVariable
 
