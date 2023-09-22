@@ -228,9 +228,9 @@ def normalize(a, p=2, axis=0, remove_global_phase_if_1D=True):
     return a
 
 def softmax(a, beta=1):
-     a = np.exp(beta*a)
-     Z = np.sum(a)
-     return a / Z
+    a = np.exp(beta*a)
+    Z = np.sum(a)
+    return a / Z
 
 
 ### Sets
