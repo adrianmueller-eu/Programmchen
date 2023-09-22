@@ -274,6 +274,17 @@ def su(n, include_identity=False, sparse=False, normalize=False):
         base = np.zeros((n,n), dtype=complex)
 
     basis = []
+
+    # Identity matrix, optional
+    if include_identity:
+        identity = base.copy()
+        for i in range(n):
+            identity[i,i] = 1
+        if normalize:
+            # factor 2 to get norm sqrt(2), too
+            identity = np.sqrt(2/n) * identity
+        basis.append(identity)
+
     # Generate the off-diagonal matrices
     for i in range(n):
         for j in range(i+1, n):
@@ -296,15 +307,6 @@ def su(n, include_identity=False, sparse=False, normalize=False):
         if i > 1:
             m = np.sqrt(2/(i*(i+1))) * m
         basis.append(m)
-
-    if include_identity:
-        identity = base.copy()
-        for i in range(n):
-            identity[i,i] = 1
-        if normalize:
-            # factor 2 to get norm sqrt(2), too
-            identity = np.sqrt(2/n) * identity
-        basis.append(identity)
 
     if normalize:
         # su have norm sqrt(2) by default
