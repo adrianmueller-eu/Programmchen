@@ -317,7 +317,7 @@ ip() (
 alias wi="wiki -l de"
 
 # youtube
-alias geta="yt-dlp --no-playlist -x --audio-format mp3 --audio-quality 0"
+alias geta=tomp3
 alias yt720="yt-dlp --no-playlist -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 alias yt1080="yt-dlp --no-playlist -f 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'"
 alias y=yt1080

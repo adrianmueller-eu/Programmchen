@@ -6,7 +6,7 @@ usage="\e[1mtomp3\e[0m -h | \e[4mfile\e[0m \e[4m...\e[0m"
 help="Convert any audio file capable by mplayer to mp3.
 $usage
         \e[1m-h\e[0m    Displays this message and exits.
-        \e[4mfile\e[0m  Files to convert to mp3.
+        \e[4mfile\e[0m  Files or like to file to convert to mp3.
 Dependencies to mplayer and lame.
 "
 
@@ -25,6 +25,11 @@ die() {
   echo "$*"
   exit 1
 }
+
+if [[ "$1" = "https://www.youtube.com"* ]]; then
+  yt-dlp --no-playlist -x --audio-format mp3 --audio-quality 0
+  exit 0
+fi
 
 convertWithMplayer() {
   mplayer -noar -novideo -ao pcm:fast "$1" || die "mplayer error on converting: $1"
