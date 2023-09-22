@@ -61,6 +61,60 @@ def rad(deg):
 
 ### Functions
 
+def roots(coeffs):
+    """ Solve a polynomial equation. """
+    def linear(a,b):
+        """Solve a linear equation: ax + b = 0. """
+        return -b/a
+
+    def quadratic(a,b,c):
+        """Solve a quadratic equation: ax^2 + bx + c = 0. """
+        d = (b**2 - 4*a*c)**(1/2)
+        return (-b + d)/(2*a), (-b - d)/(2*a)
+
+    def cubic(a,b,c,d):
+        """Solve a cubic equation: ax^3 + bx^2 + cx + d = 0. """
+        del_0 = b**2 - 3*a*c
+        del_1 = 2*(b**3) - 9*a*b*c + 27*(a**2)*d
+        discriminant = del_1**2 - 4*(del_0**3)
+        const = (del_1/2 + (1/2)*discriminant**(1/2))**(1/3)
+
+        tmp1 = const
+        tmp2 = const * np.exp(4/3*np.pi*1j)
+        tmp3 = const * np.exp(8/3*np.pi*1j)
+        pre = -1/(3*a)
+        return pre*(b + tmp1 + del_0/tmp1), pre*(b + tmp2 + del_0/tmp2), pre*(b + tmp3 + del_0/tmp3)
+
+    def quatric(a,b,c,d,e):
+        """ Solve a quartic equation: ax^4 + bx^3 + cx^2 + dx + e = 0. """
+        p = c/a - 3*(b**2)/(8*(a**2))
+        q = b**3/(8*(a**3)) - b*c/(2*(a**2)) + d/a
+        delta_0 = c**2 - 3*b*d + 12*a*e
+        delta_1 = 2*c**3 - 9*b*c*d + 27*(b**2)*e + 27*a*d**2 - 72*a*c*e
+        discr = complex(delta_1**2 - 4*delta_0**3)
+        Q = ((delta_1 + discr**(1/2))/2)**(1/3)
+        S = 1/2 * (-2/3 * p + 1/(3*a) * (Q + delta_0/Q))**(1/2)
+        pre = -1/(4*a) * b
+        tmp0_1 = -S**2 - p/2
+        tmp0_2 = q/(4*S)
+        tmp1 = np.sqrt(tmp0_1 + tmp0_2)
+        tmp2 = np.sqrt(tmp0_1 - tmp0_2)
+        return pre - S - tmp1, pre - S + tmp1, pre + S - tmp2, pre + S + tmp2
+
+    coeffs = list(map(complex, coeffs))
+    if len(coeffs) < 2:
+        raise ValueError("The degree of the polynomial must be at least 1.")
+    elif len(coeffs) == 2:
+        return linear(*coeffs)
+    elif len(coeffs) == 3:
+        return quadratic(*coeffs)
+    elif len(coeffs) == 4:
+        return cubic(*coeffs)
+    elif len(coeffs) == 5:
+        return quatric(*coeffs)
+    else:
+        return np.roots(coeffs)
+
 # e.g. series(lambda n, _: 1/factorial(2*n)) + series(lambda n, _: 1/factorial(2*n + 1))
 def series(f, start_value=0, start_index=0, eps=sys.float_info.epsilon, max_iter=100000, verbose=False):
     if not np.isscalar(start_value):
