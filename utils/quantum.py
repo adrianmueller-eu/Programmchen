@@ -437,24 +437,21 @@ def plotQ(state, showqubits=None, showcoeff=True, showprobs=True, showrho=False,
     fig.tight_layout()
     plt.show()
 
-def random_state(n=1):
+def random_ket(n=1):
     """Generate a random state vector ($2^{n+1}-2$ degrees of freedom). Normalized and without global phase."""
     real = np.random.random(2**n)
     imag = np.random.random(2**n)
     return normalize(real + 1j*imag)
 
-def random_density_matrix(n=1, pure=True):
+def random_dm(n=1, pure=False):
     """Generate a random density matrix ($2^{n+1}-1$ degrees of freedom). Normalized and without global phase."""
     if pure:
-        state = random_state(n)
+        state = random_ket(n)
         return np.outer(state, state.conj())
     else:
         probs = normalize(np.random.random(2**n), p=1)
-        res = np.zeros((2**n, 2**n), dtype=complex)
-        for p in probs:
-            state = random_state(n)
-            res += p * np.outer(state, state.conj())
-        return res
+        kets = normalize(random_vec((2**n, 2**n), complex=True))
+        return kets @ np.diag(probs) @ kets.conj().T
 
 def ket(specification):
     """Convert a string or dictionary of strings and weights to a state vector. The string can be a binary number or a combination of binary numbers and weights. The weights will be normalized to 1."""
@@ -1123,6 +1120,8 @@ def pauli_basis(n, kind='np', normalize=False):
 
 def test_quantum_all():
     tests = [
+        _test_random_ket,
+        _test_random_dm,
         _test_get_H_energies_eq_get_pe_energies,
         _test_ph,
         _test_reverse_qubit_order,
@@ -1150,6 +1149,20 @@ def _test_get_H_energies_eq_get_pe_energies():
     A = np.sort(get_pe_energies(exp_i(H)))
     B = get_H_energies(H)
     return np.allclose(A, B)
+def _test_random_ket():
+    for _ in range(100):
+        n_qubits = np.random.randint(1, 10)
+        psi = random_ket(n_qubits)
+        assert psi.shape == (2**n_qubits,)
+        assert np.allclose(np.linalg.norm(psi), 1)
+    return True
+
+def _test_random_dm():
+    for _ in range(100):
+        n_qubits = np.random.randint(1, 5)
+        rho = random_dm(n_qubits)
+        assert is_dm(rho)
+    return True
 
 def _test_ph():
     H = ph('0.5*(II + ZI - ZX + IX)')
@@ -1188,7 +1201,7 @@ def _test_reverse_qubit_order():
 
     # same as above, but with n random qubits
     n = 10
-    psis = [random_state(1) for _ in range(n)]
+    psis = [random_ket(1) for _ in range(n)]
     psi = psis[0]
     for i in range(1,n):
         psi = np.kron(psi, psis[i])
@@ -1221,7 +1234,7 @@ def _test_reverse_qubit_order():
     # TODO: This test fails
     # # draw n times 2 random 1-qubit states and a probability distribution over all n pairs
     # n = 10
-    # psis = [[random_density_matrix(1) for _ in range(2)] for _ in range(n)]
+    # psis = [[random_dm(1) for _ in range(2)] for _ in range(n)]
     # p = normalize(np.random.rand(n), p=1)
     # # compute the average state
     # psi = np.zeros((2**2, 2**2), dtype=complex)
@@ -1245,36 +1258,36 @@ def _test_partial_trace():
     assert np.allclose(rhoA_expected, rhoA_actual), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
 
     # two separable density matrices
-    rhoA = random_density_matrix(2)
-    rhoB = random_density_matrix(3)
+    rhoA = random_dm(2)
+    rhoB = random_dm(3)
     rho = np.kron(rhoA, rhoB)
     rhoA_expected = rhoA
     rhoA_actual   = partial_trace(rho, [0,1])
     assert np.allclose(rhoA_expected, rhoA_actual), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
 
     # two separable state vectors
-    psiA = random_state(2)
-    psiB = random_state(3)
+    psiA = random_ket(2)
+    psiB = random_ket(3)
     psi = np.kron(psiA, psiB)
     psiA_expected = np.outer(psiA, psiA.conj())
     psiA_actual   = partial_trace(psi, [0,1])
     assert np.allclose(psiA_expected, psiA_actual), f"psi_expected = {psiA_expected}\npsi_actual = {psiA_actual}"
 
     # total trace
-    st = random_state(3)
+    st = random_ket(3)
     st_tr = partial_trace(st, [])
     assert np.allclose(np.array([[1]]), st_tr), f"st_tr = {st_tr} ≠ 1"
-    rho = random_density_matrix(3)
+    rho = random_dm(3)
     rho_tr = partial_trace(rho, [])
     assert np.allclose(np.array([[1]]), rho_tr), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
 
     # retain all qubits
-    st = random_state(3)
+    st = random_ket(3)
     st_tr = partial_trace(st, [0,1,2])
     st_expected = np.outer(st, st.conj())
     assert st_expected.shape == st_tr.shape, f"st_expected.shape = {st_expected.shape} ≠ st_tr.shape = {st_tr.shape}"
     assert np.allclose(st_expected, st_tr), f"st_expected = {st_expected} ≠ st_tr = {st_tr}"
-    rho = random_density_matrix(2)
+    rho = random_dm(2)
     rho_tr = partial_trace(rho, [0,1])
     assert rho.shape == rho_tr.shape, f"rho.shape = {rho.shape} ≠ rho_tr.shape = {rho_tr.shape}"
     assert np.allclose(rho, rho_tr), f"rho_expected = {rhoA_expected}\nrho_actual = {rhoA_actual}"
@@ -1299,8 +1312,8 @@ def _test_entanglement_entropy():
     assert np.allclose(S, 1), f"S = {S} ≠ 1"
 
     # Two separable systems should for the first system have entropy 0
-    rhoA = random_density_matrix(2)
-    rhoB = random_density_matrix(3)
+    rhoA = random_dm(2, pure=True)  # this must be pure (why?)
+    rhoB = random_dm(3, pure=False)
     rho = np.kron(rhoA, rhoB)
     S = entanglement_entropy(rho, [0,1])
     assert np.allclose(S, 0), f"S = {S} ≠ 0"
