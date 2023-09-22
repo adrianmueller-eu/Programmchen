@@ -628,7 +628,9 @@ def sqrt_brain_compatible(x, correction_term=False, n_max = 20):
            else:
                return n + (x - n_sq_table[n-1])/(2*n + 1)
 
-# Reduction of the halting problem to the equivalence problem, i.e. show that the latter is at least as hard as the former. Give an algorithm `H` and input `x` to decide whether `H(x)` halts. This function returns two functions `f1, f2`. Use your implementation `equiv` solving the equivalence problem to solve the halting problem, e.g. `equiv(*equiv_from_halt(H, x))`.
+# Reduction of the halting problem to the equivalence problem, i.e. show that the latter is at least as hard as the former.
+# Give an algorithm `H` and input `x` to decide whether `H(x)` halts. This function returns two functions `f1, f2`. Use your
+# implementation `equiv` solving the equivalence problem to solve the halting problem, e.g. `equiv(*equiv_from_halt(H, x))`.
 def equiv_from_halt(H, x):
     def f1(y):
         if y == x:
@@ -641,6 +643,7 @@ def equiv_from_halt(H, x):
     return f1, f2
 
 def Hutchinson_trace(A, n=1000):
+    """ Terribly inefficient, but theoretically interesting. """
     if A.shape[0] != A.shape[1]:
         raise ValueError("A must be square")
     zs = np.random.normal(0, 1, size=(A.shape[0], n))
