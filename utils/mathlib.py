@@ -150,6 +150,44 @@ def series(f, start_value=0, start_index=0, eps=sys.float_info.epsilon, max_iter
 
     raise ValueError(f"Series didn't converge after {max_iter} iterations! Error: {np.sum(np.abs(term))}")
 
+def sequence(f, start_value=0, start_index=0, eps=sys.float_info.epsilon, max_iter=100000, verbose=False):
+    """ Calculate the sequence $[f(start_index), f(start_index+1), ...]$ until it converges or the maximum number of iterations is reached. Then return the last term of the sequence.
+
+    Parameters
+        f (function): A function that takes two arguments, the current iteration `i` and last term `last_term`, and returns the next term in the sequence.
+        start_value (float | np.ndarray, optional): The value of the series at `start_index` (default: 0).
+        start_index (int, optional): The index at which to start the series (default: 0).
+        eps (float, optional): The precision to which the series should be calculated (default: `sys.float_info.epsilon`).
+        max_iter (int, optional): The maximum number of iterations (default: 100000).
+        verbose (bool, optional): If True, print the current iteration and the current value of the series (default: False).
+
+    Returns
+        float | np.ndarray: The value of the series.
+    """
+    if not np.isscalar(start_value):
+        start_value = np.array(start_value)
+    last_term = start_value
+    for i in range(start_index+1, max_iter):
+        current_term = f(i, last_term)
+        if verbose:
+            print(f"Iteration {i}:", current_term)
+        # if it contains inf or nan, we assume divergence
+        if np.isinf(current_term).all() or np.isnan(current_term).all():
+            if verbose:
+                print(f"Warning: Sequence diverged after {i} iterations!")
+            return current_term
+        # if the difference between the last two terms is smaller than eps, we assume convergence
+        error = np.sum(np.abs(current_term - last_term))
+        if error < eps:
+            if verbose:
+                print(f"Converged after {i} iterations! Error: {error}")
+            return current_term
+        last_term = current_term
+
+    if verbose:
+        print(f"Warning: Sequence didn't converge after {max_iter} iterations! Error: {error}")
+    return current_term
+
 try:
     from scipy.linalg import expm as matexp
     from scipy.linalg import logm as _matlog
@@ -571,6 +609,7 @@ def test_mathlib_all():
         _test_matexp,
         _test_matlog,
         _test_series,
+        _test_sequence,
         _test_normalize,
         _test_softmax,
         _test_su,
@@ -733,6 +772,19 @@ def _test_series():
     a = np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=1)
     expected = np.array([[np.e, 0], [0, 1/np.e]])
     assert np.allclose(a, expected)
+
+    return True
+
+def _test_sequence():
+    # for any converging series, the sequence should converge to 0
+    res = sequence(lambda n, _: 1/factorial(2*n), 1)
+    assert np.isclose(res, 0)
+
+    # a nice fractal to test the matrix version
+    x,y = np.meshgrid(np.linspace(-0.7,1.7,200), np.linspace(-1.1,1.1,200))
+    res = sequence(lambda i,x: (0.3+1j)*x*(1-x), start_value=x+1j*y, max_iter=200)
+    res[np.isnan(res)] = np.inf
+    np.allclose(np.mean(np.isinf(res)), 0.78815)
     return True
 
 def _test_normalize():
