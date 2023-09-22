@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import re
 from .mathlib import is_complex, is_symmetric, normalize, int_sqrt
 from .utils import *
 
@@ -125,7 +126,7 @@ def histogram(data, bins=None, xlog=False, density=False):
         bins = bins_sqrt(data)
     return np.histogram(data, bins=bins, density=density)
 
-def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=False, colored=None, cmap="viridis", save_file=None):
+def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=False, vlines=None, colored=None, cmap="viridis", save_file=None):
     """Uses magic to create pretty histograms."""
 
     if type(bins) == str:
@@ -149,9 +150,10 @@ def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=F
     data = np.array(data)
     n_filtered = np.sum(np.isnan(data)) + np.sum(np.isinf(data))
     if n_filtered > 0:
+        n_original = len(data)
         data = data[~np.isnan(data)] # filter nan
         data = data[~np.isinf(data)] # filter inf and -inf
-        print(f"nan or inf values detected in data: {n_filtered} values {n_filtered/len(data)*100:.3f}% filtered out")
+        print(f"nan or inf values detected in data: {n_filtered} values ({n_filtered/n_original*100:.3f}%) filtered out")
 
     n, bins = histogram(data, bins=bins, xlog=xlog, density=density)
     ax0.hist(bins[:-1], bins, weights=n) # TODO: moving_avg(bins,2) instead of bins[:-1]?
@@ -167,6 +169,74 @@ def hist(data, bins=None, xlabel="", title="", xlog=False, ylog=False, density=F
     ax0.spines["right"].set_visible(False)
     ax0.spines["bottom"].set_visible(False)
 
+    # Add optional vertical lines
+    if vlines:
+        # if not iterable, put it in a list
+        if not hasattr(vlines, '__iter__') or type(vlines) == str:
+            vlines = [vlines]
+        for v in vlines:
+            # if iterable, assume the first to be the number and the rest to be kwargs
+            if hasattr(v, '__iter__') and type(v) != str:
+                v, kwargs = v[0], v[1:]
+            else:
+                kwargs = {}
+            # if string, interpret it
+            if type(v) == str:
+                import re
+                if v == "mean":
+                    v = np.mean(data)
+                elif v == "median":
+                    v = np.median(data)
+                elif v == "mode":
+                    # bin with the highest frequency
+                    v = bins[np.argmax(n)]
+                elif v == "std":
+                    v1 = np.mean(data) + np.std(data)
+                    v2 = np.mean(data) - np.std(data)
+                    if "color" not in kwargs:
+                        kwargs["color"] = "black"
+                    if "alpha" not in kwargs:
+                        kwargs["alpha"] = .2
+                    ax0.axvspan(v1, v2, **kwargs)
+                    continue
+                elif v == "2std":
+                    v1 = np.mean(data) + 2*np.std(data)
+                    v2 = np.mean(data) - 2*np.std(data)
+                    if "color" not in kwargs:
+                        kwargs["color"] = "black"
+                    if "alpha" not in kwargs:
+                        kwargs["alpha"] = .2
+                    ax0.axvspan(v1, v2, **kwargs)
+                    continue
+                # credible interval
+                elif re.match(r"\d?\d\.?\d?\d?%?C?I?", v.replace(' ', '').replace('-', '')):
+                    v = float(v.replace(' ', '').replace('%', '').replace('-', '').replace('CI', ''))
+                    if v < 0 or v > 100:
+                        raise ValueError(f"CI must be between 0 and 100, but was {v}")
+                    v /= 100
+                    v1 = np.quantile(data, (1-v)/2)
+                    v2 = np.quantile(data, (1+v)/2)
+                    if "color" not in kwargs:
+                        kwargs["color"] = "black"
+                    if "alpha" not in kwargs:
+                        kwargs["alpha"] = .2
+                    ax0.axvspan(v1, v2, **kwargs)
+                    continue
+                else:
+                    raise ValueError(f"Unknown vlines string: {v}")
+            if "color" not in kwargs:
+                kwargs["color"] = "black"
+            if "linestyle" not in kwargs:
+                kwargs["linestyle"] = "--"
+            ax0.axvline(v, **kwargs)
+            # add a label at v
+            if "label" not in kwargs:
+                kwargs["label"] = f"{v:.3f}"
+            if kwargs["label"] != None:
+                # ax0.text(v + 0.01*(ax0.get_xlim[1] - ax0.get_xlim()[0]), ax0.get_ylim()[1]*0.9, kwargs["label"], rotation=90, verticalalignment="top")
+                ax0.text(v, 0, kwargs["label"], rotation=-45, verticalalignment="top")
+
+    # Add colored 1d scatter plot
     if colored:
         ax[1].scatter(data, np.zeros(*data.shape), alpha=.5, c=colored, cmap=cmap, marker="|", s=500)
         # ax[1].axis("off")
