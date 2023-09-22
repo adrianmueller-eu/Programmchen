@@ -94,3 +94,13 @@ def shape_it(a, progress=True):
     for n in tq(product(*[list(range(s)) for s in a.shape]),
                         disable=not progress, total=np.prod(a.shape)):
         yield n
+
+def allclose_set(a, b):
+    """ Check if for each item in a there is a corresponding item in b that is close to it and vice versa. """
+    matched_b_indices = []
+    for item_a in a:
+        for i, item_b in enumerate(b):
+            if i not in matched_b_indices and np.isclose(item_a, item_b):
+                matched_b_indices.append(i)
+                break
+    return len(matched_b_indices) == len(a)
