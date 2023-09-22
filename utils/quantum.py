@@ -606,6 +606,20 @@ def is_dm(rho):
     rho = np.array(rho)
     return is_psd(rho) and np.allclose(np.trace(rho), 1)
 
+def fidelity(state1, state2):
+    """Calculate the fidelity between two quantum states."""
+    state1 = np.array(state1)
+    state2 = np.array(state2)
+
+    if len(state1.shape) == 1:
+        return np.abs(state1 @ state2.conj())**2
+    elif len(state1.shape) == 2:
+        # state1_sqrt = matsqrt(state1)
+        # return np.trace(matsqrt(state1_sqrt @ state2 @ state1_sqrt))
+        return np.sum(np.sqrt(np.linalg.eigvals(state1 @ state2)))  # this is correct and faster
+    else:
+        raise ValueError(f"Can't calculate fidelity between {state1.shape} and {state2.shape}")
+
 ####################
 ### Ground state ###
 ####################
@@ -1240,6 +1254,7 @@ def test_quantum_all():
         _test_partial_trace,
         _test_entropy_von_Neumann,
         _test_entropy_entanglement,
+        _test_fidelity,
         _test_ising,
         _test_pauli_basis
     ]
@@ -1484,6 +1499,33 @@ def _test_entropy_entanglement():
     rho = np.kron(rhoA, rhoB)
     S = entropy_entanglement(rho, [0,1])
     assert np.allclose(S, 0), f"S = {S} ≠ 0"
+
+    return True
+
+def _test_fidelity():
+    # same state
+    psi = random_ket(2)
+    assert np.allclose(fidelity(psi, psi), 1), f"fidelity = {fidelity(psi, psi)} ≠ 1"
+    rho = random_dm(2)
+    assert np.allclose(fidelity(rho, rho), 1), f"fidelity = {fidelity(rho, rho)} ≠ 1"
+
+    # orthogonal states
+    psi1 = ket('00')
+    psi2 = ket('11')
+    assert np.allclose(fidelity(psi1, psi2), 0), f"fidelity = {fidelity(psi1, psi2)} ≠ 0"
+    rho1 = dm('00')
+    rho2 = dm('11')
+    assert np.allclose(fidelity(rho1, rho2), 0), f"fidelity = {fidelity(rho1, rho2)} ≠ 0"
+
+    # random states to test properties: F(s1,s2) \in [0,1], symmetric
+    psi1 = random_ket(2)
+    psi2 = random_ket(2)
+    assert 0 <= fidelity(psi1, psi2) <= 1, f"fidelity = {fidelity(psi1, psi2)} ∉ [0,1]"
+    assert np.allclose(fidelity(psi1, psi2), fidelity(psi2, psi1)), f"fidelity(psi1, psi2) = {fidelity(psi1, psi2)} ≠ {fidelity(psi2, psi1)}"
+    rho1 = random_dm(2)
+    rho2 = random_dm(2)
+    assert 0 <= fidelity(rho1, rho2) <= 1, f"fidelity = {fidelity(rho1, rho2)} ∉ [0,1]"
+    assert np.allclose(fidelity(rho1, rho2), fidelity(rho2, rho1)), f"fidelity(rho1, rho2) = {fidelity(rho1, rho2)} ≠ {fidelity(rho2, rho1)}"
 
     return True
 
