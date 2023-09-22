@@ -41,9 +41,8 @@ def is_involutory(a, rtol=1e-05, atol=1e-08):
 
 def is_complex(a):
     if hasattr(a, 'dtype'):
-        return a.dtype == complex
+        return np.issubdtype(a.dtype, complex)
     return np.iscomplex(a).any()
-#    return a.dtype == "complex128"
 
 def is_psd(a, rtol=1e-05, atol=1e-08):
     if not is_hermitian(a, rtol=rtol, atol=atol):
