@@ -5,17 +5,19 @@ def getsource(f):
 eps = sys.float_info.epsilon
 ### math
 import numpy as np
-from numpy.linalg import matrix_rank as rank
+
 try:
     integral # see if sage is loaded
 except:
     from math import *
     from numpy import product as mul
     try:
-       import sympy as sp
+       import sympy
     except:
        pass
 try:
+    from numpy.linalg import *
+    from numpy.linalg import matrix_rank as rank
     from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
 
     import scipy
@@ -23,8 +25,8 @@ try:
     from scipy.optimize import minimize
     from scipy.linalg import *
 except:
-    from numpy.linalg import *
     pass
+
 import itertools # https://docs.python.org/3/library/itertools.html
 ### visual
 # import pandas as pd
