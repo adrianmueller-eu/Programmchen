@@ -732,7 +732,7 @@ def _test_random_orthogonal():
     return True
 
 def _test_is_hermitian():
-    a = np.random.rand(5,5) + 1j*np.random.rand(5,5)
+    a = random_vec((5,5), complex=True)
     b = a + a.conj().T
     assert is_hermitian(b)
     c = a + 1
@@ -745,8 +745,8 @@ def _test_random_hermitian():
     return True
 
 def _test_is_unitary():
-    a, b = np.random.rand(2) + 1j*np.random.rand(2)
-    a, b = normalize([a, b], remove_global_phase=False)
+    a, b = random_vec(2, complex=True)
+    a, b = normalize([a, b])
     phi = np.random.rand()*2*np.pi
     a = np.array([
         [a, b],
@@ -796,7 +796,7 @@ def _test_deg():
     return True
 
 def _test_matexp():
-    a = np.random.rand(5,5) + 1j*np.random.rand(5,5)
+    a = random_vec((5,5), complex=True)
     # check if det(matexp(A)) == exp(trace(A))
     assert np.isclose(np.linalg.det(matexp(a)), np.exp(np.trace(a)))
     return True
@@ -814,8 +814,8 @@ def _test_roots():
     assert np.allclose(roots([1, -2, -11, 12]), [-3, 1, 4])
     assert np.allclose(roots([1, -7, 5, 31, -30]), [-2, 1, 3, 5])
 
-    for degree in range(2, 6):
-        coeffs = np.random.uniform(-10, 10, degree) + 1j*np.random.uniform(-10, 10, degree)
+    for degree in range(1, 6):
+        coeffs = random_vec(degree+1, (-10, 10), complex=True)
         assert np.allclose(np.polyval(coeffs, roots(coeffs)), 0), f"{coeffs}: {roots(coeffs)}"
     return True
 
@@ -859,7 +859,7 @@ def _test_sequence():
     return True
 
 def _test_normalize():
-    a = np.random.rand(5) + 1j*np.random.rand(5)
+    a = random_vec(5, complex=True)
     b = normalize(a)
     assert np.isclose(np.linalg.norm(b), 1)
     return True
