@@ -3,7 +3,7 @@ from math import factorial
 
 from .utils import *
 
-def H(p): # e.g. H(1*[1/2] + 4*[1/8])
+def entropy(p): # e.g. H(1*[1/2] + 4*[1/8])
     """Entropy!"""
     if callable(p):
         S = 0
@@ -13,7 +13,7 @@ def H(p): # e.g. H(1*[1/2] + 4*[1/8])
         return S
     if abs(np.sum(p) - 1) > 1e-10:
         raise ValueError("The overall probability must be 1!")
-    return -sum((p*np.log2(p) for p in p if p > 0))
+    return -sum((p*np.log2(p) for p in p if p > 0))  # 0*log(0) = 0
 
 def smooth(y, smoothing=0.1):
     # https://scipy.github.io/old-wiki/pages/Cookbook/SavitzkyGolay

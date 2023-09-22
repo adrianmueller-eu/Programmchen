@@ -34,7 +34,7 @@ T_gate = np.array([ # avoid overriding T = True
     [1,  0],
     [0,  np.sqrt(1j)]
 ], dtype=complex)
-Had = 1/np.sqrt(2) * np.array([
+H = 1/np.sqrt(2) * np.array([
     [1,  1],
     [1, -1]
 ], dtype=complex) # f2*(X + Z) = 1j*f2*(Rx(pi) + Rz(pi))
@@ -114,8 +114,6 @@ def parse_unitary(unitary):
             # if there is no C, then it's just a single gate
             elif c == "T":
                  gate = T_gate
-            elif c == "H":
-                 gate = Had
             else:
                  gate = globals()[chunk[i]]
             chunk_matrix = np.kron(chunk_matrix, gate)
