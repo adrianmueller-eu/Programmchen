@@ -1228,6 +1228,8 @@ def pauli_basis(n, kind='np', normalize=False):
 
 def test_quantum_all():
     tests = [
+        _test_constants,
+        _test_is_dm,
         _test_random_ket,
         _test_random_dm,
         _test_random_ham,
@@ -1250,15 +1252,33 @@ def test_quantum_all():
             print("ERROR!")
             break
 
-def _test_get_H_energies_eq_get_pe_energies():
-    n_qubits = np.random.randint(1, 5)
-    n_terms = np.random.randint(1, 100)
-    H = random_hamiltonian(n_qubits, n_terms, scaling=False)
-    H = parse_hamiltonian(H)
+def _test_constants():
+    assert is_involutory(X)
+    assert is_involutory(Y)
+    assert is_involutory(Z)
+    assert is_involutory(H)
+    assert np.allclose(S @ S, Z)
+    assert np.allclose(T_gate @ T_gate, S)
+    assert is_involutory(CNOT)
+    assert is_involutory(SWAP)
+    assert np.allclose(Rx(2*np.pi), -I)
+    assert np.allclose(Ry(2*np.pi), -I)
+    assert np.allclose(Rz(2*np.pi), -I)
 
-    A = np.sort(get_pe_energies(exp_i(H)))
-    B = get_H_energies(H)
-    return np.allclose(A, B)
+    return True
+
+def _test_is_dm():
+    assert is_dm(np.eye(2**2)/2**2)
+    # random Bloch vectors
+    for _ in range(100):
+        v = np.random.uniform(-1, 1, 3)
+        if np.linalg.norm(v) > 1:
+            v = normalize(v)
+        # create dm from Bloch vector
+        rho = (I + v[0]*X + v[1]*Y + v[2]*Z)/2
+        assert is_dm(rho)
+    return True
+
 def _test_random_ket():
     for _ in range(100):
         n_qubits = np.random.randint(1, 10)
@@ -1327,6 +1347,17 @@ def _test_ground_state():
     # assert np.allclose(res_ITE[1], gs) # might be complex due to random state initialization
 
     return True
+
+def _test_get_H_energies_eq_get_pe_energies():
+    n_qubits = np.random.randint(1, 5)
+    n_terms = np.random.randint(1, 100)
+    n_terms = min(n_terms, 2**(2*n_qubits)-1)
+    H = random_ham(n_qubits, n_terms, scaling=False)
+    H = ph(H)
+
+    A = np.sort(get_pe_energies(exp_i(H)))
+    B = get_H_energies(H)
+    return np.allclose(A, B)
 
 def _test_reverse_qubit_order():
     # known 3-qubit matrix
