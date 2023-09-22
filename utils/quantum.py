@@ -456,30 +456,67 @@ def random_density_matrix(n=1, pure=True):
             res += p * np.outer(state, state.conj())
         return res
 
-def state(specification):
+def ket(specification):
     """Convert a string or dictionary of strings and weights to a state vector. The string can be a binary number or a combination of binary numbers and weights. The weights will be normalized to 1."""
     # if a string is given, convert it to a dictionary
-    if type(specification) == str:
+    if type(specification) == np.ndarray:
+        n = int(np.log2(len(specification)))
+        assert len(specification) == 2**n, f"State vector has wrong length: {len(specification)} is not a power of 2!"
+        return normalize(specification)
+    elif type(specification) == str:
+        # handle some special cases: |+>, |->, |i>, |-i>
+        if specification == "+":
+            return normalize(np.array([1,1], dtype=complex))
+        elif specification == "-":
+            return normalize(np.array([1,-1], dtype=complex))
+        elif specification == "i":
+            return normalize(np.array([1,1j], dtype=complex))
+        elif specification == "-i":
+            return normalize(np.array([1,-1j], dtype=complex))
+
         # remove whitespace
         specification = specification.replace(" ", "")
         specification_dict = dict()
-        specification = specification.split("+")
-        # re-merge parts with parentheses, e.g. (0.5+1j)*100
-        for i, s in enumerate(specification):
-            if s[0] == "(" and s[-1] != ")":
-                specification[i] += "+" + specification[i+1]
-                specification.pop(i+1)
-        # parse the weights
-        for s in specification:
-            if "*" in s:
-                weight, state = s.split("*")
-                specification_dict[state] = weight
-            else:
-                specification_dict[s] = 1
-        specification = specification_dict
+        n = None
+
+        # Parse the specification into the dictionary, where the keys are the strings '00', '01', '10', '11', etc. and the values are the weights
+        # The following cases have to be considered:
+        #  00 + 11
+        #  0.5*00 + 0.5*11
+        #  0.5*(00 + 11)
+        #  (1+1j)*00 + (1-1j)*11
+        #  0.5*((1+1j)*00 + (1-1j)*11)
+        #  0.5*((1+1j)*00 + (1-1j)*11) + 0.5*((1-1j)*00 + (1+1j)*11)
+
+        # if there are no brackets, then split by "+" and then by "*"
+        if "(" not in specification and ")" not in specification:
+            for term in specification.split("+"):
+                if "*" in term:
+                    weight, state = term.split("*")
+                    weight = complex(weight)
+                else:
+                    weight = 1
+                    state = term
+                if n is not None:
+                    assert len(state) == n, f"Part of the specification has wrong length: len('{state}') != {n}"
+                else:
+                    n = len(state)
+                if state in specification_dict:
+                    specification_dict[state] += weight
+                else:
+                    specification_dict[state] = weight
+        else:
+            raise NotImplementedError("Parentheses are not yet supported!")
+
+        # normalize the weights
+        specification = {}
+        for key in specification_dict:
+            specification[key] = specification_dict[key] / np.sum(list(specification_dict.values()))
+
         # convert the weights to floats
         for key in specification:
             specification[key] = complex(specification[key])
+
     # convert the dictionary to a state vector
     n = len(list(specification.keys())[0])
     state = np.zeros(2**n, dtype=complex)
