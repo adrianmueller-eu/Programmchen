@@ -33,7 +33,7 @@ import itertools # https://docs.python.org/3/library/itertools.html
 # %matplotlib
 import matplotlib.pyplot as plt # https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.html#module-matplotlib.pyplot
 try:
-  from tqdm import tqdm
+  from tqdm.autonotebook import tqdm as tq
 except:
   pass
 ### options
