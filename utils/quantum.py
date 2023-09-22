@@ -590,16 +590,16 @@ def probs(state):
     """Calculate the probabilities of measuring a state vector in the standard basis."""
     return np.abs(state)**2
 
-def von_Neumann_entropy(state):
-    """Calculate the von Neumann entropy of a state vector."""
-    state = np.array(state)
+def entropy_von_Neumann(state):
+    """Calculate the von Neumann entropy of a given density matrix."""
+    state = op(state)
     S = -np.trace(state @ matlog(state)/np.log(2))
     assert np.allclose(S.imag, 0), f"WTF: Entropy is not real: {S}"
     return np.max(S.real, 0)  # fix rounding errors
 
-def entanglement_entropy(state, subsystem_qubits):
-    """Calculate the entanglement entropy of a state vector with respect to the given subsystem."""
-    return von_Neumann_entropy(partial_trace(state, subsystem_qubits))
+def entropy_entanglement(state, subsystem_qubits):
+    """Calculate the entanglement entropy of a quantum state (density matrix or vector) with respect to the given subsystem."""
+    return entropy_von_Neumann(partial_trace(state, subsystem_qubits))
 
 def is_dm(rho):
     """Check if matrix `rho` is a density matrix."""
@@ -1174,8 +1174,8 @@ def test_quantum_all():
         _test_ph,
         _test_reverse_qubit_order,
         _test_partial_trace,
-        _test_von_Neumann_entropy,
-        _test_entanglement_entropy,
+        _test_entropy_von_Neumann,
+        _test_entropy_entanglement,
         _test_ising_model,
         _test_pauli_basis
     ]
@@ -1342,28 +1342,28 @@ def _test_partial_trace():
 
     return True
 
-def _test_von_Neumann_entropy():
-    rho = random_density_matrix(2, pure=True)
-    S = von_Neumann_entropy(rho)
+def _test_entropy_von_Neumann():
+    rho = random_dm(2, pure=True)
+    S = entropy_von_Neumann(rho)
     assert np.allclose(S, 0), f"S = {S} ≠ 0"
 
     rho = np.eye(2)/2
-    S = von_Neumann_entropy(rho)
+    S = entropy_von_Neumann(rho)
     assert np.allclose(S, 1), f"S = {S} ≠ 1"
 
     return True
 
-def _test_entanglement_entropy():
+def _test_entropy_entanglement():
     # Bell state |00> + |11> should for the first qubit have entropy 1
     rho = 1/2*np.outer(np.array([1,0,0,1]), np.array([1,0,0,1]))
-    S = entanglement_entropy(rho, [0])
+    S = entropy_entanglement(rho, [0])
     assert np.allclose(S, 1), f"S = {S} ≠ 1"
 
     # Two separable systems should for the first system have entropy 0
     rhoA = random_dm(2, pure=True)  # this must be pure (why?)
     rhoB = random_dm(3, pure=False)
     rho = np.kron(rhoA, rhoB)
-    S = entanglement_entropy(rho, [0,1])
+    S = entropy_entanglement(rho, [0,1])
     assert np.allclose(S, 0), f"S = {S} ≠ 0"
 
     return True
