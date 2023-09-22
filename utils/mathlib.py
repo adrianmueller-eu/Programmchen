@@ -378,11 +378,15 @@ def random_psd(size):
 
 def prime_factors(n):
     """Simple brute-force algorithm to find prime factors"""
-    i = 2
     factors = []
+    # remove all factors of 2 first
+    while n % 2 == 0:
+        factors.append(2)
+        n //= 2
+    i = 3
     while i * i <= n:
         if n % i:
-            i += 1
+            i += 2
         else:
             n //= i
             factors.append(i)
