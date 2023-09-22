@@ -216,15 +216,16 @@ except:
     def matsqrt(A, n=2):
         return matpow(A, 1/n)
 
-def normalize(a, p=2, remove_global_phase=True):
-     if is_complex(a):
-         a = np.array(a, dtype=complex)
-     else:
-         a = np.array(a, dtype=float)
-     a /= np.linalg.norm(a, ord=p)
-     if remove_global_phase and is_complex(a):
-         a *= np.exp(-1j*np.angle(a[0]))
-     return a
+def normalize(a, p=2, axis=0, remove_global_phase_if_1D=True):
+    if is_complex(a):
+        a = np.array(a, dtype=complex)
+    else:
+        a = np.array(a, dtype=float)
+    a /= np.linalg.norm(a, ord=p, axis=axis, keepdims=True)
+    if len(a.shape) == 1 and remove_global_phase_if_1D and is_complex(a):
+        # this works only for a 1D array
+        a *= np.exp(-1j*np.angle(a[0]))
+    return a
 
 def softmax(a, beta=1):
      a = np.exp(beta*a)
