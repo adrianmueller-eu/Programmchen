@@ -606,6 +606,44 @@ def is_dm(rho):
     rho = np.array(rho)
     return is_psd(rho) and np.allclose(np.trace(rho), 1)
 
+####################
+### Ground state ###
+####################
+
+def ground_state_exact(hamiltonian):
+    """ Calculate the ground state using the Lanczos algorithm (exact diagonalization). """
+    if isinstance(hamiltonian, str):
+        try:
+            H = ph(hamiltonian)
+        except MemoryError:
+            H = ph(hamiltonian, sparse=True)
+    # elif isinstance(hamiltonian, nk.operator.DiscreteOperator):
+    #     H = hamiltonian.to_sparse()
+    else:
+        H = hamiltonian
+
+    if sp.issparse(H):
+        evals, evecs = sp.linalg.eigsh(H, k=1, which='SA')
+    else:
+        evals, evecs = np.linalg.eigh(H) # way faster, but only dense matrices
+    ground_state_energy = evals[0]
+    ground_state = evecs[:,0]
+    return ground_state_energy, ground_state
+
+def ground_state_ITE(H, tau=5, eps=1e-6):  # eps=1e-6 gives almost perfect precision in the energy
+    """ Calculate the ground state using the Imaginary Time-Evolution (ITE) scheme. Since its vanilla form uses diagonalization, it can't be more efficient than the Lanczos algorithm itself. """
+    def evolve(i, psi):
+        psi = U @ psi
+        return normalize(psi)
+
+    # U = matexp(-tau*H)
+    D, V = np.linalg.eigh(H)  # this requires diagonalization of H
+    U = V @ np.diag(softmax(D, -tau)) @ V.conj().T
+    n = int(np.log2(H.shape[0]))
+    ground_state = sequence(evolve, start_value=random_ket(n), eps=eps)
+    ground_state_energy = (ground_state.conj().T @ H @ ground_state).real
+    return ground_state_energy, ground_state
+
 ###################
 ### Hamiltonian ###
 ###################
@@ -1195,6 +1233,7 @@ def test_quantum_all():
         _test_random_ham,
         _test_get_H_energies_eq_get_pe_energies,
         _test_ph,
+        _test_ground_state,
         _test_reverse_qubit_order,
         _test_partial_trace,
         _test_entropy_von_Neumann,
@@ -1273,6 +1312,20 @@ def _test_random_ham():
         assert H.shape == (2**n_qubits, 2**n_qubits)
         assert np.allclose(np.trace(H), 0)
         assert is_hermitian(H)
+    return True
+
+def _test_ground_state():
+    H = ph('ZZII + IZZI + IIZZ', dtype=float)
+    ge, gs = -3, ket('0101')
+
+    res_exact = ground_state_exact(H)
+    assert np.allclose(res_exact[0], ge)
+    assert np.allclose(res_exact[1], gs)
+
+    res_ITE = ground_state_ITE(H)
+    assert np.allclose(res_ITE[0], ge)
+    # assert np.allclose(res_ITE[1], gs) # might be complex due to random state initialization
+
     return True
 
 def _test_reverse_qubit_order():
