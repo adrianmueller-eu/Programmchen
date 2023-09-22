@@ -79,18 +79,18 @@ class TestBayesNet(unittest.TestCase):
 
     def test_makefactor0(self):
         i = ('D', {'D': ['D', 'A']}, {'B': True})
-        o = (['A', 'D'], {(True, True): 0.7, (True, False): 0.30000000000000004,
+        o = (['A', 'D'], {(True, True): 0.7, (True, False): 0.3,
             (False, True): 0.1, (False, False): 0.9})
         self.assertEqual(self.net_ex2.makefactor(*i), o)
 
     def test_pointwise0(self):
         i1 = (['C', 'E'], {(False, False): 0.8, (False, True): 0.2, (True, True): 0.7, (True, False): 0.3})
         i2 = (['A', 'C'], {(True, True): 0.8, (True, False): 0.2, (False, True): 0.4, (False, False): 0.6})
-        o = (['A', 'C', 'E'], {(False, True, True): 0.27999999999999997,
+        o = (['A', 'C', 'E'], {(False, True, True): 0.28,
             (False, False, False): 0.48, (True, True, False): 0.24,
-            (True, False, False): 0.16000000000000003, (False, True, False): 0.12,
-            (False, False, True): 0.12, (True, True, True): 0.5599999999999999,
-            (True, False, True): 0.04000000000000001})
+            (True, False, False): 0.16, (False, True, False): 0.12,
+            (False, False, True): 0.12, (True, True, True): 0.56,
+            (True, False, True): 0.04})
         self.assertEqual(self.net_ex2.pointwise('C', i1, i2), o)
 
     def test_sumout0(self):
