@@ -295,7 +295,7 @@ def colorize_complex(z):
     c = np.array(c).transpose(1,2,0) # convert shape (3,n,m) -> (n,m,3)
     return c
 
-def imshow(a, figsize=(8,6), title="", cmap="hot", yticks=None, xticks=None, **pltargs):
+def imshow(a, figsize=(8,6), title="", cmap="hot", yticks=None, xticks=None, show_colorbar=True, **pltargs):
     """Uses magic to create pretty images from arrays."""
 
     a = np.array(a)
@@ -315,7 +315,8 @@ def imshow(a, figsize=(8,6), title="", cmap="hot", yticks=None, xticks=None, **p
         else:
             a = a.real
             img = plt.imshow(a, cmap=cmap, **pltargs)
-            fig.colorbar(img, fraction=0.1, pad=0.05)
+            if show_colorbar:
+                fig.colorbar(img, fraction=0.1, pad=0.05)
     elif len(a.shape) == 2:
         if is_complex(a):
             img = colorize_complex(a)
@@ -323,7 +324,8 @@ def imshow(a, figsize=(8,6), title="", cmap="hot", yticks=None, xticks=None, **p
         else:
             a = a.real
             img = plt.imshow(a, cmap=cmap, **pltargs)
-            fig.colorbar(img, fraction=0.1, pad=0.05, shrink=0.87)
+            if show_colorbar:
+                fig.colorbar(img, fraction=0.1, pad=0.05, shrink=0.87)
     else:
         raise ValueError(f"Array must be 2D or 1D, but shape was {a.shape}")
 
