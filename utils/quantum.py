@@ -66,16 +66,16 @@ iSWAP = np.array([ # 0.5*(1j*(XX + YY) + ZZ + II), R_(XX+YY, -pi/2)
     [0, 0, 0, 1]
 ], dtype=complex)
 
-def parse_unitary(unitary):
+def pu(unitary):
     """Parse a string representation of a unitary into its matrix representation. The result is guaranteed to be unitary.
 
     Example:
-    >>> parse_unitary('CX @ XC @ CX') # SWAP
+    >>> pu('CX @ XC @ CX') # SWAP
     array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  1.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]
            [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]])
-    >>> parse_unitary('SS @ HI @ CX @ XC @ IH') # iSWAP
+    >>> pu('SS @ HI @ CX @ XC @ IH') # iSWAP
     array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  0.+1.j  0.+0.j]
            [ 0.+0.j  0.+1.j  0.+0.j  0.+0.j]
@@ -148,6 +148,9 @@ def parse_unitary(unitary):
     assert np.allclose(U @ U.conj().T, np.eye(2**n)), f"Result is not unitary: {U, U @ U.conj().T}"
 
     return U
+
+# alias
+parse_unitary = pu
 
 XX = np.kron(X,X)
 YY = np.kron(Y,Y)
