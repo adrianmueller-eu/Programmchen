@@ -521,6 +521,53 @@ def ket(specification):
         state[int(key, 2)] = specification[key]
     return normalize(state)
 
+def unket(state, as_dict=False):
+    """ Reverse of above. The output is always guaranteed to be normalized.
+
+    Example:
+    >>> unket(ket('00+01+10+11'))
+    '0.5*(00+01+10+11)'
+    >>> unket(ket('00+01+10+11'), as_dict=True)
+    {'00': 0.5, '01': 0.5, '10': 0.5, '11': 0.5}
+    """
+    state = normalize(state, remove_global_phase_if_1D=True)
+    n = int(np.log2(len(state)))
+    if as_dict:
+        # cast to float if imaginary part is zero
+        if np.allclose(state.imag, 0):
+            state = state.real
+        return {binstr_from_int(i, n): state[i] for i in range(2**n) if state[i] != 0}
+
+    # group by weight
+    weights = {}
+    for i in range(2**n):
+        if state[i] != 0:
+            weight = state[i]
+            # Find a close value in weights
+            for w in weights:
+                if np.allclose(w, weight):
+                    weight = w
+                    break
+            else:
+                # remove imaginary part if it's zero
+                if np.abs(weight.imag) < 1e-15:
+                    weight = weight.real
+                # create new weight
+                weights[weight] = []
+            # add state to weight
+            weights[weight].append(binstr_from_int(i, n))
+
+    # convert to string
+    res = []
+    for weight in weights:
+        if weight == 1:
+            res += weights[weight]
+        elif len(weights[weight]) == 1:
+            res += [f"{weight}*{weights[weight][0]}"]
+        else:
+            res += [f"{weight}*({'+'.join(weights[weight])})"]
+    return "+".join(res)
+
 def op(specification1, specification2=None):
     if type(specification1) == str:
         s1 = state(specification1)
