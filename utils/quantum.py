@@ -872,13 +872,20 @@ def ph(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=
 
     return H
 
-def random_hamiltonian(n_qubits, n_terms, offset=0, gates='XYZI', scaling=True):
-    """Generate `n_terms` combinations out of `n_qubits` gates drawn from `gates`. If `scaling=True`, the scaling factor is `1/n_terms`."""
+parse_hamiltonian = ph
+
+def random_ham(n_qubits, n_terms, offset=0, scaling=True):
+    """ Draw `n_terms` basis elements out of the basis. If `scaling=True`, the weights are normalized to 1."""
     # generate a list of random terms
-    combs = [''.join(np.random.choice(list(gates), n_qubits)) for _ in range(n_terms)]
-    H_str = ' + '.join(combs)
+    basis = pauli_basis(n_qubits, kind='str')[1:]  # exclude the identity
+    assert n_terms <= len(basis), f"Can't draw {n_terms} terms from a basis of size {len(basis)}!"
+    terms = np.random.choice(basis, size=n_terms, replace=False)
+    # generate a random coefficient for each term
+    coeffs = np.random.random(n_terms)
     if scaling:
-        H_str = str(1/len(combs)) + '*(' + H_str + ')'
+        coeffs = normalize(coeffs, p=1)
+    # generate the Hamiltonian
+    H_str = ' + '.join([f'{coeffs[i]}*{term}' for i, term in enumerate(terms)])
     if offset != 0:
         H_str += ' + ' + str(offset)
     return H_str
@@ -1170,6 +1177,7 @@ def test_quantum_all():
     tests = [
         _test_random_ket,
         _test_random_dm,
+        _test_random_ham,
         _test_get_H_energies_eq_get_pe_energies,
         _test_ph,
         _test_reverse_qubit_order,
@@ -1238,6 +1246,18 @@ def _test_ph():
     IZZI = np.kron(np.kron(I, Z), np.kron(Z, I))
     assert np.allclose(H, 1.2*IZZI)
 
+    return True
+
+def _test_random_ham():
+    for _ in range(100):
+        n_qubits = np.random.randint(1, 5)
+        n_terms = np.random.randint(1, 100)
+        n_terms = min(n_terms, 2**(2*n_qubits)-1)
+        H = random_ham(n_qubits, n_terms)
+        H = ph(H)
+        assert H.shape == (2**n_qubits, 2**n_qubits)
+        assert np.allclose(np.trace(H), 0)
+        assert is_hermitian(H)
     return True
 
 def _test_reverse_qubit_order():
