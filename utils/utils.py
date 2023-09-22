@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from warnings import warn
 from collections.abc import Iterable
@@ -84,3 +85,12 @@ def duh(n, precision=3):
     if decimals < 0 or unit == 'B':
         decimals = 0
     return f"{n:.{decimals}f} {unit}"
+
+def shape_it(a, progress=True):
+    """ Iterate over all indices of a numpy array. """
+    from itertools import product
+    from tqdm import tqdm as tq
+
+    for n in tq(product(*[list(range(s)) for s in a.shape]),
+                        disable=not progress, total=np.prod(a.shape)):
+        yield n
