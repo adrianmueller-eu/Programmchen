@@ -10,7 +10,7 @@ $usage
 	\e[1m-h\e[0m	Displays this help message and exits.
 	\e[1m-s\e[0m	Do not display the remaining time (for running in background, also detected automatically).
 	\e[4mtime\e[0m	Can be
-		 - an integer, so it will be interpreted as seconds to count down
+		 - an integer, so it will be interpreted as minutes
 		 - an endtime in format (H)H:MM(:SS), so maximal a time within the next
 		   24 hours is possible
 		 - a string in the form:
@@ -20,7 +20,7 @@ $usage
 		   m    = 0\"m\"(s)
 		   s    = 0\"s\"
 		   0    = [0-9]+
-		   while
+		   where
 		   - \"d\" stands for days
 		   - \"h\" stands for hours
 		   - \"m\" stands for minutes
@@ -30,22 +30,17 @@ $usage
 	\e[4mmes\e[0m	The message that should be sent as time is up. (Default: \"Time is up!\")
 "
 
-asUptime() {
-  now=$(date "+%s")
-  desttime=$(($1 + now))
-}
-
-asSeconds() {
+asMinutes() {
   desttime=$((desttime + 60*$1))
   numberbuffer=
 }
 
-asMinutes() {
-  asSeconds $((60*$1))
+asHours() {
+  asMinutes $((60*$1))
 }
 
-asHours() {
-  asMinutes $((24*$1))
+asDays() {
+  asHours $((24*$1))
 }
 
 while [[ -n $* ]]; do
@@ -70,7 +65,14 @@ while [[ -n $* ]]; do
     echo "Please specify a time and/or message. See -h for more help."
     exit 1
     ;;
-  [0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]|[0-9]:[0-5][0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]:[0-5][0-9])
+  [0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9])
+    minutes=$(echo $1 | cut -d: -f1)
+    seconds=$(echo $1 | cut -d: -f2) # cut doesn't work as expected if there is no :
+    desttime=$(date -v+${minutes}M -v+${seconds}S "+%s")
+    ((desttime--))
+    shift
+    ;;
+  [0-9]:[0-5][0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]:[0-5][0-9])
     hours=$(echo $1 | cut -d: -f1)
     minutes=$(echo $1 | cut -d: -f2)
     seconds=$(echo $1 | cut -d: -f3)
@@ -80,7 +82,7 @@ while [[ -n $* ]]; do
     shift
     ;;
   *)
-    if [[ $1 =~ ^[[:digit:]]+(d([[:digit:]]+(h([[:digit:]]+(m([[:digit:]]+s)?|s))?|m([[:digit:]]+s)?|s))?|h([[:digit:]]+(m([[:digit:]]+s)?|s))?|m([[:digit:]]+s)?|s)?$ ]]; then
+    if [[ $1 =~ ^[[:digit:]]+(d(ays?)?([[:digit:]]+(h(ours?)?([[:digit:]]+(m(ins?)?([[:digit:]]+s(ecs?)?)?|s(ecs?)?))?|m(ins?)?([[:digit:]]+s(ecs?)?)?|s(ecs?)?))?|h(ours?)?([[:digit:]]+(m(ins?)?([[:digit:]]+s(ecs?)?)?|s(ecs?)?))?|m(ins?)?([[:digit:]]+s(ecs?)?)?|s(ecs?)?)?$ ]]; then
       timestring="$1"
       i=0
       numberbuffer=
@@ -90,26 +92,44 @@ while [[ -n $* ]]; do
           [0-9])
             numberbuffer+=$nextchar
             ;;
-          d|D)
+          d)
+            asDays $numberbuffer
+            ;;
+          h)
             asHours $numberbuffer
             ;;
-          h|H)
+          m)
             asMinutes $numberbuffer
             ;;
-          m|M)
-            asSeconds $numberbuffer
-            ;;
-          s|S)
+          s)
             desttime=$((desttime + numberbuffer))
+            ;;
+          a|i|e)
+            # skip the next letter ("ay", "in", or "ec")
+            ((i++))
+            # skip the second next letter if it's "s"
+            if [[ ${timestring:((i+1)):1} == "s" ]]; then
+              ((i++))
+            fi
+            ;;
+          o)
+            # skip the next two letters ("our")
+            ((i+=2))
+            # skip the third next letter if it's "s"
+            if [[ ${timestring:((i+1)):1} == "s" ]]; then
+              ((i++))
+            fi
             ;;
         esac
         ((i++))
       done
       if [[ $desttime -eq 0 ]]; then
-        asUptime $numberbuffer
-      else
-        asUptime $desttime
+        # no unit specified, so interpret as minutes
+        asMinutes $numberbuffer
       fi
+      # set desttime relative to now
+      now=$(date "+%s")
+      desttime=$((desttime + now))
     else
       mes="$*"
       break;
