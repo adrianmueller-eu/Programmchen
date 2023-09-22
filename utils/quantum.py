@@ -558,30 +558,35 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
 
     # Initialize the matrix map
     global matmap_np, matmap_sp
-    if matmap_np is None or matmap_sp is None:
+    if matmap_np is None or matmap_sp is None or matmap_np["I"].dtype != dtype:
         # numpy versions
         matmap_np = {
-            "H": np.array(Had, dtype=dtype),
-            "X": np.array(X, dtype=dtype),
-            "Y": np.array(Y, dtype=dtype),
-            "Z": np.array(Z, dtype=dtype),
-            "I": np.array(I, dtype=dtype),
-            "II": np.eye(2**2, dtype=dtype),
-            "ZZ": np.array(np.kron(Z, Z), dtype=dtype),
-            "IX": np.array(np.kron(I, X), dtype=dtype),
-            "XI": np.array(np.kron(X, I), dtype=dtype),
-            "III": np.eye(2**3, dtype=dtype),
-            "IIII": np.eye(2**4, dtype=dtype),
-            "IIIII": np.eye(2**5, dtype=dtype),
-            "IIIIII": np.eye(2**6, dtype=dtype),
-            "IIIIIII": np.eye(2**7, dtype=dtype),
-            "IIIIIIII": np.eye(2**8, dtype=dtype),
-            "IIIIIIIII": np.eye(2**9, dtype=dtype),
-            "IIIIIIIIII": np.eye(2**10, dtype=dtype),
+            "H": np.array([[1, 1], [1, -1]], dtype=dtype) / np.sqrt(2),
+            "X": np.array([[0, 1], [1, 0]], dtype=dtype),
+            "Z": np.array([[1, 0], [0, -1]], dtype=dtype),
+            "I": np.array([[1, 0], [0, 1]], dtype=dtype),
         }
+        # composites
+        matmap_np.update({
+            "ZZ": np.kron(matmap_np['Z'], matmap_np['Z']),
+            "IX": np.kron(matmap_np['I'], matmap_np['X']),
+            "XI": np.kron(matmap_np['X'], matmap_np['I']),
+            "YY": np.array([[ 0,  0,  0, -1],  # to avoid complex numbers
+                            [ 0,  0,  1,  0],
+                            [ 0,  1,  0,  0],
+                            [-1,  0,  0,  0]], dtype=dtype)
+        })
+        for i in range(2, 11):
+            matmap_np["I"*i] = np.eye(2**i, dtype=dtype)
+        # add 'Y' only if dtype supports imaginary numbers
+        if np.issubdtype(dtype, np.complexfloating):
+            matmap_np["Y"] = np.array([[0, -1j], [1j, 0]], dtype=dtype)
 
         # sparse versions
         matmap_sp = {k: sp.csr_array(v) for k, v in matmap_np.items()}
+
+    if not np.issubdtype(dtype, np.complexfloating) and "Y" in hamiltonian:
+        raise ValueError(f"The Pauli matrix Y is not supported for dtype {dtype.__name__}.")
 
     matmap = matmap_sp if sparse else matmap_np
 
@@ -591,6 +596,8 @@ def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buf
         buffer = matmap
 
     def calculate_chunk_matrix(chunk, sparse=False, scaling=1):
+        # if scaling != 1:  # only relevant for int dtype, to prevent changing dtype when multiplying
+            # scaling = np.array(scaling, dtype=dtype)
         if use_buffer:
             if chunk in buffer:
                 return buffer[chunk] if scaling == 1 else scaling * buffer[chunk]
