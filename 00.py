@@ -44,7 +44,9 @@ except:
 # plt.style.use('ggplot') # nicer plots?
 if "COLUMNS" in os.environ:
     cols = int(os.environ["COLUMNS"])
-    if cols != 0:
+    if cols == 0:
+        np.set_printoptions(linewidth=200)
+    else:
         np.set_printoptions(linewidth=cols)
 
 def bins(data):
