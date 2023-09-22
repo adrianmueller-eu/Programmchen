@@ -890,7 +890,7 @@ def random_ham(n_qubits, n_terms, offset=0, scaling=True):
         H_str += ' + ' + str(offset)
     return H_str
 
-def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False):
+def ising(n_qubits, J=(-1,1), h=(-1,1), g=(-1,1), offset=0, kind='1d', circular=False):
     """
     Generates an Ising model with (optional) longitudinal and (optional) transverse couplings.
 
@@ -899,17 +899,20 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
     n_qubits : int or tuple
         Number of qubits, at least 2. For `kind='2d'` or `kind='3d'`, give a tuple of 2 or 3 integers, respectively.
     J : float, array, or dict
-        Coupling strength. If a scalar, all couplings are set to this value.
+        Coupling strength.
+        If a scalar, all couplings are set to this value.
         If a 2-element vector but `n_qubit > 2` (or tuple), all couplings are set to a random value in this range.
         If a matrix, this matrix is used as the coupling matrix.
         For `kind='pairwise'`, `kind='2d'`, or `kind='3d'`, `J` is read as an incidence matrix, where the rows and columns correspond to the qubits and the values are the coupling strengths. Only the upper triangular part of the matrix is used.
         For `kind='full'`, specify a dictionary with keys being tuples of qubit indices and values being the corresponding coupling strength.
     h : float or array, optional
-        Longitudinal field strength. If a scalar, all fields are set to this value.
+        Longitudinal field strength.
+        If a scalar, all fields are set to this value.
         If a 2-element vector, all fields are set to a random value in this range.
         If a vector of size `n_qubits`, its elements specify the individual strengths of the longitudinal field.
     g : float or array, optional
-        Transverse field strength. If a scalar, all couplings are set to this value.
+        Transverse field strength.
+        If a scalar, all couplings are set to this value.
         If a 2-element vector, all couplings are set to a random value in this range.
         If a vector of size `n_qubits`, its elements specify the individual strengths of the transverse field.
     offset : float, optional
@@ -922,10 +925,16 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
     Returns
     -------
     H : str
-        The Hamiltonian as a string, which can be parsed by parse_hamiltonian.
+        The Hamiltonian as a string, which can be parsed by ph.
     """
+    # TODO: interactions on X and Y, and local fields on Y
+    # if n_qubits is not scalar or tuple, try ising_graph
+    if not (np.isscalar(n_qubits) or isinstance(n_qubits, tuple)):
+        return ising_graph(n_qubits, J=J, h=h, g=g, offset=offset)
     # generate the coupling shape
     n_total_qubits = np.prod(n_qubits)
+    if n_total_qubits < 1:
+        raise ValueError(f"Number of qubits must be positive, but is {n_total_qubits}")
     assert n_total_qubits - int(n_total_qubits) == 0, "n_qubits must be an integer or a tuple of integers"
     if kind == '1d':
         assert np.isscalar(n_qubits) or len(n_qubits) == 1, f"For kind={kind}, n_qubits must be an integer or tuple of length 1, but is {n_qubits}"
@@ -934,11 +943,11 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
             n_qubits = n_qubits[0]
         couplings = (n_qubits if circular and n_qubits > 2 else n_qubits-1,)
     elif kind == '2d':
-        if np.isscalar(n_qubits) or len(n_qubits) == 1:
+        if np.isscalar(n_qubits) or len(n_qubits) != 2:
             raise ValueError(f"For kind={kind}, n_qubits must be a tuple of length 2, but is {n_qubits}")
         couplings = (n_total_qubits, n_total_qubits)
     elif kind == '3d':
-        if np.isscalar(n_qubits) or len(n_qubits) == 2:
+        if np.isscalar(n_qubits) or len(n_qubits) != 3:
             raise ValueError(f"For kind={kind}, n_qubits must be a tuple of length 3, but is {n_qubits}")
         couplings = (n_total_qubits, n_total_qubits)
     elif kind == 'pairwise':
@@ -1101,8 +1110,11 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
     else:
         raise ValueError(f"Unknown kind {kind}")
 
-    if np.isscalar(J) and J != 0 and n_total_qubits > 1:
-        H_str = str(J) + '*(' + H_str[:-3] + ') + '
+    if np.isscalar(J) and n_total_qubits > 1:
+        if J != 0:
+            H_str = str(J) + '*(' + H_str[:-3] + ') + '
+        else:
+            H_str = ''
 
     # local longitudinal fields
     if np.any(h):
@@ -1116,6 +1128,9 @@ def ising_model(n_qubits, J, h=None, g=None, offset=0, kind='1d', circular=False
             H_str += str(g) + '*(' + ' + '.join(['I'*i + 'X' + 'I'*(n_total_qubits-i-1) for i in range(n_total_qubits)]) + ') + '
         else:
             H_str += ' + '.join([str(g[i]) + '*' + 'I'*i + 'X' + 'I'*(n_total_qubits-i-1) for i in range(n_total_qubits) if g[i] != 0]) + ' + '
+    # Add I*n - I*n if there are no fields
+    if H_str == '':
+        H_str += 'I'*n_total_qubits + ' - ' + 'I'*n_total_qubits + ' + '
     # offset
     if np.any(offset):
         H_str += str(offset)
@@ -1184,7 +1199,7 @@ def test_quantum_all():
         _test_partial_trace,
         _test_entropy_von_Neumann,
         _test_entropy_entanglement,
-        _test_ising_model,
+        _test_ising,
         _test_pauli_basis
     ]
 
@@ -1388,58 +1403,62 @@ def _test_entropy_entanglement():
 
     return True
 
-def _test_ising_model():
+def _test_ising():
     # 1d
-    H_str = ising_model(5, J=1.5, h=0, g=0, offset=0, kind='1d', circular=False)
+    H_str = ising(5, J=1.5, h=0, g=0, offset=0, kind='1d', circular=False)
     expected = "1.5*(ZZIII + IZZII + IIZZI + IIIZZ)"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
-    H_str = ising_model(5, J=1.5, h=1.1, g=0.5, offset=0.5, kind='1d', circular=True)
+    H_str = ising(3, J=0, h=3, g=2)
+    expected = '3*(ZII + IZI + IIZ) + 2*(XII + IXI + IIX)'
+    assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
+
+    H_str = ising(5, J=1.5, h=1.1, g=0.5, offset=0.5, kind='1d', circular=True)
     expected = "1.5*(ZZIII + IZZII + IIZZI + IIIZZ + ZIIIZ) + 1.1*(ZIIII + IZIII + IIZII + IIIZI + IIIIZ) + 0.5*(XIIII + IXIII + IIXII + IIIXI + IIIIX) + 0.5"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
-    H_str = ising_model(3, J=[0.6,0.7,0.8], h=[0.1,0.2,0.7], g=[0.6,0.1,1.5], offset=0.5, kind='1d', circular=True)
+    H_str = ising(3, J=[0.6,0.7,0.8], h=[0.1,0.2,0.7], g=[0.6,0.1,1.5], offset=0.5, kind='1d', circular=True)
     expected = "0.6*ZZI + 0.7*IZZ + 0.8*ZIZ + 0.1*ZII + 0.2*IZI + 0.7*IIZ + 0.6*XII + 0.1*IXI + 1.5*IIX + 0.5"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
-    H_str = ising_model(3, J=[0,1], h=[1,2], g=[2,5], offset=0.5, kind='1d', circular=True)
+    H_str = ising(3, J=[0,1], h=[1,2], g=[2,5], offset=0.5, kind='1d', circular=True)
     # random, but count terms in H_str instead
     n_terms = len(H_str.split('+'))
     assert n_terms == 10, f"n_terms = {n_terms}\nexpected = 10"
 
     # 2d
-    H_str = ising_model((2,2), J=1.5, h=0, g=0, offset=0, kind='2d', circular=False)
+    H_str = ising((2,2), J=1.5, h=0, g=0, offset=0, kind='2d', circular=False)
     expected = "1.5*(ZIZI + ZZII + IZIZ + IIZZ)"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
-    H_str = ising_model((3,3), J=1.5, h=1.1, g=0.5, offset=0.5, kind='2d', circular=True)
+    H_str = ising((3,3), J=1.5, h=1.1, g=0.5, offset=0.5, kind='2d', circular=True)
     expected = "1.5*(ZIIZIIIII + ZZIIIIIII + IZIIZIIII + IZZIIIIII + IIZIIZIII + ZIZIIIIII + IIIZIIZII + IIIZZIIII + IIIIZIIZI + IIIIZZIII + IIIIIZIIZ + IIIZIZIII + IIIIIIZZI + ZIIIIIZII + IIIIIIIZZ + IZIIIIIZI + IIZIIIIIZ + IIIIIIZIZ) + 1.1*(ZIIIIIIII + IZIIIIIII + IIZIIIIII + IIIZIIIII + IIIIZIIII + IIIIIZIII + IIIIIIZII + IIIIIIIZI + IIIIIIIIZ) + 0.5*(XIIIIIIII + IXIIIIIII + IIXIIIIII + IIIXIIIII + IIIIXIIII + IIIIIXIII + IIIIIIXII + IIIIIIIXI + IIIIIIIIX) + 0.5"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
     # 3d
-    H_str = ising_model((2,2,3), kind='3d', J=1.8, h=0, g=0, offset=0, circular=False)
+    H_str = ising((2,2,3), kind='3d', J=1.8, h=0, g=0, offset=0, circular=False)
     expected = "1.8*(ZIIIIIZIIIII + ZIIZIIIIIIII + ZZIIIIIIIIII + IZIIIIIZIIII + IZIIZIIIIIII + IZZIIIIIIIII + IIZIIIIIZIII + IIZIIZIIIIII + IIIZIIIIIZII + IIIZZIIIIIII + IIIIZIIIIIZI + IIIIZZIIIIII + IIIIIZIIIIIZ + IIIIIIZIIZII + IIIIIIZZIIII + IIIIIIIZIIZI + IIIIIIIZZIII + IIIIIIIIZIIZ + IIIIIIIIIZZI + IIIIIIIIIIZZ)"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
-    H_str = ising_model((2,2,3), kind='3d', J=1.2, h=1.5, g=2, offset=0, circular=True)
+    H_str = ising((2,2,3), kind='3d', J=1.2, h=1.5, g=2, offset=0, circular=True)
     expected = "1.2*(ZIIIIIZIIIII + ZIIZIIIIIIII + ZZIIIIIIIIII + IZIIIIIZIIII + IZIIZIIIIIII + IZZIIIIIIIII + IIZIIIIIZIII + IIZIIZIIIIII + ZIZIIIIIIIII + IIIZIIIIIZII + IIIZZIIIIIII + IIIIZIIIIIZI + IIIIZZIIIIII + IIIIIZIIIIIZ + IIIZIZIIIIII + IIIIIIZIIZII + IIIIIIZZIIII + IIIIIIIZIIZI + IIIIIIIZZIII + IIIIIIIIZIIZ + IIIIIIZIZIII + IIIIIIIIIZZI + IIIIIIIIIIZZ + IIIIIIIIIZIZ) + 1.5*(ZIIIIIIIIIII + IZIIIIIIIIII + IIZIIIIIIIII + IIIZIIIIIIII + IIIIZIIIIIII + IIIIIZIIIIII + IIIIIIZIIIII + IIIIIIIZIIII + IIIIIIIIZIII + IIIIIIIIIZII + IIIIIIIIIIZI + IIIIIIIIIIIZ) + 2*(XIIIIIIIIIII + IXIIIIIIIIII + IIXIIIIIIIII + IIIXIIIIIIII + IIIIXIIIIIII + IIIIIXIIIIII + IIIIIIXIIIII + IIIIIIIXIIII + IIIIIIIIXIII + IIIIIIIIIXII + IIIIIIIIIIXI + IIIIIIIIIIIX)"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
-    H_str = ising_model((3,3,3), kind='3d', J=1.5, h=0, g=0, offset=0, circular=True)
+    H_str = ising((3,3,3), kind='3d', J=1.5, h=0, g=0, offset=0, circular=True)
     expected = "1.5*(ZIIIIIIIIZIIIIIIIIIIIIIIIII + ZIIZIIIIIIIIIIIIIIIIIIIIIII + ZZIIIIIIIIIIIIIIIIIIIIIIIII + IZIIIIIIIIZIIIIIIIIIIIIIIII + IZIIZIIIIIIIIIIIIIIIIIIIIII + IZZIIIIIIIIIIIIIIIIIIIIIIII + IIZIIIIIIIIZIIIIIIIIIIIIIII + IIZIIZIIIIIIIIIIIIIIIIIIIII + ZIZIIIIIIIIIIIIIIIIIIIIIIII + IIIZIIIIIIIIZIIIIIIIIIIIIII + IIIZIIZIIIIIIIIIIIIIIIIIIII + IIIZZIIIIIIIIIIIIIIIIIIIIII + IIIIZIIIIIIIIZIIIIIIIIIIIII + IIIIZIIZIIIIIIIIIIIIIIIIIII + IIIIZZIIIIIIIIIIIIIIIIIIIII + IIIIIZIIIIIIIIZIIIIIIIIIIII + IIIIIZIIZIIIIIIIIIIIIIIIIII + IIIZIZIIIIIIIIIIIIIIIIIIIII + IIIIIIZIIIIIIIIZIIIIIIIIIII + IIIIIIZZIIIIIIIIIIIIIIIIIII + ZIIIIIZIIIIIIIIIIIIIIIIIIII + IIIIIIIZIIIIIIIIZIIIIIIIIII + IIIIIIIZZIIIIIIIIIIIIIIIIII + IZIIIIIZIIIIIIIIIIIIIIIIIII + IIIIIIIIZIIIIIIIIZIIIIIIIII + IIZIIIIIZIIIIIIIIIIIIIIIIII + IIIIIIZIZIIIIIIIIIIIIIIIIII + IIIIIIIIIZIIIIIIIIZIIIIIIII + IIIIIIIIIZIIZIIIIIIIIIIIIII + IIIIIIIIIZZIIIIIIIIIIIIIIII + IIIIIIIIIIZIIIIIIIIZIIIIIII + IIIIIIIIIIZIIZIIIIIIIIIIIII + IIIIIIIIIIZZIIIIIIIIIIIIIII + IIIIIIIIIIIZIIIIIIIIZIIIIII + IIIIIIIIIIIZIIZIIIIIIIIIIII + IIIIIIIIIZIZIIIIIIIIIIIIIII + IIIIIIIIIIIIZIIIIIIIIZIIIII + IIIIIIIIIIIIZIIZIIIIIIIIIII + IIIIIIIIIIIIZZIIIIIIIIIIIII + IIIIIIIIIIIIIZIIIIIIIIZIIII + IIIIIIIIIIIIIZIIZIIIIIIIIII + IIIIIIIIIIIIIZZIIIIIIIIIIII + IIIIIIIIIIIIIIZIIIIIIIIZIII + IIIIIIIIIIIIIIZIIZIIIIIIIII + IIIIIIIIIIIIZIZIIIIIIIIIIII + IIIIIIIIIIIIIIIZIIIIIIIIZII + IIIIIIIIIIIIIIIZZIIIIIIIIII + IIIIIIIIIZIIIIIZIIIIIIIIIII + IIIIIIIIIIIIIIIIZIIIIIIIIZI + IIIIIIIIIIIIIIIIZZIIIIIIIII + IIIIIIIIIIZIIIIIZIIIIIIIIII + IIIIIIIIIIIIIIIIIZIIIIIIIIZ + IIIIIIIIIIIZIIIIIZIIIIIIIII + IIIIIIIIIIIIIIIZIZIIIIIIIII + IIIIIIIIIIIIIIIIIIZIIZIIIII + IIIIIIIIIIIIIIIIIIZZIIIIIII + ZIIIIIIIIIIIIIIIIIZIIIIIIII + IIIIIIIIIIIIIIIIIIIZIIZIIII + IIIIIIIIIIIIIIIIIIIZZIIIIII + IZIIIIIIIIIIIIIIIIIZIIIIIII + IIIIIIIIIIIIIIIIIIIIZIIZIII + IIZIIIIIIIIIIIIIIIIIZIIIIII + IIIIIIIIIIIIIIIIIIZIZIIIIII + IIIIIIIIIIIIIIIIIIIIIZIIZII + IIIIIIIIIIIIIIIIIIIIIZZIIII + IIIZIIIIIIIIIIIIIIIIIZIIIII + IIIIIIIIIIIIIIIIIIIIIIZIIZI + IIIIIIIIIIIIIIIIIIIIIIZZIII + IIIIZIIIIIIIIIIIIIIIIIZIIII + IIIIIIIIIIIIIIIIIIIIIIIZIIZ + IIIIIZIIIIIIIIIIIIIIIIIZIII + IIIIIIIIIIIIIIIIIIIIIZIZIII + IIIIIIIIIIIIIIIIIIIIIIIIZZI + IIIIIIZIIIIIIIIIIIIIIIIIZII + IIIIIIIIIIIIIIIIIIZIIIIIZII + IIIIIIIIIIIIIIIIIIIIIIIIIZZ + IIIIIIIZIIIIIIIIIIIIIIIIIZI + IIIIIIIIIIIIIIIIIIIZIIIIIZI + IIIIIIIIZIIIIIIIIIIIIIIIIIZ + IIIIIIIIIIIIIIIIIIIIZIIIIIZ + IIIIIIIIIIIIIIIIIIIIIIIIZIZ)"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
     # pairwise
-    H_str = ising_model(4, J=-.5, h=.4, g=.7, offset=1, kind='pairwise')
+    H_str = ising(4, J=-.5, h=.4, g=.7, offset=1, kind='pairwise')
     expected = "-0.5*(ZZII + ZIZI + ZIIZ + IZZI + IZIZ + IIZZ) + 0.4*(ZIII + IZII + IIZI + IIIZ) + 0.7*(XIII + IXII + IIXI + IIIX) + 1"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
     # full
-    H_str = ising_model(3, J=1.5, h=.4, g=.7, offset=1, kind='full')
+    H_str = ising(3, J=1.5, h=.4, g=.7, offset=1, kind='full')
     expected = "1.5*(ZZI + ZIZ + IZZ + ZZZ) + 0.4*(ZII + IZI + IIZ) + 0.7*(XII + IXI + IIX) + 1"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
-    H_str = ising_model(3, kind='full', J={(0,1): 2, (0,1,2): 3, (1,2):0}, h=1.35)
+    H_str = ising(3, kind='full', J={(0,1): 2, (0,1,2): 3, (1,2):0}, g=0, h=1.35)
     expected = "2*ZZI + 3*ZZZ + 1.35*(ZII + IZI + IIZ)"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
@@ -1450,7 +1469,7 @@ def _test_ising_model():
         (0,1,2): 3,
         (0,1,2,3): 0.5
     }
-    H_str = ising_model(4, J=J_dict, h=.3, g=.5, offset=1.2, kind='full')
+    H_str = ising(4, J=J_dict, h=.3, g=.5, offset=1.2, kind='full')
     expected = "1.5*ZZII + 2*ZIZI + 0.5*IZZI + 3*ZZZI + 0.5*ZZZZ + 0.3*(ZIII + IZII + IIZI + IIIZ) + 0.5*(XIII + IXII + IIXI + IIIX) + 1.2"
     assert H_str == expected, f"\nH_str    = {H_str}\nexpected = {expected}"
 
