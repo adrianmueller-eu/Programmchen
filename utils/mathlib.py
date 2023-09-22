@@ -117,21 +117,38 @@ def roots(coeffs):
 
 # e.g. series(lambda n, _: 1/factorial(2*n)) + series(lambda n, _: 1/factorial(2*n + 1))
 def series(f, start_value=0, start_index=0, eps=sys.float_info.epsilon, max_iter=100000, verbose=False):
+    """ Calculate the series $start_value + \sum_{n=start_index+1}^{\infty} f(n, f(n-1, ...))$. Throws an error if the series doesn't converge.
+
+    Parameters
+        f (function): A function that takes two arguments, the current iteration `i` and the last term `term`, and returns the next term in the series.
+        start_value (float | np.ndarray, optional): The value of the series at `start_index` (default: 0).
+        start_index (int, optional): The index at which to start the series (default: 0).
+        eps (float, optional): The precision to which the series should be calculated (default: `sys.float_info.epsilon`).
+        max_iter (int, optional): The maximum number of iterations (default: 100000).
+        verbose (bool, optional): If True, print the current iteration and the current value of the series (default: False).
+
+    Returns
+        float | np.ndarray: The value of the series.
+
+    Examples:
+        >>> series(lambda n, _: 1/factorial(2*n), 1) + series(lambda n, _: 1/factorial(2*n + 1), 1)
+        2.7182818284590455
+    """
     if not np.isscalar(start_value):
         start_value = np.array(start_value)
     res = start_value
-    res_i = res
-    for n in range(start_index, max_iter):
-        res_i = f(n, res_i)
-        res += res_i
+    term = res
+    for i in range(start_index+1, max_iter):
+        term = f(i, term)
+        res += term
         if verbose:
-            print(f"Iteration {n}:", res, res_i)
-        if np.sum(np.abs(res_i)) < eps:
+            print(f"Iteration {i}:", res, term)
+        if np.sum(np.abs(term)) < eps:
             return res # return when converged
         if np.max(res) == np.inf:
             break
 
-    raise ValueError("Series didn't converge!")
+    raise ValueError(f"Series didn't converge after {max_iter} iterations! Error: {np.sum(np.abs(term))}")
 
 try:
     from scipy.linalg import expm as matexp
@@ -148,7 +165,7 @@ except:
             eigval, eigvec = np.linalg.eig(A0)
             return eigvec @ np.diag(np.power(base, eigval)) @ eigvec.conj().T
         # use series expansion
-        return np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=2)
+        return np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=1)
 
     def matlog(A, base=np.e):
         evals, evecs = np.linalg.eig(A)
@@ -554,7 +571,6 @@ def test_mathlib_all():
         _test_matexp,
         _test_matlog,
         _test_series,
-        _test_series2,
         _test_normalize,
         _test_softmax,
         _test_su,
@@ -691,21 +707,30 @@ def _test_matlog():
     assert np.allclose(matlog(A), alpha*np.array([[0, -1],[1, 0]])), f"Error for alpha = {alpha}! {matlog(A)} != {alpha*np.array([[0, -1],[1, 0]])}"
     return True
 
-def _test_series():
-    a = series(lambda n, _: 1/factorial(2*n)) + series(lambda n, _: 1/factorial(2*n + 1))
-    assert np.isclose(a, np.e)
     return True
 
-def _test_series2():
+def _test_series():
+    res = series(lambda n, _: 1/factorial(2*n), 1) + series(lambda n, _: 1/factorial(2*n + 1), 1)
+    assert np.isclose(res, np.e)
+
+    res = series(lambda n, _: 1/(2**n))
+    assert np.isclose(res, 1)
+
     # pauli X
     A0 = np.array([[0, 1.], [1., 0]])
-    a = np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=2)
+    a = np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=1)
     expected = np.array([[np.cosh(1), np.sinh(1)], [np.sinh(1), np.cosh(1)]])
+    assert np.allclose(a, expected)
+
+    # pauli Y
+    A0 = np.array([[0, -1j], [1j, 0]])
+    a = np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=1)
+    expected = np.array([[np.cosh(1), -1j*np.sinh(1)], [1j*np.sinh(1), np.cosh(1)]])
     assert np.allclose(a, expected)
 
     # pauli Z
     A0 = np.array([[1., 0], [0, -1.]])
-    a = np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=2)
+    a = np.eye(A0.shape[0]) + series(lambda n, A: A @ A0 / n, start_value=A0, start_index=1)
     expected = np.array([[np.e, 0], [0, 1/np.e]])
     assert np.allclose(a, expected)
     return True
