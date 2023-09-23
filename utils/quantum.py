@@ -611,12 +611,16 @@ def fidelity(state1, state2):
     state1 = np.array(state1)
     state2 = np.array(state2)
 
-    if len(state1.shape) == 1:
+    if len(state1.shape) == 1 and len(state2.shape) == 1:
         return np.abs(state1 @ state2.conj())**2
-    elif len(state1.shape) == 2:
+    elif len(state1.shape) == 2 and len(state2.shape) == 1:
+        return np.abs(state2.conj() @ state1 @ state2)
+    elif len(state1.shape) == 1 and len(state2.shape) == 2:
+        return np.abs(state1.conj() @ state2 @ state1)
+    elif len(state1.shape) == 2 and len(state2.shape) == 2:
         # state1_sqrt = matsqrt(state1)
-        # return np.trace(matsqrt(state1_sqrt @ state2 @ state1_sqrt))
-        return np.sum(np.sqrt(np.linalg.eigvals(state1 @ state2)))  # this is correct and faster
+        # return np.trace(matsqrt(state1_sqrt @ state2 @ state1_sqrt))**2
+        return np.sum(np.sqrt(np.linalg.eigvals(state1 @ state2)))**2 # this is correct and faster
     else:
         raise ValueError(f"Can't calculate fidelity between {state1.shape} and {state2.shape}")
 
@@ -1516,6 +1520,18 @@ def _test_fidelity():
     rho1 = dm('00')
     rho2 = dm('11')
     assert np.allclose(fidelity(rho1, rho2), 0), f"fidelity = {fidelity(rho1, rho2)} ≠ 0"
+    assert np.allclose(fidelity(psi1, rho2), 0), f"fidelity = {fidelity(psi1, rho2)} ≠ 0"
+    assert np.allclose(fidelity(rho1, psi2), 0), f"fidelity = {fidelity(rho1, psi2)} ≠ 0"
+
+    # check values
+    psi1 = ket('0')
+    psi2 = ket('-')
+    rho1 = dm('0')
+    rho2 = dm('-')
+    assert np.allclose(fidelity(psi1, psi2), 1/2), f"fidelity = {fidelity(psi1, psi2)} ≠ 1/2"
+    assert np.allclose(fidelity(rho1, rho2), 1/2), f"fidelity = {fidelity(rho1, rho2)} ≠ 1/2"
+    assert np.allclose(fidelity(psi1, rho2), 1/2), f"fidelity = {fidelity(psi1, rho2)} ≠ 1/2"
+    assert np.allclose(fidelity(rho1, psi2), 1/2), f"fidelity = {fidelity(rho1, psi2)} ≠ 1/2"
 
     # random states to test properties: F(s1,s2) \in [0,1], symmetric
     psi1 = random_ket(2)
@@ -1526,6 +1542,10 @@ def _test_fidelity():
     rho2 = random_dm(2)
     assert 0 <= fidelity(rho1, rho2) <= 1, f"fidelity = {fidelity(rho1, rho2)} ∉ [0,1]"
     assert np.allclose(fidelity(rho1, rho2), fidelity(rho2, rho1)), f"fidelity(rho1, rho2) = {fidelity(rho1, rho2)} ≠ {fidelity(rho2, rho1)}"
+    assert np.allclose(fidelity(psi1, rho2), fidelity(rho2, psi1)), f"fidelity(psi1, rho2) = {fidelity(psi1, rho2)} ≠ {fidelity(rho2, psi1)}"
+    assert np.allclose(fidelity(rho1, psi2), fidelity(psi2, rho1)), f"fidelity(rho1, psi2) = {fidelity(rho1, psi2)} ≠ {fidelity(psi2, rho1)}"
+    assert 0 <= fidelity(psi1, rho2) <= 1, f"fidelity = {fidelity(psi1, rho2)} ∉ [0,1]"
+    assert 0 <= fidelity(rho1, psi2) <= 1, f"fidelity = {fidelity(rho1, psi2)} ∉ [0,1]"
 
     return True
 
