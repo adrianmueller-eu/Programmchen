@@ -343,35 +343,33 @@ def random_vec(size, limits=(0,1), complex=False):
         return random_vec(size, limits=limits) + 1j*random_vec(size, limits=limits)
     return np.random.uniform(limits[0], limits[1], size=size)
 
-def random_symmetric(size):
+def random_square(size, limits=(0,1), complex=False):
     if not hasattr(size, '__len__'):
         size = (size, size)
-    a = random_vec(size)
+    if size[0] != size[1] or len(size) != 2:
+        raise ValueError(f"The shape must be square, but was {size}.")
+    return random_vec(size, limits=limits, complex=complex)
+
+def random_symmetric(size, limits=(0,1)):
+    a = random_square(size, limits=limits)
     return (a + a.T)/2
 
 def random_orthogonal(size):
-    if not hasattr(size, '__len__'):
-        size = (size, size)
-    a = random_vec(size)
+    a = random_square(size)
     q, r = np.linalg.qr(a)
     return q
 
-def random_hermitian(size):
-    if not hasattr(size, '__len__'):
-        size = (size, size)
-    a = random_vec(size, complex=True)
+def random_hermitian(size, limits=(0,1)):
+    a = random_square(size, limits=limits, complex=True)
     return (a + a.conj().T)/2
 
 def random_unitary(size):
-    if not hasattr(size, '__len__'):
-        size = (size, size)
-    a = random_hermitian(size)
-    return matexp(1j*a)
+    H = random_hermitian(size)
+    return matexp(1j*H)
 
-def random_psd(size):
-    if not hasattr(size, '__len__'):
-        size = (size, size)
-    a = random_vec(size, complex=True)
+def random_psd(size, limits=(0,1)):
+    limits = np.sqrt(limits)  # because we square it later
+    a = random_square(size, limits=limits, complex=True)
     return a @ a.conj().T
 
 ### Integers & Primes
