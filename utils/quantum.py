@@ -69,16 +69,16 @@ iSWAP = np.array([ # 0.5*(1j*(XX + YY) + ZZ + II), R_(XX+YY, -pi/2)
     [0, 0, 0, 1]
 ], dtype=complex)
 
-def pu(unitary):
+def parse_unitary(unitary):
     """Parse a string representation of a unitary into its matrix representation. The result is guaranteed to be unitary.
 
     Example:
-    >>> pu('CX @ XC @ CX') # SWAP
+    >>> parse_unitary('CX @ XC @ CX') # SWAP
     array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  1.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]
            [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]])
-    >>> pu('SS @ HI @ CX @ XC @ IH') # iSWAP
+    >>> parse_unitary('SS @ HI @ CX @ XC @ IH') # iSWAP
     array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  0.+1.j  0.+0.j]
            [ 0.+0.j  0.+1.j  0.+0.j  0.+0.j]
@@ -151,9 +151,6 @@ def pu(unitary):
     assert np.allclose(U @ U.conj().T, np.eye(2**n)), f"Result is not unitary: {U, U @ U.conj().T}"
 
     return U
-
-# alias
-parse_unitary = pu
 
 XX = np.kron(X,X)
 YY = np.kron(Y,Y)
@@ -257,10 +254,11 @@ def reverse_qubit_order(state):
     # if vector, just reshape
     if len(state.shape) == 1 or state.shape[0] != state.shape[1]:
         return state.reshape([2]*n).T.flatten()
-    # if matrix, reverse qubit order in eigenvectors
+    # if matrix, reverse qubit order in eigenvectors and eigenvalues
     # TODO: This doesn't work for mixed states!
     elif state.shape[0] == state.shape[1]:
         vals, vecs = np.linalg.eig(state)
+        # vals = reverse_qubit_order(vals)
         vecs = np.array([reverse_qubit_order(vecs[:,i]) for i in range(2**n)])
         return vecs.T @ np.diag(vals) @ vecs
 
@@ -632,9 +630,9 @@ def ground_state_exact(hamiltonian):
     """ Calculate the ground state using the Lanczos algorithm (exact diagonalization). """
     if isinstance(hamiltonian, str):
         try:
-            H = ph(hamiltonian)
+            H = parse_hamiltonian(hamiltonian)
         except MemoryError:
-            H = ph(hamiltonian, sparse=True)
+            H = parse_hamiltonian(hamiltonian, sparse=True)
     # elif isinstance(hamiltonian, nk.operator.DiscreteOperator):
     #     H = hamiltonian.to_sparse()
     else:
@@ -668,7 +666,7 @@ def ground_state_ITE(H, tau=5, eps=1e-6):  # eps=1e-6 gives almost perfect preci
 
 matmap_np, matmap_sp = None, None
 
-def ph(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=complex):
+def parse_hamiltonian(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=complex):
     """Parse a string representation of a Hamiltonian into a matrix representation. The result is guaranteed to be Hermitian.
 
     Parameters:
@@ -682,17 +680,17 @@ def ph(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=
         numpy.ndarray | scipy.sparse.csr_matrix: The matrix representation of the Hamiltonian.
 
     Example:
-    >>> ph('0.5*(XX + YY + ZZ + II)') # SWAP
+    >>> parse_hamiltonian('0.5*(XX + YY + ZZ + II)') # SWAP
     array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]
            [ 0.+0.j  1.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]])
-    >>> ph('-(XX + YY + .5*ZZ) + 1.5')
+    >>> parse_hamiltonian('-(XX + YY + .5*ZZ) + 1.5')
     array([[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
            [ 0.+0.j  2.+0.j -2.+0.j  0.+0.j]
            [ 0.+0.j -2.+0.j  2.+0.j  0.+0.j]
            [ 0.+0.j  0.+0.j  0.+0.j  1.+0.j]])
-    >>> ph('0.5*(II + ZI - ZX + IX)') # CNOT
+    >>> parse_hamiltonian('0.5*(II + ZI - ZX + IX)') # CNOT
 
     """
     kron = sp.kron if sparse else np.kron
@@ -836,7 +834,7 @@ def ph(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=
             weight += "1"
         # Calculate the part recursively
         part = part[1:-1] # remove parentheses
-        parts[i] = ph(part, sparse=sparse, scaling=float(weight), buffer=buffer, max_buffer_n=max_buffer_n, dtype=dtype)
+        parts[i] = parse_hamiltonian(part, sparse=sparse, scaling=float(weight), buffer=buffer, max_buffer_n=max_buffer_n, dtype=dtype)
 
     # print("Parts replaced:", parts)
 
@@ -927,8 +925,6 @@ def ph(hamiltonian, sparse=False, scaling=1, buffer=None, max_buffer_n=0, dtype=
         assert np.allclose(H, H.conj().T), f"The given Hamiltonian {hamiltonian} is not Hermitian: {H}"
 
     return H
-
-parse_hamiltonian = ph
 
 def random_ham(n_qubits, n_terms, offset=0, scaling=True):
     """ Draw `n_terms` basis elements out of the basis. If `scaling=True`, the weights are normalized to 1."""
@@ -1197,7 +1193,7 @@ def ising(n_qubits, J=(-1,1), h=(-1,1), g=(-1,1), offset=0, kind='1d', circular=
 def get_H_energies(H, expi=True):
     """Returns the energies of the given hamiltonian `H`. For `expi=True` (default) it gives the same result as `get_pe_energies(exp_i(H))` (up to sorting) and for `expi=False` it returns the eigenvalues of `H`."""
     if type(H) == str:
-        H = ph(H)
+        H = parse_hamiltonian(H)
     energies = np.linalg.eigvalsh(H)
     if expi:
         energies = (energies % (2*np.pi))/(2*np.pi)
@@ -1239,6 +1235,13 @@ def pauli_basis(n, kind='np', normalize=False):
         return [norm_str + ''.join(i) for i in product(['I', 'X', 'Y', 'Z'], repeat=n)]
     else:
         raise ValueError(f"Unknown kind: {kind}")
+
+###############
+### Aliases ###
+###############
+
+ph = parse_hamiltonian
+pu = parse_unitary
 
 #############
 ### Tests ###
@@ -1314,28 +1317,28 @@ def _test_random_dm():
     return True
 
 def _test_ph():
-    H = ph('0.5*(II + ZI - ZX + IX)')
+    H = parse_hamiltonian('0.5*(II + ZI - ZX + IX)')
     assert np.allclose(H, CNOT)
 
-    H = ph('0.5*(XX + YY + ZZ + II)')
+    H = parse_hamiltonian('0.5*(XX + YY + ZZ + II)')
     assert np.allclose(H, SWAP)
 
-    H = ph('-(XX + YY + .5*ZZ) + 1.5')
+    H = parse_hamiltonian('-(XX + YY + .5*ZZ) + 1.5')
     assert np.allclose(np.sum(H), 2)
 
-    H = ph('0.2*(-0.5*(3*XX + 4*YY) + 1*II)')
+    H = parse_hamiltonian('0.2*(-0.5*(3*XX + 4*YY) + 1*II)')
     assert np.allclose(np.sum(H), -.4)
 
-    H = ph('X + 2*(I+Z)')
+    H = parse_hamiltonian('X + 2*(I+Z)')
     assert np.allclose(H, X + 2*(I+Z))
 
-    H = ph('1*(ZZI + IZZ) + 1*(ZII + IZI + IIZ)')
+    H = parse_hamiltonian('1*(ZZI + IZZ) + 1*(ZII + IZI + IIZ)')
     assert np.allclose(np.sum(np.abs(H)), 14)
 
-    H = ph('-.25*(ZZI + IZZ) + 1.5')
+    H = parse_hamiltonian('-.25*(ZZI + IZZ) + 1.5')
     assert np.allclose(np.sum(np.abs(H)), 12)
 
-    H = ph('1.2*IZZI')
+    H = parse_hamiltonian('1.2*IZZI')
     IZZI = np.kron(np.kron(I, Z), np.kron(Z, I))
     assert np.allclose(H, 1.2*IZZI)
 
@@ -1347,14 +1350,14 @@ def _test_random_ham():
         n_terms = np.random.randint(1, 100)
         n_terms = min(n_terms, 2**(2*n_qubits)-1)
         H = random_ham(n_qubits, n_terms)
-        H = ph(H)
+        H = parse_hamiltonian(H)
         assert H.shape == (2**n_qubits, 2**n_qubits)
         assert np.allclose(np.trace(H), 0)
         assert is_hermitian(H)
     return True
 
 def _test_ground_state():
-    H = ph('ZZII + IZZI + IIZZ', dtype=float)
+    H = parse_hamiltonian('ZZII + IZZI + IIZZ', dtype=float)
     ge, gs = -3, ket('0101')
 
     res_exact = ground_state_exact(H)
@@ -1372,7 +1375,7 @@ def _test_get_H_energies_eq_get_pe_energies():
     n_terms = np.random.randint(1, 100)
     n_terms = min(n_terms, 2**(2*n_qubits)-1)
     H = random_ham(n_qubits, n_terms, scaling=False)
-    H = ph(H)
+    H = parse_hamiltonian(H)
 
     A = np.sort(get_pe_energies(exp_i(H)))
     B = get_H_energies(H)
@@ -1399,14 +1402,14 @@ def _test_reverse_qubit_order():
     assert np.allclose(psi_rev, psi_rev2)
 
     # general hamiltonian
-    H = ph('IIIXX')
-    H_rev = ph('XXIII')
+    H = parse_hamiltonian('IIIXX')
+    H_rev = parse_hamiltonian('XXIII')
     H_rev2 = reverse_qubit_order(H)
     assert np.allclose(H_rev, H_rev2)
 
-    # TODO: this fails, too
-    # H = ph('XI + YI')
-    # H_rev = ph('IX + IY')
+    # TODO: This test fails
+    # H = parse_hamiltonian('XI + YI')
+    # H_rev = parse_hamiltonian('IX + IY')
     # assert np.allclose(reverse_qubit_order(H), H_rev)
 
     # pure density matrix
@@ -1417,7 +1420,7 @@ def _test_reverse_qubit_order():
     rho_rev2 = reverse_qubit_order(rho)
     assert np.allclose(rho_rev, rho_rev2)
 
-    # TODO: This test fails
+    # TODO: This fails, too
     # # draw n times 2 random 1-qubit states and a probability distribution over all n pairs
     # n = 10
     # psis = [[random_dm(1) for _ in range(2)] for _ in range(n)]
@@ -1657,7 +1660,7 @@ def _test_pauli_basis():
 
     # check if all generators are the same
     for i, (A,B) in enumerate(zip(pauli_n, pauli_n_str)):
-        assert np.allclose(A, ph(B)), f"Generator {i} is not the same!"
+        assert np.allclose(A, parse_hamiltonian(B)), f"Generator {i} is not the same!"
 
     # check sparse representation
     pauli_n_sp = pauli_basis(n, kind='sp')
