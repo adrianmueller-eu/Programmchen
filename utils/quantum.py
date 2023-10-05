@@ -7,7 +7,6 @@ import scipy.sparse as sp
 from .mathlib import *
 from .plot import colorize_complex
 from .utils import duh
-import netket as nk
 
 #################
 ### Unitaries ###
@@ -1188,6 +1187,74 @@ def ising(n_qubits, J=(-1,1), h=(-1,1), g=(-1,1), offset=0, kind='1d', circular=
         H_str += str(offset)
     else:
         H_str = H_str[:-3]
+    return H_str
+
+def ising_graph(graph, J=(-1,1), h=(-1,1), g=(-1,1), offset=0):
+    """ Takes a graph and generates a Hamiltonian string for it that is compatible with `ph`. """
+    import netket as nk # TODO: add networkx, too
+
+    if not isinstance(graph, nk.graph.Graph):
+        raise ValueError(f"graph must be a nk.graph.Graph, but is {type(graph)}")
+
+    # get the number of qubits
+    n_qubits = graph.n_nodes
+    # get the edges
+    edges = graph.edges()
+    # get the coupling matrix
+    J = np.array(J)
+    if J.shape == ():
+        # triangular matrix with all couplings set to J
+        J = np.triu(np.ones((n_qubits, n_qubits)), k=1) * J
+    elif J.shape == (2,):
+        # triangular matrix with all couplings set to a random value in this range
+        J = np.triu(np.random.uniform(J[0], J[1], (n_qubits, n_qubits)), k=1)
+    elif J.shape == (n_qubits, n_qubits):
+        # use the given matrix
+        pass
+    else:
+        raise ValueError(f"J must be a scalar, 2-element vector, or matrix of shape {(n_qubits, n_qubits)}, but is {J.shape}")
+
+    # get the longitudinal fields
+    if h is not None:
+        h = np.array(h)
+        if h.shape == ():
+            h = np.ones(n_qubits) * h
+        elif h.shape == (2,):
+            h = np.random.uniform(h[0], h[1], n_qubits)
+        elif h.shape == (n_qubits,):
+            pass
+        else:
+            raise ValueError(f"h must be a scalar, 2-element vector, or vector of shape {(n_qubits,)}, but is {h.shape}")
+
+    # get the transverse fields
+    if g is not None:
+        g = np.array(g)
+        if g.shape == ():
+            g = np.ones(n_qubits) * g
+        elif g.shape == (2,):
+            g = np.random.uniform(g[0], g[1], n_qubits)
+        elif g.shape == (n_qubits,):
+            pass
+        else:
+            raise ValueError(f"g must be a scalar, 2-element vector, or vector of shape {(n_qubits,)}, but is {g.shape}")
+
+    # generate the Hamiltonian
+    H_str = ''
+    # pairwise interactions
+    for i, j in edges:
+        if J[i,j] != 0:
+            H_str += str(J[i,j]) + '*' + 'I'*i + 'Z' + 'I'*(j-i-1) + 'Z' + 'I'*(n_qubits-j-1) + ' + '
+    # local longitudinal fields
+    if np.any(h):
+        H_str += ' + '.join([str(h[i]) + '*' + 'I'*i + 'Z' + 'I'*(n_qubits-i-1) for i in range(n_qubits) if h[i] != 0]) + ' + '
+    # local transverse fields
+    if np.any(g):
+        H_str += ' + '.join([str(g[i]) + '*' + 'I'*i + 'X' + 'I'*(n_qubits-i-1) for i in range(n_qubits) if g[i] != 0])
+
+    # offset
+    if offset != 0:
+        H_str += f" + {offset}"
+
     return H_str
 
 def get_H_energies(H, expi=True):
