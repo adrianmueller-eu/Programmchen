@@ -19,6 +19,7 @@ try:
     from numpy.linalg import *
     from numpy.linalg import matrix_rank as rank
     from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
+    from numpy import trace as tr
 
     import scipy
     from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
