@@ -414,7 +414,7 @@ function urldata() (
   else
     data=$(pbpaste)
   fi
-  uridecode -e "${uri#*\?}" | tr '&' '\n'
+  uridecode -e "${data#*\?}" | tr '&' '\n'
 )
 
 function fetch_dwd() ( # german weather agency / usage: $0 "state" "city"
