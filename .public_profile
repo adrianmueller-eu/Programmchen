@@ -852,10 +852,10 @@ function copy_custom_py_packages() { # { -> make $py_usersite available for look
   py_usersite=$(python -m site --user-site)
   [[ -d "$py_usersite" ]] || mkdir -p "$py_usersite"
 
-  [[ -d "$P/BN" ]] &&  cp -a "$P/BN" "$py_usersite/"
-  [[ -d "$P/MDP" ]] && cp -a "$P/MDP" "$py_usersite/"
-  [[ -d "$P/SAT" ]] && cp -a "$P/SAT" "$py_usersite/"
-  [[ -d "$P/utils" ]] && cp -a "$P/utils" "$py_usersite/"
+  [[ -d "$PROJ/BN" ]] &&  cp -af "$PROJ/BN" "$py_usersite/" || echo "Failed to copy BN"
+  [[ -d "$PROJ/MDP" ]] && cp -af "$PROJ/MDP" "$py_usersite/" || echo "Failed to copy MDP"
+  [[ -d "$PROJ/SAT" ]] && cp -af "$PROJ/SAT" "$py_usersite/" || echo "Failed to copy SAT"
+  [[ -d "$PROJ/utils" ]] && cp -af "$PROJ/utils" "$py_usersite/" || echo "Failed to copy utils"
 }
 
 function ln_update() (
