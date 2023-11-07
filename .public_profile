@@ -1527,10 +1527,10 @@ guitar() { # don't execute in subshell!
 }
 
 txt2img() {
-  pushd ~/Projects/stable-diffusion/ >&/dev/null
-  conda activate ldm || {
+  pushd ~/Projects/latent-consistency-model >&/dev/null
+  source venv/bin/activate || {
     echo "Please install requirements first:"
-    echo "cd ~/Projects/stable-diffusion && conda env create -f environment-mac.yaml"
+    echo "python3 -m pip install virtualenv && python3 -m virtualenv venv && source venv/bin/activate && pip install -r requirements.txt"
     return 1
   }
 
@@ -1540,22 +1540,13 @@ txt2img() {
     read text # don't call it "prompt", as it will set $PS1
   else
     text=$1
-  fi
-  if [[ -z "$2" ]]; then
-    printf "How many samples do you want to draw? [1]: "
-    read cnt
-    if [[ -z "$cnt" ]]; then
-      cnt=1
-    fi
-  else
-    cnt=$2
+    shift
   fi
 
-  for i in $(seq 1 $cnt); do
-    python scripts/txt2img.py --prompt "$text" --n_samples 1 --n_iter 1 --plms
-  done
-  conda deactivate
-  open outputs/
+  open output
+  trap 'deactivate; popd &>/dev/null' INT
+  python main.py "$text" "$@"
+  deactivate
   popd &>/dev/null
 }
 
