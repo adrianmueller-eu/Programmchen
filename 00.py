@@ -1,6 +1,6 @@
 import sys, os, time # For timing: %time foo()
 import inspect
-def getsource(f):
+def source(f):
     print(inspect.getsource(f))
 eps = sys.float_info.epsilon
 ### math
