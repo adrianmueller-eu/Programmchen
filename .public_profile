@@ -1310,7 +1310,7 @@ alias lc=lcalc
 
 function isprime() {
   if [[ ${#1} -le 17 ]] && (($1 < 18014398509481984)); then # 2^54
-    python "$P"/utils/isprime.py $1
+    python "$PROJ"/utils/isprime.py $1
   else
     #echo "Let's harness sage..."
     sage -c "print(is_prime($1))"
