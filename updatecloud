@@ -32,17 +32,6 @@ rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram_
 sed -i.bak 's/\/bots\/general.php/\/bots\/mental_health.php/g' "../tools/gpt/telegram_mh/index.php"
 rm -f "../tools/gpt/telegram_mh/index.php.bak"
 
-if [[ -z $1 ]]; then
-# Fetch from db
-echo "Fetching existing entries from the db"
-res=$(pass blogdb)
-host=$(printf "%s" "$res" | sed -n '1p')
-dbname=$(printf "%s" "$res" | sed -n '2p')
-username=$(printf "%s" "$res" | sed -n '3p')
-password=$(printf "%s" "$res" | sed -n '4p')
-exists_in_db=$(mysql -h $host -u $username -p$password $dbname <<< "SELECT article_path FROM posts;" | tail -n +2 | sort)
-fi
-
 # Generate files from articles
 for f in "${source}/"*.md; do
   f=$(basename "$f")
@@ -58,24 +47,6 @@ for f in "${source}/"*.md; do
 require __DIR__ . '/../../lib.php';
 generateArticle('$name');
 ?>" > "$name/index.php"
-  echo "Generated \"$name\""
-  if [[ -z $1 ]]; then
-  # create in db if it doesn't exist yet
-  if [[ ! $exists_in_db =~ $name ]]; then
-    echo "Adding \"$name\" to the database"
-    m_date=$(stat -f %m "$source/$f")
-    m_date=$(date -j -f "%s" "$m_date" "+%Y-%m-%d")
-    mysql -h $host -u $username -p$password $dbname << EOF
-INSERT INTO posts (title, date_published, background, article_path)
-VALUES (
-  "$f_no_ending",
-  "$m_date",
-  "black",
-  "$name"
-);
-EOF
-  fi
-  fi
 done
 
 # Sync with server
@@ -95,33 +66,15 @@ for f in ${files[@]}; do
     rsync --progress "$f" "$CLOUD_WEB_PREFIX/$f" \
     || rsync --mkpath --progress "$f" "$CLOUD_WEB_PREFIX/$f" \
     || die
-    if [[ -z $1 && "$f" =~ .html$ && $f =~ /articles/ ]]; then
-      name=$(basename "$f")
-      name=${name%.*}
-      word_cnt=$(cat "$f" | sed 's/<[^>]*>//g' | wc -w | awk '{print $1}')
-      echo "Updating word count of \"$f\" to $word_cnt in database"
-      mysql -h $host -u $username -p$password $dbname << EOF
-UPDATE posts SET words=$word_cnt WHERE article_path = "$name";
-EOF
-    fi
-  else
-    uh=${CLOUD_WEB_PREFIX%%:*}
-    path=${CLOUD_WEB_PREFIX#*:}
-    echo "Deleting \"$f\" from server"
-    ssh "$uh" "rm -v \"$path/$f\""
-    if [[ -z $1 && "$f" =~ .html$ && $f =~ /articles/ ]]; then
-      ssh "$uh" "rm -vr \"$path/${f%.*}\""
-      name=$(basename "$f")
-      name=${name%.*}
-      echo "Deleting \"$name\" from database"
-      mysql -h $host -u $username -p$password $dbname << EOF
-DELETE FROM posts WHERE article_path = "$name";
-EOF
-    fi
   fi
 done
 
 rm -f $source/*.bak
+
+# Remote data base update
+uh=${CLOUD_WEB_PREFIX%%:*}
+path=${CLOUD_WEB_PREFIX#*:}
+ssh "$uh" "bash \"${path}/main/update_blog.sh\""
 
 # Commit changes
 git add .
