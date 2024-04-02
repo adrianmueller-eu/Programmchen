@@ -5,6 +5,7 @@ export FPATH="$(brew --prefix)/share/zsh/site-functions:$FPATH"
 export FPATH="$(brew --prefix)/share/zsh-completions:$FPATH"
 
 HIST_STAMPS="dd.mm.yyyy" # see man strftime
+SAVEHIST=10000000
 
 plugins=(
   git
