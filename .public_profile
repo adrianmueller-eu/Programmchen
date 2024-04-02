@@ -237,6 +237,7 @@ vcal() {
 alias q="qlmanage -p &>/dev/null"
 alias mime='file -I'
 alias idiff="/Applications/IntelliJ\ IDEA.app/Contents/MacOS/idea diff"
+unalias diff  # omz
 function diff() {
   if [[ -z "$2" || -n "$3" ]]; then
     echo "Please give exactly two arguments!"
