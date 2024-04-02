@@ -55,7 +55,7 @@ firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
 safari_bookmark_backup="$thisdir/Safari/Bookmarks.plist"
 newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 
-py_ver=python@3.10
+py_ver=python@3.12
 
 # brew formulas  # brew leaves
 brews=(
@@ -102,7 +102,6 @@ git
 go
 #gox		# Go cross compile tool
 #gobject-introspection
-googler
 #goplus
 heksa
 hexedit
@@ -161,7 +160,6 @@ testdisk        # Powerful free data recovery utility
 tldr		# Simplified and community-driven man pages
 tor
 trash		# CLI tool that moves files or folder to the trash
-trimage		# optimizing PNG and JPG files
 #unrar		# Extract, view, and test RAR archives
 w-calc
 wget
@@ -296,15 +294,17 @@ pips=(
 numpy
 pandas
 scipy
-sklearn
+scikit-learn
 notebook # jupyter
 #tensorflow
 matplotlib
 #nest-asyncio # stan
 jupyterlab
+ipympl
 ipywidgets
 ipython
 ipykernel
+openai
 sympy
 torch
 tqdm
@@ -902,7 +902,7 @@ pipls=$($pip_exec list | tail -n +3)
 for package in ${pips[@]}; do
   if [[ -z $(echo "$pipls" | grep -e "$package") ]]; then
     echo "Installing package $package ..."
-    $pip_exec install $package
+    $pip_exec install --break-system-packages $package
     if [[ $? != 0 ]]; then
       echo "Failed installing $package"
       failedpackages+="$package "
@@ -1020,18 +1020,6 @@ if [[ ! -e "/Applications/Graphing Calculator.app" ]]; then
 else
   echo "Skipped creation of Graphing Calculator.app with nativefier"
 fi
-
-# create WhatsAppWeb.app with nativefier
-#if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
-#  echo "### Whatsapp Web.app installation"
-#  echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
-#  nativefier -f -n "WhatsApp Web" http://web.whatsapp.com/ || die "Creating Whatsapp Web.app failed"
-#  mv "WhatsApp Web-${platform}-${arch}/WhatsApp Web.app" /Applications/ || die "Moving to /Applications/ failed"
-#  rm -rf "WhatsApp Web-${platform}-${arch}"
-#  echo
-#else
-#  echo "Skipped creation of Whatsapp Web.app with nativefier"
-#fi
 
 # create Trading212.app with nativefier
 if [[ ! -e "/Applications/Trading212.app" ]]; then
