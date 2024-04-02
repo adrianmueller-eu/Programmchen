@@ -189,8 +189,8 @@ path() {
 alias pbc=pbcopy
 alias pbp=pbpaste
 alias vwc='pbpaste | wc'
-alias al='echo "\$\$\n\\\\begin{aligned}\n\n\\\\end{aligned}\n\$\$" | pbcopy'
-alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
+alias al='echo "\$\$\n\\\\begin{aligned}\n  \n\\\\end{aligned}\n\$\$" | pbcopy'
+alias wctex="pbpaste | sed 's/^ *//;s/^%.*//;s/[^%] *%.*//;s/^\\\\.*//;/^[^ ]*$/d' | wc -w"
 alias lower="pbpaste | tr '[:upper:]' '[:lower:]' | pbcopy"
 alias upper="pbpaste | tr '[:lower:]' '[:upper:]' | pbcopy"
 md2h() {
