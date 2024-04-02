@@ -526,7 +526,7 @@ for (i in speed) {
 
 function panoptoDownload() ( # TODO: seems not to work anymore
   if [[ -n $1 && $1 == *Viewer* ]]; then
-    youtube-dl "$1"
+    yt-dlp --no-playlist "$1"
     return
   fi
   printf "Copy (whole) page html into clipboard"
@@ -535,7 +535,7 @@ function panoptoDownload() ( # TODO: seems not to work anymore
   echo "$links"
   printf "%d links found. Seems right?" $(echo $links | wc -l)
   read trash
-  echo "$links" | xargs -L 1 youtube-dl
+  echo "$links" | xargs -L 1 yt-dlp --no-playlist
 )
 
 function dm() (
