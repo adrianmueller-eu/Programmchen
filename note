@@ -140,7 +140,8 @@ while [[ -n $* ]]; do
 done
 
 timeout() {
-  time=$((desttime - $(date "+%s")))
+  now=$(date "+%s")
+  time=$((desttime - now))
   if [ $time -ge 86400 ]; then
     days=$((time / 86400))
     lefttoday=$((time % 86400))
