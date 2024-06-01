@@ -859,7 +859,11 @@ function backup() (
 )
 
 function copy_custom_py_packages() { # { -> make $py_usersite available for lookup
-  py_usersite=$(python -m site --user-site)
+  if [[ -n $1 ]]; then
+     py_usersite=$1
+  else
+     py_usersite=$(python -m site --user-site)
+  fi
   [[ -d "$py_usersite" ]] || mkdir -p "$py_usersite"
 
   [[ -d "$PROJ/BN" ]] &&  cp -af "$PROJ/BN" "$py_usersite/" || echo "Failed to copy BN"
