@@ -150,9 +150,9 @@ alias py=python
 alias ipython="python -m IPython"
 alias pip="python -m pip"
 alias ipy=ipython
-alias j="jupyter lab"
+alias jlab="jupyter lab"
 alias jnb="python -m notebook" # guarantee same python version #jupyter-notebook
-alias s="sage -n jupyter"
+alias snb="sage -n jupyter"
 alias spip="sage -python -m pip"
 alias ca=conda
 alias caa="ca activate"
@@ -168,6 +168,15 @@ alias satt="py -m SAT -t"
 piptop() {
    pipdeptree --python $(t python | sed -n 1p | awk '{print $3}') | grep -v '^ ' | sed 's/==.*//'
 }
+j() (
+  [[ -z "$1" ]] && filename="playground.ipynb" || filename=$1
+  [[ "$filename" != *.ipynb ]] && filename="$filename".ipynb
+  touch "$filename"
+  code "$filename"
+  sleep 0.2
+  osascript -e 'tell application "System Events" to set frontmost of the first application process whose displayed name is "Code" to true'
+)
+alias s=j
 
 #############################
 ### hacky
