@@ -60,6 +60,19 @@ if "COLUMNS" in os.environ:
 def bins(data):
     return int(np.ceil(np.sqrt(len(data))))
 
+### aliases
+T = True
+F = False
+l = list
+Conv = ConvergenceCondition
+factor = prime_factors
+
+def r(x, precision=7):
+    return np.round(x, precision)
+def now():
+    return time.time()
+
+
 ### more
 # %lsmagic
 # import warnings; warnings.filterwarnings('ignore')
