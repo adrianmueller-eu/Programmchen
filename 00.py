@@ -15,20 +15,27 @@ except:
        import sympy
     except:
        pass
-try:
-    from numpy.linalg import *
-    from numpy.linalg import matrix_rank as rank
-    from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
-    from numpy import trace as tr
+    try:  # avoid overwriting Sage functions (e.g. solve)
+        from numpy.linalg import *
+        from numpy.linalg import matrix_rank as rank
+        from numpy.random import * # https://numpy.org/doc/stable/reference/random/generator.html
+        from numpy import trace as tr
 
-    import scipy
-    from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
-    from scipy.optimize import minimize
-    from scipy.linalg import *
+        import scipy
+        from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
+        from scipy.optimize import minimize
+        from scipy.linalg import *
+    except:
+        pass
+
+try:
+    from utils import *
+    #from utils.quantum import *
 except:
     pass
 
 import itertools # https://docs.python.org/3/library/itertools.html
+from itertools import product, combinations
 ### visual
 # import pandas as pd
 # %matplotlib
@@ -70,5 +77,3 @@ def bins(data):
 # import nest_asyncio
 # nest_asyncio.apply()
 
-from utils import *
-#from utils.quantum import *
