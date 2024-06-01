@@ -1549,7 +1549,7 @@ txt2img() {
   }
 
   # parse args
-  if [[ -z "$1" ]]; then
+  if [[ -z "$1" || $1 == -* && $1 != "-h" ]]; then
     printf "Your prompt: "
     read text # don't call it "prompt", as it will set $PS1
   else
