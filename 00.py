@@ -5,11 +5,15 @@ import inspect
 def source(f):
     print(inspect.getsource(f))
 eps = sys.float_info.epsilon
+
 ### math
 import numpy as np
 
 try:
-    integral # see if sage is loaded
+    from sage.all import * # see if sage is loaded
+    from utils import *
+    #from utils.quantum import *
+    from tqdm import tqdm as tq
 except:
     from math import *
     from numpy import product as mul
@@ -29,23 +33,20 @@ except:
         from scipy.linalg import *
     except:
         pass
-
-try:
-    from utils import *
-    #from utils.quantum import *
-except:
-    pass
+    try:
+        from utils import *
+        #from utils.quantum import *
+        from tqdm.autonotebook import tqdm as tq
+    except:
+        pass
 
 import itertools # https://docs.python.org/3/library/itertools.html
 from itertools import product, combinations
+
 ### visual
+import matplotlib.pyplot as plt
 # import pandas as pd
 # %matplotlib
-import matplotlib.pyplot as plt # https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.html#module-matplotlib.pyplot
-try:
-  from tqdm.autonotebook import tqdm as tq
-except:
-  pass
 ### options
 # pd.set_option('display.max_rows', 500)
 # pd.set_option('display.max_colwidth', None) # show complete text in df cells
@@ -66,14 +67,20 @@ def bins(data):
 T = True
 F = False
 l = list
-Conv = ConvergenceCondition
-factor = prime_factors
+try:
+    Conv = ConvergenceCondition
+    factor = prime_factors
+except:
+    pass
 
 def r(x, precision=7):
     return np.round(x, precision)
+
+def npp(precision=5):
+    np.set_printoptions(precision=precision, suppress=True)
+
 def now():
     return time.time()
-
 
 ### more
 # %lsmagic
