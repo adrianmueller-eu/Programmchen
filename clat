@@ -5,11 +5,13 @@ default_name="main.tex"
 goal=
 SHORT=
 DELETE=true
+repeating=
 help="Compiles a tex file. Complies multiple times if citation is used, so that literature section is right. Uses pdflatexmkrc if available.
 $usage
 	\e[1m-h\e[0m	Display this message and exit.
 	\e[1m-s\e[0m	Force compile only one time with pdflatex.
 	\e[1m-l\e[0m	Force compile multiple times.
+	\e[1m-a\e[0m	After compilation ask to compile again.
 	\e[1m-d\e[0m	Debug: Don't delete auto-generated files.
 	\e[4mfile\e[0m	.tex-file to compile (default: $default_name).
 "
@@ -62,6 +64,9 @@ while [[ $1 == -* ]]; do
     -d)
       DELETE=false
       ;;
+    -a)
+      repeating=true
+      ;;
     --)
       break;
       ;;
@@ -84,25 +89,29 @@ if [[ -z $SHORT ]]; then
   fi
 fi
 
-if [[ -r "$PWD/pdflatexmkrc" ]]; then
-  latexmk -pdf -r pdflatexmkrc "$goal" || die
-  open_it "$goal"
-elif [[ -n "$goal" ]]; then
-  if [[ ! -r "$goal" ]]; then
-    echo "Please give an existing and readable file. See -h for more help."
-    exit 1
-  fi
-  pdflatex -output-directory "$goal_dir" "$goal" || die 'First latex compilation run failed'
-  if [[ $SHORT == "false" ]]; then
-    if cat "$goal" | grep '^\\printbibliography' >/dev/null; then
-      biber "${goal%.*}" || die 'Biber run failed. Try `rm -rf $(biber --cache)`.' # clear cache if exit code 2
-    else
-      bibtex "${goal%.*}.aux" || die 'Bibtex run failed.'
+while true; do
+  if [[ -r "$PWD/pdflatexmkrc" ]]; then
+    latexmk -pdf -r pdflatexmkrc "$goal" || die
+    open_it "$goal"
+  elif [[ -n "$goal" ]]; then
+    if [[ ! -r "$goal" ]]; then
+      echo "Please give an existing and readable file. See -h for more help."
+      exit 1
     fi
-    pdflatex -output-directory "$goal_dir" "$goal" || die 'Second latex compilation run failed'
-    pdflatex -output-directory "$goal_dir" "$goal" || die 'Third latex compilation run failed'
+    pdflatex -output-directory "$goal_dir" "$goal" || die 'First latex compilation run failed'
+    if [[ $SHORT == "false" ]]; then
+      if cat "$goal" | grep '^\\printbibliography' >/dev/null; then
+        biber "${goal%.*}" || die 'Biber run failed. Try `rm -rf $(biber --cache)`.' # clear cache if exit code 2
+      else
+        bibtex "${goal%.*}.aux" || die 'Bibtex run failed.'
+      fi
+      pdflatex -output-directory "$goal_dir" "$goal" || die 'Second latex compilation run failed'
+      pdflatex -output-directory "$goal_dir" "$goal" || die 'Third latex compilation run failed'
+    fi
+    open_it "$goal"
+  else
+   die "Please give a valid tex file. See -h for more help."
   fi
-  open_it "$goal"
-else
- die "Please give a valid tex file. See -h for more help."
-fi
+  [[ -z "$repeating" ]] && break
+  read -p 'clat? [Enter] ' trash
+done
