@@ -858,7 +858,7 @@ function backup() (
   unmount
 )
 
-function copy_custom_py_packages() { # { -> make $py_usersite available for lookup
+function copy_custom_py_packages_depr() { # { -> make $py_usersite available for lookup
   if [[ -n $1 ]]; then
      py_usersite=$1
   else
