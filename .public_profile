@@ -120,6 +120,8 @@ alias grh^="git reset HEAD^"
 alias grh^^="git reset HEAD^^"
 alias grh^2="git reset HEAD^2"
 alias gurl="git config --get remote.origin.url | sed 's/\.git//;s~:~/~;s~git@~https://~;s~///~://~'"
+#alias gmaintenance="git rebase --root && git reflog expire --all --expire=now && git gc --prune=now --aggressive"
+alias gmaintenance="git maintenance run"
 
 function c() ( # commit
   git status > /dev/null || return

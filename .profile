@@ -210,7 +210,7 @@ for b in $a3; do echo "b: [$b]"; done
 #regex:password=\w+==>password=  # Replace, using a regex
 #regex:\r(\n)==>$1               # Replace Windows newlines with Unix newlines
 #https://stackoverflow.com/questions/4110652/how-to-substitute-text-from-files-in-git-history
-#after that: git rebase --root && git reflog expire --expire=now --all && git gc --prune=now --aggressive
+#after that use `git maintenance run`
 
 #replace git commit name & mail address:
 function replace_git_name_and_mail() {
