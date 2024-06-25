@@ -7,7 +7,7 @@ cleanedUp=0 #storage freed in bytes
 path="." #path as root for cleaning
 uselocate=0
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s|-v] [-l | [-t] [\e[4mpath\e[0m]]"
-help="Cleans up the current (or given) directory recursively from .DS_Store files.
+help="Cleans up the current (or given) directory recursively from .DS_Store files. If it's a git repository, also runs \`git maintenance run\`
 $usage
 	\e[1m-h\e[0m	Display this message and exit.
 	\e[1m-s\e[0m	Silence. Show errors only.
@@ -136,3 +136,8 @@ else
 fi
 
 resumee
+
+if git rev-parse --is-inside-work-tree &>/dev/null; then
+  echo "*** git maintenance run ***"
+  git maintenance run
+fi
