@@ -61,6 +61,7 @@ py_ver=python@3.12
 brews=(
 agedu		# Unix utility for tracking down wasted disk space
 airshare
+ares		# Automatic decryption and decoding tool
 aspell
 bash
 bash-completion
@@ -74,9 +75,7 @@ blueutil
 #cheat		# Better version contained in bash snippets
 #choose		# reads from stdin, lets user choose one line, prints that line to stdout, exits
 #chordii
-ciphey		# Automatic decryption and decoding tool
 clamav
-clang-format    # C++ formatting, e.g. for TextMate
 cloc
 cmake
 coreutils	# GNU File, Shell, and Text utilities (SHA!)
@@ -99,14 +98,15 @@ gcal
 #ghostscript	# pdf2ps, ps2pdf, and more
 git
 #geoipupdate
-go
+#go
 #gox		# Go cross compile tool
 #gobject-introspection
-#goplus
+#goplus         # Go and some more stuff (not sure what)
+#graphviz       # Graph visualization software
 heksa
 hexedit
 howdoi
-ijq		# Interactive jq
+ijq		# Interactive wrapper for jq
 imagemagick	# installs convert
 #jq		# JSON parser
 #launch4j   	# Cross-platform Java executable wrapper
@@ -147,11 +147,13 @@ recode		# Convert character sets
 rename
 ripgrep
 rsync
+rust            # Hype language of the day
 sha3sum
 #shellcheck	# analysis and lint tool for bash scripts
 #shpotify
 #sic		# Minimal multiplexing IRC client
 #sip
+sniffnet        # another nextwork traffic analyser
 sox		# SOund eXchange: audio manipulation (e.g. sound recording tool)
 telnet
 tesseract	# also required by ffmeg and tesseract-lang
@@ -185,12 +187,11 @@ brewcasks_pwd=(
   #wine-stable		# currently not working with ARM
   xquartz
   zoom
-  #adoptopenjdk/openjdk/adoptopenjdk8 # needed?
+  #adoptopenjdk/openjdk/adoptopenjdk8 # discontinued
 )
 
 # brew casks  # brew list --cask
 brewcasks=(
-adoptopenjdk8
 #anaconda
 android-file-transfer
 #android-sdk
@@ -200,6 +201,7 @@ anki
 #avira-antivirus
 #axure-rp
 #balenaetcher 		# utility for writing image files
+beekeeper-studio        # nice database interfact
 bibdesk
 blender
 calibre
@@ -209,7 +211,7 @@ discord
 #docker			# also as formula
 drawio
 #element		# matrix messenger
-eqmac			# system-wide equalizer
+#eqmac			# system-wide equalizer
 #eul 			# clear and simple system status monitoring (cpu, ram, ...)
 finicky
 firefox
@@ -217,13 +219,13 @@ flux
 font-hack-nerd-font
 #font-times-newer-roman	# slightly wider times font
 geogebra
-gephi			# Utility to visualize and explore graphs
+#gephi			# Utility to visualize and explore graphs
 #graphsketcher		# draw graphs
-intellij-idea
+#intellij-idea
 iterm2
 j			# J language
 #jamkazam		# Low-latency rehearsing, jamming and performing
-joplin			# Note taking app with nextcloud sync
+#joplin			# Note taking app with nextcloud sync (try out some day!)
 jpc-qlcolorcode		# QuickLook plug-in for syntax highlighting
 #jwzlyrics
 #kodi
@@ -239,7 +241,7 @@ musescore
 obsidian		# replacement for notational-velocity
 #openoffice
 #osxfuse 		#maybe needed for plugging the external drive?
-pycharm
+#pycharm
 qlstephen
 #rstudio
 rwts-pdfwriter          # Print driver for printing documents directly to a pdf file
@@ -252,6 +254,7 @@ slack
 #sonic-visualiser
 spotify
 #stellarium
+#sweet-home3d
 #teamviewer
 telegram
 #texstudio
@@ -263,7 +266,7 @@ tomatobar
 #tor-browser
 ukelele
 visual-studio-code
-#yippy                  # clipboard manager (in beta) see also: maccy
+#yippy                  # cool clipboard manager (see also: maccy)
 #zulip
 )
 
