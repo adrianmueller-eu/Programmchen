@@ -358,13 +358,17 @@ function ytr() ( # youtube recents
 )
 
 alias be="bielefeld_events"
-function curl() {
-  if hash curlie &>/dev/null; then
-    curlie --socks5-hostname "$PROXY" "$@"
-  else
-    curl --socks5-hostname "$PROXY" "$@"
+function curl() (
+  args=("$@")
+  if [[ -n "$PROXY" ]]; then
+    args=(--socks5-hostname "$PROXY" "$@")
   fi
-}
+  if hash curlie &>/dev/null; then
+    curlie "${args[@]}"
+  else
+    curl "${args[@]}"
+  fi
+)
 
 function ping() {
   if [[ -z $1 ]]; then
