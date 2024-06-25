@@ -429,14 +429,11 @@ if [[ -z "$P" ]]; then
   section "Preferences installation"
 
   # install basic shell sources
-  copy .bashrc .profile .zshrc
+  copy .bashrc .profile .zshrc .public_profile
   P=$(cat .profile | grep P= | sed "s/export P=//") # avoid errors by not sourcing .profile
 
   # install the other shit
-  if [[ ! -d .m2 ]]; then
-    mkdir .m2 || die "mkdir $HOME/.m2 failed"
-  fi
-  copy .m2/settings.xml .ssh .password-store .gnupg
+  copy .ssh .password-store .gnupg
   chmod 700 .gnupg .password-store .password-store/* .ssh
   chmod 600 .password-store/**/*.gpg
   chmod 600 .ssh/*
@@ -952,11 +949,11 @@ fi
 popd &> /dev/null || die "cd failed" # HOME again
 
 ### place at ~/Library/Application Support
-if [[ ! -n $(ls "Application Support/JetBrains/IntelliJIdea"* 2>/dev/null) ]]; then
-  copy "Application Support/"
-else
-  echo "Skipped copying of content of \"Application Support\" to $HOME/Library/Application Support/"
-fi
+#if [[ ! -n $(ls "Application Support/JetBrains/IntelliJIdea"* 2>/dev/null) ]]; then
+#  copy "Application Support/"
+#else
+#  echo "Skipped copying of content of \"Application Support\" to $HOME/Library/Application Support/"
+#fi
 
 ### place at HOME
 

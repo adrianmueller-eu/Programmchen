@@ -160,8 +160,7 @@ case $1 in
     pushd "$HOME" &> /dev/null
     overall_size=$(calc_size Cloud Desktop Documents Music Pictures \
                              Library/Thunderbird/Profiles \
-                             Library/Dictionaries \
-                             Library/Application\ Support/JetBrains/IntelliJIdea* )
+                             Library/Dictionaries )
     echo "You will need about $overall_size."
     popd &> /dev/null
     exit 0
@@ -239,11 +238,10 @@ echo "####################################################"
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 
 ensureTargetDir files
-ensureTargetDir .m2
 
 rm -rf .gnupg/S.* # remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
-ctt .bashrc .profile .zshrc # only transitionally
-ctt .m2/settings.xml .ssh .password-store .gnupg
+ctt .bashrc .profile .public_profile .zshrc # only transitionally
+ctt .ssh .password-store .gnupg
 
 cd "Programmchen" &> /dev/null || die "cd to $HOME/Programmchen failed"
 ctt sys_install
@@ -264,7 +262,6 @@ ensureTargetDir Safari
 ctt Safari/Bookmarks.plist
 
 ensureTargetDir "Application Support/JetBrains"
-ctt Application\ Support/JetBrains/IntelliJIdea* # IntelliJ config folder
 
 # TODO: copy whole Firefox Profile folder
 firefox_bookmark="firefox_bookmark.jsonlz4"
