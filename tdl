@@ -3,11 +3,11 @@
 depth=3
 sort=
 permissions=
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s|-r] [\e[4mdepth\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-S|-r] [\e[4mdepth\e[0m]"
 help="List directories with \"\e[1mtree\e[0m\".
 $usage
     \e[1m-h\e[0m     Displays this message and exits.
-    \e[1m-s\e[0m     Sort entries by size, display in human-readable format.
+    \e[1m-S\e[0m     Sort entries by size, display in human-readable format.
     \e[1m-r\e[0m     Sort entries by size, display in raw format.
     \e[1m-p\e[0m     Add permissions to the output.
     \e[4mdepth\e[0m  Depth of directories listed (1 to 99; default: $depth).
@@ -35,7 +35,7 @@ while [[ -n $1 ]]; do
     -[1-9]|-[1-9][0-9])
       depth=$1;
       ;;
-    -s)
+    -S|-s)
       sort=1
       ;;
     -r)
