@@ -1418,6 +1418,7 @@ function sec2time() (
 alias showUnixTime="$BREW_PREFIX/bin/bash -c 'while true; do printf \"\\r\\e[K\$EPOCHREALTIME\"; done'"
 alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
 alias lsusers="dscl . list /Users | grep -v ^_"
+alias cd..="cd .."  # common typo
 
 randline() (
   s=1
