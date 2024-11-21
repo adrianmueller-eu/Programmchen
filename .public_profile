@@ -250,18 +250,41 @@ vcal() {
 alias q="qlmanage -p &>/dev/null"
 alias mime='file -I'
 alias idiff="/Applications/IntelliJ\ IDEA.app/Contents/MacOS/idea diff"
-unalias diff  # omz
-function diff() {
-  if [[ -z "$2" || -n "$3" ]]; then
-    echo "Please give exactly two arguments!"
-    return 1
+unalias diff &>/dev/null  # omz
+function diff() (
+  local word
+  if [[ $1 == "-w" ]]; then
+    word=true
+    shift
   fi
-  if file -b --mime-type "$1" "$2" | grep "^text" >/dev/null; then
-    gd --no-index "$1" "$2"
+  if [[ ! -t 0 ]]; then
+    input=()
+    while IFS= read -r line; do
+      input+=("$line")
+    done
+    if (( ${#input[@]} < 2 )); then
+      echo "Error: Please give two files"
+      exit 1
+    fi
+    file1="${input[1]}"
+    file2="${input[2]}"
+  elif [[ -n $2 ]]; then
+    file1="$1"
+    file2="$2"
   else
-    command diff "$1" "$2"
+    echo "Error: Please give two files"
+    exit 1
   fi
-}
+  if file -b --mime-type "$file1" "$file2" | grep "^text" >/dev/null; then
+    if [[ -n $word ]]; then
+      gdw --no-index "$file1" "$file2"
+    else
+      gd --no-index "$file1" "$file2"
+    fi
+  else
+    command diff "$file1" "$file2"
+  fi
+)
 function cp() {
   if [[ "$1" == -* ]]; then
     command cp "$@"
