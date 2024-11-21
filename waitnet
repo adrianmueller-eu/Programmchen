@@ -115,18 +115,16 @@ function turnWifiOn() {
   networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
 }
 
-#toggle wifi on
+# for preformance, first test if internet connection is established
+# performance: 40ms more when not working (more latency okay), but 100ms less when working (most of the uses)
 wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice" | cut -c 20-)
+# check wifidevice if this didn't work
 if [[ $? -ne 0 ]]; then
   wifiDevice=$(networksetup -listallhardwareports | grep -A 2 "Wi-Fi" | grep "Device" | awk '{print $2}')
   wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice" | cut -c 20-)
 fi
 [[ $output -ge 3 ]] && echo "Wi-Fi status: $wifiDeviceStatus"
-if [[ "$wifiDeviceStatus" == "Off" ]]; then
-  turnWifiOn
-else
-  # for preformance, first test if internet connection is established
-  # performance: 40ms more when not working (more latency okay), but 100ms less when working (most of the uses)
+if [[ "$wifiDeviceStatus" == "On" ]]; then
   [[ $output -ge 3 ]] && echo "ping $PING"
   netTest=$(ping -t 3 -c 1 $PING 2>/dev/null)
   if [[ $? -eq 0 ]]; then
@@ -140,26 +138,32 @@ fi
 elapsedTime=0
 ssid_established=
 while true; do
-  #test on ssid connected
-  ssid=$(networksetup -getairportnetwork "$wifiDevice" | cut -c 24-)
-  if [[ $ssid == *$'\n'* ]]; then  # 2 lines -> wifi Off
-    log "Wifi turned off."
-    turnWifiOn
-    sleep 2
-  elif [[ $ssid == "with an AirPort network." ]]; then
-    if [[ -n "$ssid_established" ]]; then
-      log "Connection to $ssid_established lost."
-      ssid_established=
+  #test if ssid connected
+  #ssid=$(networksetup -getairportnetwork "$wifiDevice" | cut -c 24-)  # broken in Sequoia
+  ssid=$(ipconfig getsummary "$wifiDevice" | grep '  SSID : ' | awk -F ': ' '{print $2}')
+  #if [[ $ssid == *$'\n'* ]]; then  # 2 lines -> wifi Off
+  if [[ -z "$ssid" ]]; then
+    wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice" | cut -c 20-)
+    if [[ "$wifiDeviceStatus" == "Off" ]]; then
+      [[ $elapsedTime -gt 0 ]] && log "Wifi turned off."
+      turnWifiOn
+      sleep 1
+    else
+  #elif [[ $ssid == "with an AirPort network." ]]; then
+      if [[ -n "$ssid_established" ]]; then
+        log "Connection to $ssid_established lost."
+        ssid_established=
+      fi
+      if [[ -z $sendNote && $elapsedTime -ge $timeout ]]; then
+        fail "Timeout: Auto-connecting to an SSID"
+      fi
+      waitflag=1
+      setShouldOutput
+      if [[ $shouldOutput == "true" ]]; then
+        log "Waiting for SSID ..."
+      fi
+      sleep 1
     fi
-    if [[ -z $sendNote && $elapsedTime -ge $timeout ]]; then
-      fail "Timeout: Auto-connecting to an SSID"
-    fi
-    waitflag=1
-    setShouldOutput
-    if [[ $shouldOutput == "true" ]]; then
-      log "Waiting for SSID ..."
-    fi
-    sleep 1
   else  # SSID found!
     [[ $output -ge 3 ]] && echo "waitflag: $waitflag"
     if [[ $waitflag -eq 1 ]]; then
@@ -170,7 +174,7 @@ while true; do
       [[ -n "$netTest" && $output -ge 1 ]] && echo "$netTest" | tail -1
       fail "Timeout: Internet connection detection"
     fi
-    #test on internet connection
+    #test if internet connection available
     netTest=$(ping -t 3 -c 1 $PING 2>&1 >/dev/null)
     if [[ $? -ne 0 ]]; then
       [[ $output -ge 3 ]] && echo "ping output: $netTest"
