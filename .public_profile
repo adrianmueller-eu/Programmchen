@@ -153,6 +153,7 @@ alias py=python
 alias ipython="python -m IPython"
 alias pip="python -m pip"
 alias ipy=ipython
+alias uva="[[ -d .venv ]] || uv venv; source .venv/bin/activate"
 alias jlab="jupyter lab"
 alias jnb="python -m notebook" # guarantee same python version #jupyter-notebook
 alias snb="sage -n jupyter"
