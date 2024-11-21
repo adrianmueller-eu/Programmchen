@@ -16,7 +16,6 @@ try:
     from tqdm import tqdm as tq
 except:
     from math import *
-    from numpy import product as mul
     try:
        import sympy
     except:
