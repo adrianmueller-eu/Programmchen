@@ -3,7 +3,7 @@ sys.path.append(os.environ['PROJ'])
 
 import inspect
 def source(f):
-    print(inspect.getsource(f))
+    print(inspect.getsource(f), end="")
 eps = sys.float_info.epsilon
 
 ### math
