@@ -85,6 +85,12 @@ function help() {
   esac
 }
 
+pride() (
+  # https://codegolf.stackexchange.com/questions/230438/create-a-pride-flag
+  i(){echo "\e[$1m${(pl:22::█:)}"};i 31;i 91;i 93;i 32;i 34;i 35
+)
+alias rainbow=pride
+
 #for IntelliJ shell do
 #echo "source ~/.zshrc" >> /Applications/IntelliJ\ IDEA.app/Contents/plugins/terminal/.zshrc
 # If zsh is slow, try
