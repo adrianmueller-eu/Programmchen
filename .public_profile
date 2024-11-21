@@ -1598,7 +1598,94 @@ txt2img() {
   popd &>/dev/null
 }
 
-tts() (
+tts() {
+  if ! conda activate tts >&/dev/null; then
+    echo "Run: conda create -y -n tts python==3.10 && caa tts && pip install TTS"
+    return 1
+  fi
+  local output
+  if [[ "$1" == "-o" ]]; then
+    shift
+    if [[ -z "$1" ]]; then
+      echo "Please give a file path with argument -o"
+      return 1
+    else
+      output=$1
+      shift
+    fi
+  fi
+  if [[ ! -t 0 ]]; then
+    input=$(cat)
+  elif [[ -z $1 ]]; then
+    input=$(pbpaste)
+  else
+    input=$1
+  fi
+  if [[ -n $output ]]; then
+    tmpfile="${TMPDIR}audio_${output}.wav"
+    if [[ "$output" != *.mp3 ]]; then
+      output="${output}.mp3"
+    fi
+    if [[ -e "$output" ]]; then
+      echo "$output already exists!"
+      return 1
+    fi
+    echo "Saving to $tmpfile"
+    $CONDA_PREFIX/bin/tts --text "$input" --model_name "tts_models/en/ljspeech/tacotron2-DDC_ph" --out_path "$tmpfile" || return $?
+    echo "Converting $tmpfile -> $output"
+    ffmpeg -loglevel warning -stats -hide_banner -i "$tmpfile" -vn -ar 22050 -ac 1 -b:a 96k "$output" || return $?
+    fs_wav=$(du -sh "$tmpfile" | awk '{print $1}')
+    fs_mp3=$(du -sh "$output" | awk '{print $1}')
+
+    echo
+    echo "Filesize $fs_wav -> $fs_mp3"
+    echo "play $output"
+  else
+    echo "Generation will start in a second"
+    echo "Input: $input"
+    $CONDA_PREFIX/bin/tts --text "$input" --model_name "tts_models/en/ljspeech/tacotron2-DDC_ph" --pipe_out | mpv --really-quiet --demuxer=rawaudio --demuxer-rawaudio-rate=22050 --demuxer-rawaudio-format=s16le --demuxer-rawaudio-channels=1 - 2> /dev/null
+  fi
+  conda deactivate
+}
+
+tts_piper() {
+  if ! conda activate piper; then
+    echo "Run"
+    echo "conda create -n piper python==3.10"
+    echo "caa piper"
+    echo "cd ~/Projects/pp"
+    echo "pip install ."
+    echo "pip install piper-tts"
+    return 1
+  fi
+  local output
+  if [[ "$1" == "-o" ]]; then
+    shift
+    if [[ -z "$1" ]]; then
+      output="output.wav"
+    else
+      output=$1
+      shift
+    fi
+  fi
+  if [[ ! -t 0 ]]; then
+    text=$(cat)
+  elif [[ -z $1 ]]; then
+    text=$(pbpaste)
+  else
+    text=$1
+  fi
+  export DYLD_LIBRARY_PATH=~/Projects/pp/build/ei/lib
+  if [[ -n "$output" ]]; then
+     printf "%s" "$text" | piper --model ~/Projects/piper/voices/en_US-hfc_female-medium.onnx --output_file "$output"
+  else
+    # stream
+    printf "%s" "$text" | piper --model ~/Projects/piper/voices/en_US-hfc_female-medium.onnx --output-raw | mpv --demuxer=rawaudio --demuxer-rawaudio-rate=22050 --demuxer-rawaudio-format=s16le --demuxer-rawaudio-channels=1 - 2> /dev/null
+  fi
+  conda deactivate
+}
+
+tts_bark() (
   if [[ ! -t 0 ]]; then
     text=$(cat)
   elif [[ -z $1 ]]; then
