@@ -360,6 +360,7 @@ alias y=yt1080
 alias ytul="alias | grep \"='yt \" | grep -v -- --cached | sed 's/alias //g; s/=.*//g'"
 function ytu() (
   waitnet -s || return
+  blon
   setopt NO_MONITOR # LOCAL_OPTIONS NO_NOTIFY
   [[ -n "$PROXY" ]] && echo "Using proxy ($PROXY)"
   yts=($(ytul))
