@@ -14,7 +14,7 @@ export PYTHONSTARTUP=$HOME/.ipython/profile_default/startup/00.py
 export HOMEBREW_NO_ENV_HINTS=1
 
 export PATH="$BREW_PREFIX/sbin:$PATH"
-export PATH="$BREW_PREFIX/opt/python/libexec/bin:$PATH" # current python version # @3.9
+export PATH="$BREW_PREFIX/opt/python3/libexec/bin:$PATH"
 export PATH="./node_modules/.bin:$PATH" # nice hack for dev independent node deps versioning
 #export PATH="$JAVA_HOME/bin:$PATH"
 

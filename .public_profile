@@ -148,6 +148,7 @@ function c() ( # commit
 #############################
 export COLUMNS
 export LINES
+alias python=python3.12
 alias py=python
 alias ipython="python -m IPython"
 alias pip="python -m pip"
