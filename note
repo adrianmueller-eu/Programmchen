@@ -10,10 +10,9 @@ $usage
 	\e[1m-h\e[0m	Displays this help message and exits.
 	\e[1m-s\e[0m	Do not display the remaining time (for running in background, also detected automatically).
 	\e[4mtime\e[0m	Can be
-		 - an integer, so it will be interpreted as minutes
-		 - an endtime in format (H)H:MM(:SS), so maximal a time within the next
-		   24 hours is possible
-		 - a string in the form:
+		 - an integer, which will be interpreted as minutes
+		 - an endtime in format (H)H:MM(:SS)
+		 - a string of the form:
 		   \e[4mtime\e[0m = d | h | m | s
 		   d    = 0\"d\"(h | m | s)
 		   h    = 0\"h\"(m | s)
@@ -65,19 +64,16 @@ while [[ -n $* ]]; do
     echo "Please specify a time and/or message. See -h for more help."
     exit 1
     ;;
-  [0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9])
-    minutes=$(echo $1 | cut -d: -f1)
-    seconds=$(echo $1 | cut -d: -f2) # cut doesn't work as expected if there is no :
-    desttime=$(date -v+${minutes}M -v+${seconds}S "+%s")
-    ((desttime--))
-    shift
-    ;;
-  [0-9]:[0-5][0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]:[0-5][0-9])
+  [0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]|[0-9]:[0-5][0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]:[0-5][0-9])
     hours=$(echo $1 | cut -d: -f1)
     minutes=$(echo $1 | cut -d: -f2)
     seconds=$(echo $1 | cut -d: -f3)
     seconds=${seconds:-0}  # default to 0 if not given
-    desttime=$(date -v+${hours}H -v+${minutes}M -v+${seconds}S "+%s")
+    desttime=$(date -j -f "%H:%M:%S" "${hours}:${minutes}:${seconds}" +%s)
+    now=$(date +%s)
+    if [[ $now > $desttime ]]; then
+      desttime=$((desttime + 60*60*24))
+    fi
     ((desttime--))
     shift
     ;;
