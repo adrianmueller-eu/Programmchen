@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mmessage\e[0m \e[4mfiles\e[0m \e[4m...\e[0m]"
-help="Updates git repository by stashing away current changes, pulling (rebase), and commiting if message and files specified.
+help="Updates git repository by stashing away current changes, pulling (rebase), commiting if message and files specified, run maintenance, and push if confirmed.
 $usage
         \e[1m-h\e[0m	Display this message and exit.
 	\e[4mmessage\e[0m	Commit message. Obligatory for committing.
@@ -25,7 +25,7 @@ case $1 in
     if [[ -n "$mes" ]]; then
       echo "Commit message: $mes"
       if [[ -t 0 ]]; then
-        printf "Are you sure you want to continue? Press enter: "
+        printf "Are you sure you want to continue? [Enter] "
         read trash
       fi
       shift
@@ -59,6 +59,8 @@ if [[ -n "$1" ]]; then # if file to commit given
     && git commit -m "$mes" || exit $?
   fi
 fi
+
+git maintenance run
 
 if [[ -n $(git status | grep "ahead") ]]; then
   if [[ -t 0 ]]; then
