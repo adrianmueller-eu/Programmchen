@@ -46,11 +46,7 @@ fi
 # dirs
 templates="$C/Org/Vorlagen"
 # resources
-duolingo_icon="$IT/duolingo.jpg" # icon for Duolingo.app
-duolingo_inject="$IT/duolingo.css"
 graphing_icon="$IT/graphing calculator.jpg" # icon for Graphing Calculator.app
-trading_icon="$PROJ/212/js-listener/trading212.png" # icon for Trading212.app
-trading_script="$PROJ/212/js-listener/212listener.js" # listener for Trading212.app
 firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
 safari_bookmark_backup="$thisdir/Safari/Bookmarks.plist"
 newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
@@ -951,13 +947,6 @@ else
 fi
 popd &> /dev/null || die "cd failed" # HOME again
 
-### place at ~/Library/Application Support
-#if [[ ! -n $(ls "Application Support/JetBrains/IntelliJIdea"* 2>/dev/null) ]]; then
-#  copy "Application Support/"
-#else
-#  echo "Skipped copying of content of \"Application Support\" to $HOME/Library/Application Support/"
-#fi
-
 ### place at HOME
 
 ### place at /Applications
@@ -972,11 +961,8 @@ popd &> /dev/null || die "cd failed"
 
 section "nativefier app creations"
 # ensure required cloud content synced
-[[ ! -e "$duolingo_icon" ]] && echo "Icon for Duolingo not found: $duolingo_icon"
-[[ ! -e "$trading_icon" ]] && echo "Icon for Trading212 not found: $trading_icon"
 [[ ! -e "$graphing_icon" ]] && echo "Icon for Graphing Calculator not found: $graphing_icon"
-[[ ! -e "$trading_script" ]] && echo "Script for Trading212 not found: $trading_script"
-while [[ ! ( -e "$duolingo_icon" && -e "$trading_icon" && -e "$trading_script" && -e "$graphing_icon") ]]; do
+while [[ ! ( -e  "$graphing_icon" ) ]]; do
   printf "Please wait until required cloud data is syncing "
   sleep 1
   printf "."
@@ -997,18 +983,6 @@ else
   arch="x64" # assume
 fi
 
-# create Duolingo.app with nativefier
-if [[ ! -e "/Applications/Duolingo.app" ]]; then
-  echo "### Duolingo.app installation"
-  echo "Installing Duolingo.app with nativefier from https://www.duolingo.com/learn"
-  nativefier -f --inject "$duolingo_inject" -n "Duolingo" -i "$duolingo_icon" https://www.duolingo.com/learn || die "Creating Duolingo.app failed"
-  mv "Duolingo-${platform}-${arch}/Duolingo.app" /Applications/ || die "Moving to /Applications/ failed"
-  rm -rf "Duolingo-${platform}-${arch}"
-  echo
-else
-  echo "Skipped creation of Duolingo.app with nativefier"
-fi
-
 # create Graphing Calculator.app with nativefier
 if [[ ! -e "/Applications/Graphing Calculator.app" ]]; then
   echo "### Graphing Calculator.app installation"
@@ -1019,43 +993,6 @@ if [[ ! -e "/Applications/Graphing Calculator.app" ]]; then
   echo
 else
   echo "Skipped creation of Graphing Calculator.app with nativefier"
-fi
-
-# create Trading212.app with nativefier
-if [[ ! -e "/Applications/Trading212.app" ]]; then
-  echo "### Trading212.app installation"
-  echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
-  nativefier -f -i "$trading_icon" --inject "$trading_script" -n "Trading212" https://www.trading212.com/ || die "Creating Trading212.app failed"
-
-  mv "Trading212-${platform}-${arch}/Trading212.app" /Applications/ || die "Moving to /Applications/ failed"
-  rm -rf "Trading212-${platform}-${arch}"
-
-  mainpath="/Applications/Trading212.app/Contents/Resources/app/lib/main.js"
-  if [[ -e "$mainpath" ]]; then
-    mainjs=$(cat "$mainpath")
-    lineToInsert=$(echo "$mainjs" | grep -n "mainWindow.webContents.on('will-navigate', onWillNavigate);" | awk '{ print $1 + 0; }') #5335
-    line='  mainWindow.webContents.on("did-finish-load", function () { setTimeout(function () { mainWindow.webContents.send("loadListener"); }, 10000); })'
-    if [[ -n $lineToInsert ]]; then
-      echo "$mainjs" | sed -n "1,${lineToInsert}p" > "${mainpath}"
-      echo "$line" >> "${mainpath}"
-      echo "$mainjs" | sed -n "${lineToInsert},\$p" >> "${mainpath}"
-      echo "Successfully injected listener call!"
-    else
-      echo "Failed to fetch listener insertion location. Please insert manually: $line"
-      echo "mate -l '5306' \"$mainpath\" # location with nativefier 7.6.4: mainWindow.webContents.on('will-navigate', onWillNavigate);"
-    fi
-
-    appdir=$(dirname "$mainpath")
-    pushd "$appdir/.." &>/dev/null || die "cd to $appdir/.. failed"
-    npm i --save ws || die "npm install ws failed"
-    popd &>/dev/null || die "cd failed"
-    echo
-  else
-    echo "Failed to insert listener script call function. File not found: $mainpath"
-  fi
-
-else
-  echo "Skipped creation of Trading212.app with nativefier"
 fi
 
 ####################################################
@@ -1072,15 +1009,14 @@ else
   echo "Skipped iTerm switch"
 fi
 
-if [[ ! -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
-  letRead "Install Microsoft Office"
-  open https://www.microsoft.com/education/products/office
-  pressEnterTo
-fi
+#if [[ ! -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
+#  letRead "Install Microsoft Office"
+#  open https://www.microsoft.com/education/products/office
+#  pressEnterTo
+#fi
 
 section "Logins"
 
-# DONE: Spotify, OneNote, Duolingo
 # TODO: Anki, Discord, Slack, Zoom, Notion?
 # TODO: only propose login if applications are present
 if [[ ! -e "$HOME/Library/Application Support/Spotify/prefs" ]]; then
@@ -1089,22 +1025,6 @@ if [[ ! -e "$HOME/Library/Application Support/Spotify/prefs" ]]; then
   pressEnterTo
 else
   echo "Skipped Spotify login"
-fi
-
-if [[ ! -e "$HOME/Library/Containers/com.microsoft.onenote.mac" ]]; then
-  letRead "  - OneNote"
-  open /Applications/Microsoft\ OneNote.app/ || die "Please install OneNote and restart the script to continue"
-  pressEnterTo
-else
-  echo "Skipped OneNote login"
-fi
-
-if [[ ! -e "$HOME/Library/Preferences/com.electron.duolingo.plist" ]]; then
-  letRead "  - Duolingo"
-  open /Applications/Duolingo.app/ || die "Please install Duolingo with nativfier and restart the script to continue"
-  pressEnterTo
-else
-  echo "Skipped Duolingo login"
 fi
 
 section "Settings"
