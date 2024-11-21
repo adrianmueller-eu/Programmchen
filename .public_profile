@@ -829,7 +829,8 @@ function ccat() {
 }
 
 function cdf() {
-  local picked__dir=$(fd -t d | grep -v '\.git/' | fzf --scheme=path --query="$1") || return $?
+  local picked__dir
+  picked__dir=$(fd -t d | grep -v '\.git/' | fzf --scheme=path --query="$1") || return $?
   cd "$picked__dir"
 }
 
