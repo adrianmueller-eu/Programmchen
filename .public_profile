@@ -92,13 +92,13 @@ fdSh() {
 #############################
 ### git
 #############################
-alias gst="git status | sed -n 1,2p | grep -v 'On branch' | grep -v 'Untracked'; git status --short"
+alias gst="git status | sed -n 1,2p | grep -v 'On branch' | grep -v 'Untracked' && git status --short"
 alias gsti="gst --ignored"
 alias ga="git add"
-alias a="git add"
 alias gup=git_update
 # diff
 alias gd="PAGER=$BREW_PREFIX/share/git-core/contrib/diff-highlight/diff-highlight git diff" # use with colors in ~/.gitconfig as described in https://www.viget.com/articles/dress-up-your-git-diffs-with-word-level-highlights/
+alias gd^="gd HEAD^"
 alias gds="gd --staged"
 alias gdw="PAGER= git diff --word-diff=color"
 alias gdsw="gdw --staged"
