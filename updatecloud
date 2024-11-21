@@ -22,11 +22,9 @@ header('Location: /');
 ?>" > "index.php"
 fi
 
-# compile about me
-md2html "../about/about_me.md" > "../about/about_me.html"
-
 # copy telegram bot files
 rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram"
+
 rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram_mh"
 # Replace "/bots/general.php" with "/bots/mental_health.php" in telegram_mh/index.php
 sed -i.bak 's/\/bots\/general.php/\/bots\/mental_health.php/g' "../tools/gpt/telegram_mh/index.php"
@@ -42,10 +40,17 @@ for f in "${source}/"*.md; do
   rm -rf "$name"
   mkdir "$name"
   # generate html & index.php
-  md2html "$source/$f" > "$name.html" || die
+  md2html "$source/$f" > "$name/$name.html" || die
   echo "<?php
-require __DIR__ . '/../../lib.php';
-generateArticle('$name');
+if (file_exists('${name}-gen.html')) {
+    include('${name}-gen.html');
+} else {
+    ob_start();
+    require __DIR__ . '/../../lib.php';
+    generateArticle('$name');
+    file_put_contents('${name}-gen.html', ob_get_contents());
+    ob_end_flush();
+}
 ?>" > "$name/index.php"
 done
 
