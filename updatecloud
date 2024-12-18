@@ -30,6 +30,11 @@ rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram_
 sed -i.bak 's/\/bots\/general.php/\/bots\/mental_health.php/g' "../tools/gpt/telegram_mh/index.php"
 rm -f "../tools/gpt/telegram_mh/index.php.bak"
 
+rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram_voice_bot"
+# Replace "/bots/general.php" with "/bots/voice_bot.php" in telegram_voice_bot/index.php
+sed -i.bak 's/\/bots\/general.php/\/bots\/voice_bot.php/g' "../tools/gpt/telegram_voice_bot/index.php"
+rm -f "../tools/gpt/telegram_voice_bot/index.php.bak"
+
 # Generate files from articles
 for f in "${source}/"*.md; do
   f=$(basename "$f")
