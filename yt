@@ -23,7 +23,7 @@ declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
 
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-o] [-d] [ --cached | --update ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m | -] | -f \e[4mfile\e[0m ] [\e[4mquery\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-o] [-d] [ --cached | --update ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m | -] | -f \e[4mfile\e[0m ] [\e[4mquery ...\e[0m]"
 help="Fetch list of recent videos from YouTube.
 $usage
         \e[1m-h\e[0m         Displays this message and exits.
@@ -123,7 +123,7 @@ while [[ -n $1 ]]; do
       FILE=$1
       shift
     elif [[ -z "$query" ]]; then
-      query="$1"
+      query="${@}"
       if [[ -z "$JSON_FILE" ]]; then
         USE_CACHED=
         PRINTALL=
