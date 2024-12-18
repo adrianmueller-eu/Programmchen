@@ -367,8 +367,9 @@ alias yt1080="yt-dlp --no-playlist -f 'bestvideo[height<=1080]+bestaudio/best[he
 alias y=yt1080
 alias ytul="alias | grep \"='yt \" | grep -v -- --cached | sed 's/alias //g; s/=.*//g'"
 function ytu() (
-  waitnet -s || return
+  echo "Bluetooth on"
   blon
+  waitnet -s || return
   setopt NO_MONITOR # LOCAL_OPTIONS NO_NOTIFY
   [[ -n "$PROXY" ]] && echo "Using proxy ($PROXY)"
   yts=($(ytul))
