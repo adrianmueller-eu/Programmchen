@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Pomodoro timer script
+work=25
+break=5
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mwork\e[0m [\e[4mbreak\e[0m]]"
+help="Starts a pomodoro timer with given work and break times. Default is 25 and 5 minutes.
+    \e[1m-h\e[0m	Show this help.
+    \e[1mwork\e[0m	Work time in minutes.
+    \e[1mbreak\e[0m	Break time in minutes.
+"
+
+die() {
+    printf "%s\n" "$1"
+    exit 1
+}
+
+while getopts ":h" opt; do
+    case $opt in
+        h)
+            printf "%b\n" "$usage"
+            printf "%b\n" "$help"
+            exit 0
+            ;;
+        \?)
+            die "Invalid option: -$OPTARG"
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -gt 2 ]; then
+    die "$usage"
+fi
+
+if [ $# -eq 1 ]; then
+    work=$1
+elif [ $# -eq 2 ]; then
+    work=$1
+    break=$2
+fi
+
+printf "Starting pomodoro timer with work time \e[1m%d\e[0m minutes and break time \e[1m%d\e[0m minutes.\n" $work $break
+
+i=0
+task=
+while true; do
+    i=$((i+1))
+    printf "\e[1mPomodoro %d\e[0m\n" $i
+    if [[ -n "$task" ]]; then
+        read -p "Have you finished \e[1m%s\e[0m? [y/n]: " finished
+        if [[ "$finished" == "y" ]]; then
+            task=
+        fi
+    fi
+    if [[ -z "$task" ]]; then
+        read -p "What are you going to do now?: " task
+    fi
+    note $((work))m "Work time is up!"
+    printf "Time for a break :)\n" $break
+    note $((break))m "Break time is up!"
+    read -p "Press enter to start another round"
+done
