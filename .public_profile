@@ -837,7 +837,7 @@ function ccat() {
   _pick_and_execute -f "pygmentize -O style=dracula -g" "$@"
 }
 
-function cdf() {
+function cdd() {
   local picked__dir
   picked__dir=$(fd -t d | grep -v '\.git/' | fzf --scheme=path --query="$1") || return $?
   cd "$picked__dir"
