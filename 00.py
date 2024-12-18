@@ -4,7 +4,6 @@ sys.path.append(os.environ['PROJ'])
 import inspect
 def source(f):
     print(inspect.getsource(f), end="")
-eps = sys.float_info.epsilon
 
 ### math
 import numpy as np
@@ -59,15 +58,12 @@ if "COLUMNS" in os.environ:
     else:
         np.set_printoptions(linewidth=cols)
 
-def bins(data):
-    return int(np.ceil(np.sqrt(len(data))))
-
 ### aliases
 T = True
 F = False
 l = list
 try:
-    Conv = ConvergenceCondition
+    CC = ConvergenceCondition
     factor = prime_factors
 except:
     pass
