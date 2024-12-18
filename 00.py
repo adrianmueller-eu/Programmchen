@@ -6,6 +6,7 @@ def source(f):
 
 ### math
 import numpy as np
+np.set_printoptions(legacy='1.25')  # mainly means that numeric scalars are printed without their type information, e.g. as 3.0 rather than np.float64(3.0) https://numpy.org/doc/stable/reference/generated/numpy.set_printoptions.html#numpy.set_printoptions
 
 try:
     from sage.all import * # see if sage is loaded
@@ -70,8 +71,8 @@ except:
 def r(x, precision=7):
     return np.round(x, precision)
 
-def npp(precision=5):
-    np.set_printoptions(precision=precision, suppress=True)
+def npp(precision=3, suppress=True):
+    np.set_printoptions(precision=precision, suppress=suppress)
 
 def now():
     return time.time()
