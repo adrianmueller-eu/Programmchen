@@ -1,5 +1,4 @@
-import sys, os, time # For timing: %time foo()
-sys.path.append(os.environ['PROJ'])
+import os, time  # For timing use %time foo() or %timeit foo()
 
 import inspect
 def source(f):

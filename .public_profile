@@ -900,20 +900,6 @@ function backup() (
   unmount
 )
 
-function copy_custom_py_packages_depr() { # { -> make $py_usersite available for lookup
-  if [[ -n $1 ]]; then
-     py_usersite=$1
-  else
-     py_usersite=$(python -m site --user-site)
-  fi
-  [[ -d "$py_usersite" ]] || mkdir -p "$py_usersite"
-
-  [[ -d "$PROJ/BN" ]] &&  cp -af "$PROJ/BN" "$py_usersite/" || echo "Failed to copy BN"
-  [[ -d "$PROJ/MDP" ]] && cp -af "$PROJ/MDP" "$py_usersite/" || echo "Failed to copy MDP"
-  [[ -d "$PROJ/SAT" ]] && cp -af "$PROJ/SAT" "$py_usersite/" || echo "Failed to copy SAT"
-  [[ -d "$PROJ/utils" ]] && cp -af "$PROJ/utils" "$py_usersite/" || echo "Failed to copy utils"
-}
-
 function ln_update() (
   function hardLink() {
     if [[ $1 == "-P" ]]; then
