@@ -1283,6 +1283,8 @@ function po() (
 #############################
 ### math
 #############################
+alias inv="ries -s"
+
 __test_b() (
   b '1+1' || return 1 # 2
   b '2**1000' || return 1 # scientific output
