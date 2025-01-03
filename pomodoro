@@ -44,6 +44,8 @@ elif [ $# -eq 2 ]; then
     worktime=$1
     breaktime=$2
 fi
+(( $worktime >= 1 )) || die "Worktime but be at least 1 minute, but was: $worktime"
+(( $breaktime >= 1 )) || die "Break but be at least 1 minute, but was: $breaktime"
 
 printf "Starting pomodoro timer with work time \e[1m%d\e[0m minutes and break time \e[1m%d\e[0m minutes.\n" $worktime $breaktime
 
@@ -53,17 +55,19 @@ while true; do
     i=$((i+1))
     now "\e[1mPomodoro $i\e[0m\n"
     if [[ -n "$task" ]]; then
-        read -p "Have you finished \e[1m%s\e[0m? [y/n]: " finished
+        printf "Have you finished \e[1m%s\e[0m? [y/n]: " "$task"
+        read finished
         if [[ "$finished" == "y" ]]; then
             task=
         fi
     fi
     if [[ -z "$task" ]]; then
-        read -p "What are you going to do now?: " task
+        printf "What are you going to do now?: "
+        read task
     fi
     note $((worktime))m "Work time is up!"
     now "Time for a break :)\n"
     note $((breaktime))m "Break time is up!"
-    now "Press enter to start another round "
+    now "Press enter to start another round"
     read trash
 done
