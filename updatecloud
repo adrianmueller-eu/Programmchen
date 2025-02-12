@@ -70,7 +70,7 @@ if [[ -z "$files" ]]; then
   echo "No changes found."
   exit 0
 fi
-rsync --mkpath --progress --files-from=<(printf "%s\n" "${files[@]}") ./ "$CLOUD_WEB_PREFIX"
+rsync --mkpath --progress --files-from=<(printf "%s\n" "${files[@]}") ./ "$CLOUD_WEB_PREFIX" || die
 
 rm -f $source/*.bak
 
