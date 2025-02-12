@@ -47,9 +47,9 @@ fi
 
 # update hosts file
 update_hosts_after=$((14*24*60*60 + $RANDOM)) # seconds
-if [[ ! -e /etc/hosts  # not exists
-  || $(wc -l /etc/hosts | awk '{print $1}') -lt 100  # too short
-  || ! $(tail -1 /etc/hosts | cut -c 3-) =~ ^[0-9]{10}$  # timestamp not exists
+if [[ ! -e /etc/hosts  # file doesn't exist
+  || $(wc -l /etc/hosts | awk '{print $1}') -lt 100  # file too short
+  || ! $(tail -1 /etc/hosts | cut -c 3-) =~ ^[0-9]{10}$  # timestamp doesn't exist
   || $(tail -1 /etc/hosts | cut -c 3-) -lt $(($(date +%s) - update_hosts_after))  # timestamp expired
 ]]; then
   echo
@@ -74,11 +74,11 @@ if [[ ! -e /etc/hosts  # not exists
       echo "Your password is required to write the hosts file."
     fi
     if [[ -f /etc/hosts ]]; then
-      sudo mv /etc/hosts /etc/hosts_backup || echo "Couldn't create a backup!"
+      sudo mv /etc/hosts /etc/hosts_backup || echo "Backup failed!"
     fi
     sudo chown root "$tmphosts"
     sudo mv "$tmphosts" /etc/hosts && echo "Update succeeded!" || echo "Update failed!"
-    sudo -k # invalidate cached credentials
+    sudo -k  # invalidate cached credentials
     unset allowed link
   else
     echo "Update failed (couldn't download)!"
