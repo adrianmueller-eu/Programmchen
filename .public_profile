@@ -834,7 +834,7 @@ function sm() {
 }
 
 function o() {
-  _pick_and_execute open "$@"
+  _pick_and_execute open "$*"
 }
 
 function catf() {
