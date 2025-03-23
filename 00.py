@@ -42,6 +42,7 @@ except:
 
 import itertools # https://docs.python.org/3/library/itertools.html
 from itertools import product, combinations
+# from bisect import bisect as binary_search
 
 ### numpy visuals
 np.set_printoptions(legacy='1.25')  # mainly means that numeric scalars are printed without their type information, e.g. as 3.0 rather than np.float64(3.0) https://numpy.org/doc/stable/reference/generated/numpy.set_printoptions.html#numpy.set_printoptions
@@ -58,6 +59,8 @@ if "COLUMNS" in os.environ:
 T = True
 F = False
 l = list
+eigs = eigvals
+eigsh = eigvalsh
 try:
     CC = ConvergenceCondition
     factor = prime_factors
