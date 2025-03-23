@@ -182,8 +182,10 @@ piptop() {
 }
 j() (
   [[ -z "$1" ]] && filename="playground.ipynb" || filename=$1
-  [[ "$filename" != *.ipynb ]] && filename="$filename".ipynb
-  touch "$filename"
+  if [[ ! -d "$1" ]]; then
+    [[ "$filename" != *.ipynb ]] && filename="$filename".ipynb
+    touch "$filename"
+  fi
   code "$filename"
   sleep 0.2
   osascript -e 'tell application "System Events" to set frontmost of the first application process whose displayed name is "Code" to true'
