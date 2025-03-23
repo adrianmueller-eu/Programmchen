@@ -208,6 +208,7 @@ function parseResults0() {
 
           // create link
           let link = '$youtube' + v.navigationEndpoint.commandMetadata.webCommandMetadata.url
+          link = link.split('&')[0]  // remove parameters
 
           // print out, remove newlines
           console.log(description.replace(/\r?\n|\r/gm, ''))
