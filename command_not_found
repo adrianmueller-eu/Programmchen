@@ -25,6 +25,12 @@ case $1 in
     [[ "$arg" == "." ]] && ask=false
     cmd=open
     ;;
+  j.)
+    ask=false
+    cmd=j
+    arg=.
+    functions_needed=true
+    ;;
   greo)
     cmd=grep
     arg="--color=always" # grep alias is created by oh-my-zsh
