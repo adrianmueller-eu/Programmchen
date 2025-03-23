@@ -16,6 +16,7 @@ try:
     from tqdm import tqdm as tq
 except:
     from math import *
+    del pow  # use builtin
     try:
        import sympy
     except:
