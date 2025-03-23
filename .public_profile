@@ -295,6 +295,12 @@ function diff() (
     command diff "$file1" "$file2"
   fi
 )
+
+notetime() (
+  file=${1:-$C/notes.txt}
+  ts -m "%y %b %d %H:%M:%S" | tee -a "$file"
+)
+
 function cp() {
   if [[ "$1" == -* ]]; then
     command cp "$@"
