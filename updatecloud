@@ -44,8 +44,18 @@ for f in "${source}/"*.md; do
   # recreate folder
   rm -rf "$name"
   mkdir "$name"
-  # generate html & index.php
+  # generate html
   md2html "$source/$f" > "$name/$name.html" || die
+  # auto-id headers
+  perl -i -pe 's{<h3>([^<]+)</h3>}{
+    my $title = $1;
+    my $id = lc($title);
+    $id =~ s/[^a-z0-9 ]//g;
+    $id =~ s/^ +| +$//g;
+    $id =~ s/ /-/g;
+    "<h3 id=\"$id\">$title</h3>";
+  }ge' "$name/$name.html"
+  # generate index.php
   echo "<?php
 if (file_exists('${name}-gen.html')) {
     include('${name}-gen.html');
