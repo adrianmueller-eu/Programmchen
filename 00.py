@@ -1,4 +1,4 @@
-import os, time  # For timing use %time foo() or %timeit foo()
+import sys, os, time  # For timing use %time foo() or %timeit foo()
 # import warnings; warnings.filterwarnings('ignore')
 
 ### visuals
@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 # %matplotlib qt > %matplotlib widget
 # plt.style.use('ggplot') # nicer plots?
 # %lsmagic
+
+# turn off auto-sorting sets
+#get_ipython().display_formatter.formatters['text/plain'].type_printers.pop(set, None)
 
 ### libs
 import numpy as np
@@ -31,6 +34,8 @@ except:
         from scipy.stats import * # https://docs.scipy.org/doc/scipy/reference/stats.html
         from scipy.optimize import minimize
         from scipy.linalg import *
+
+        from numpy import kron
     except:
         pass
     try:
@@ -45,7 +50,9 @@ from itertools import product, combinations
 # from bisect import bisect as binary_search
 
 ### numpy visuals
-np.set_printoptions(legacy='1.25')  # mainly means that numeric scalars are printed without their type information, e.g. as 3.0 rather than np.float64(3.0) https://numpy.org/doc/stable/reference/generated/numpy.set_printoptions.html#numpy.set_printoptions
+if sys.modules['numpy'].__version__ > '2':
+    np.set_printoptions(legacy='1.25')  # mainly means that numeric scalars are printed without their type information, e.g. as 3.0 rather than np.float64(3.0) https://numpy.org/doc/stable/reference/generated/numpy.set_printoptions.html#numpy.set_printoptions
+
 def npp(precision=3, suppress=True):
     np.set_printoptions(precision=precision, suppress=suppress)
 if "COLUMNS" in os.environ:
