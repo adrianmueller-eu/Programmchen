@@ -167,6 +167,11 @@ function parseResults0() {
 
           // get data
           let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
+          // Remove trailing durations like '6 minutes, 35 seconds' or '1 hour, 2 minutes, 5 seconds'
+          while (title.match(/,? ?\d+ (hours?|minutes?|seconds?)$/)) {
+            title = title.replace(/,? ?\d+ (hours?|minutes?|seconds?)$/, '');
+          }
+          title = title.trim();
           if (!title) {
             // slightly panic
             console.error('Error! This video has no title node:')
@@ -189,7 +194,7 @@ function parseResults0() {
           // Livestream
           else if (v.viewCountText?.runs) {
             let views = v.viewCountText.runs[0].text
-            description = '\033[1mLive:\033[0m ' + title + ' \033[37m' + views + '\033[0m'
+            description = '\033[1m\033[31mLive:\033[0m ' + title + ' \033[37m\033[2m' + views + '\033[0m'
           }
           else if (!v.viewCountText && v.publishedTimeText) {
             let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
@@ -225,6 +230,10 @@ function parseResults0() {
             idx = title.lastIndexOf(by_str)
           }
           title = title.substring(0, idx)
+          while (title.match(/,? ?\d+ (hours?|minutes?|seconds?)$/)) {
+            title = title.replace(/,? ?\d+ (hours?|minutes?|seconds?)$/, '');
+          }
+          title = title.trim();
           if (!title) {
             // slightly panic
             console.error('Error! This video has no title node:')
@@ -255,10 +264,6 @@ function parseResults0() {
           console.log(description.replace(/\r?\n|\r/gm, ''))
           console.log(link)
         }
-      }
-      else if (content.messageRenderer) { // TODO: this is probably wrong by now
-        console.error(contents.messageRenderer.text.simpleText)
-        process.exit(42)
       }
       else {
         console.error('Unknown content object!')
