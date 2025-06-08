@@ -203,7 +203,6 @@ alias shutup="osascript -e 'Set volume output volume 0'"
 alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
 alias rll="sed 's/.\{250,\}/***LONG LINE HERE***/'"
 alias psh="ps aux | head"
-alias h="waitnet -s && howdoi"
 alias rm="rm -I"
 path() {
   echo $PATH | tr ':' $'\n'

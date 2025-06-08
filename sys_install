@@ -101,7 +101,6 @@ git
 #graphviz       # Graph visualization software
 heksa
 hexedit
-howdoi
 ijq		# Interactive wrapper for jq
 imagemagick	# installs convert
 #jq		# JSON parser
